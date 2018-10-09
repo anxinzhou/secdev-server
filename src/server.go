@@ -8,6 +8,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"log"
 	"net/http"
+	"net/rpc"
 )
 
 func getToken(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -123,13 +124,16 @@ func transfer(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 }
 
+var c *Client
+
 func main() {
+	c, err := rpc.Dial("tcp", "127.0.0.1:8000")
 	router := httprouter.New()
-	router.GET("/:chain/tokens/:user", getToken)
-	router.GET("/:chain/nonce/:user", getUserNonce)
-	router.GET("/:chain/ether/:user", getUserEther)
+	router.GET("/:chain(public|private)/tokens/:user", getToken)
+	router.GET("/:chain(public|private)/nonce/:user", getUserNonce)
+	router.GET("/:chain(public|private)/ether/:user", getUserEther)
 	router.PUT("/private/tokens/:user", updateToken)
-	router.PUT("/:chain/transfer", transfer)
+	router.PUT("/:chain(public|private)/transfer", transfer)
 
 	log.Fatal(http.ListenAndServe(":4000", router))
 }
