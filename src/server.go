@@ -3,6 +3,7 @@ package main
 
 import (
 	"contract"
+	"encoding/json"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"log"
@@ -11,51 +12,124 @@ import (
 
 func getToken(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	user := ps.ByName("user")
-	tokenNumber, err := pvc.GetToken(user)
+	kind := ps.ByName("chain")
+	if kind == "public" {
+		tokenNumber, err := pbc.GetToken(user)
+	} else if kind == "private" {
+		tokenNumber, err := pvc.GetToken(user)
+	} else {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tokenNumberWrapper, err := json.Marshal(tokenNumber)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().set("Content-Type", "application/json")
-	w.Write(tokenNumber)
+	w.Write(tokenNumberWrapper)
 }
 
 func getUserNonce(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	user := ps.ByName("user")
+	kind := ps.ByName("chain")
+	if kind == "public" {
+		nonce, err := pbc.GetNonce(user)
+	} else if kind == "private" {
+		nonce, err := pvc.GetNonce(user)
+	} else {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	nonceWrapper, err := json.Marshal(nonce)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().set("Content-Type", "application/json")
+	w.Write(nonceWrapper)
 }
 
-func getUserNonce(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func getUserEther(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	user := ps.ByName("user")
+	kind := ps.ByName("chain")
+	if kind == "public" {
+		nonce, err := pbc.GetEther(user)
+	} else if kind == "private" {
+		nonce, err := pvc.GetEther(user)
+	} else {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	etherWrapper, err := json.Marshal(ether)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().set("Content-Type", "application/json")
+	w.Write(etherWrapper)
 }
 
-func getUserNonce(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func updateToken(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	user := ps.ByName("user")
+	var amount int
+	err := json.NewDecoder(r.Body).Decode(&amount)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if amount < 0 {
+		err = pvc.consume(user, -amount)
+	} else if amount > 0 {
+		err = pvc.reward(user, amount)
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
-func getUserNonce(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-}
-
-func getUserNonce(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-}
-
-func getUserNonce(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-}
-
-func getUserNonce(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-}
-
-func getUserNonce(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func transfer(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var tx string
+	err := json.NewDecoder(r.Body).Decode(&tx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	kind := ps.ByName("chain")
+	if kind == "public" {
+		nonce, err := pbc.sendSignedTransaction(user)
+	} else if kind == "private" {
+		nonce, err := pvc.sendSignedTransaction(user)
+	} else {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func main() {
 	router := httprouter.New()
-	router.GET("/tokens/:user", getToken)
-	router.GET("/nonce/:user", getUserNonce)
-	router.GET("/ether/:user", getUserEther)
-	router.PUT("/tokens/:user", updateToken)
-	router.POST("/validation", validate)
-	router.GET("/publicTokens/:user", getPubTOken)
-	router.PUT("/publicTOkens/:user", updatePubTOken)
-	router.GET("/publicNOnce/:user", getPubUserNonce)
-	router.GET("/publicEther/:user", getPubUserEther)
-	router.POST("/faucet", requireEther)
+	router.GET("/:chain/tokens/:user", getToken)
+	router.GET("/:chain/nonce/:user", getUserNonce)
+	router.GET("/:chain/ether/:user", getUserEther)
+	router.PUT("/private/tokens/:user", updateToken)
+	router.PUT("/:chain/transfer", transfer)
 
 	log.Fatal(http.ListenAndServe(":4000", router))
 }
