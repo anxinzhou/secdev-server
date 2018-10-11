@@ -1,0 +1,14 @@
+{
+    "public": {
+        "port": "wss://localhost:8640",
+        "keystore": "keystorefile",
+        "password": "321",
+        "address": "contractAddress"
+    },
+    "private": {
+        "port": "wss://localhost:8640",
+        "keystore": "keystorefile",
+        "password": "321",
+        "address": "contractAddress"
+    }
+}

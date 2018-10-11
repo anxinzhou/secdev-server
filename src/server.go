@@ -4,22 +4,55 @@ package main
 import (
 	"contract"
 	"encoding/json"
-	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"io/ioutil"
 	"log"
+	"math/big"
 	"net/http"
-	"net/rpc"
 )
 
+const (
+	chainConfigJson = "./etc/config.json"
+)
+
+var (
+	pbc *contract.Pbc
+	pvc *contract.Pvc
+)
+
+type BasicChainConfig struct {
+	Port     string `json:"port"`
+	Keystore string `json:"keystore"`
+	Password string `json:"password"`
+	Address  string `json:"address"`
+}
+
+type PublicConfig struct {
+	BasicChainConfig
+}
+
+type PrivateConfig struct {
+	BasicChainConfig
+}
+
+type ChainConfig struct {
+	Pub PublicConfig
+	Pri PrivateConfig
+}
+
 func getToken(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var (
+		err         error
+		tokenNumber *big.Int
+	)
 	user := ps.ByName("user")
 	kind := ps.ByName("chain")
 	if kind == "public" {
-		tokenNumber, err := pbc.GetToken(user)
+		tokenNumber, err = pbc.GetToken(user)
 	} else if kind == "private" {
-		tokenNumber, err := pvc.GetToken(user)
+		tokenNumber, err = pvc.GetToken(user)
 	} else {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Fatal("this should not happen")
 		return
 	}
 	if err != nil {
@@ -31,19 +64,23 @@ func getToken(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(tokenNumberWrapper)
 }
 
 func getUserNonce(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var (
+		err   error
+		nonce uint64
+	)
 	user := ps.ByName("user")
 	kind := ps.ByName("chain")
 	if kind == "public" {
-		nonce, err := pbc.GetNonce(user)
+		nonce, err = pbc.GetNonce(user)
 	} else if kind == "private" {
-		nonce, err := pvc.GetNonce(user)
+		nonce, err = pvc.GetNonce(user)
 	} else {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Fatal("this should not happend")
 		return
 	}
 	if err != nil {
@@ -55,19 +92,23 @@ func getUserNonce(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(nonceWrapper)
 }
 
 func getUserEther(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var (
+		err   error
+		ether *big.Int
+	)
 	user := ps.ByName("user")
 	kind := ps.ByName("chain")
 	if kind == "public" {
-		nonce, err := pbc.GetEther(user)
+		ether, err = pbc.GetEther(user)
 	} else if kind == "private" {
-		nonce, err := pvc.GetEther(user)
+		ether, err = pvc.GetEther(user)
 	} else {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Fatal("this should not happen")
 		return
 	}
 	if err != nil {
@@ -79,7 +120,7 @@ func getUserEther(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(etherWrapper)
 }
 
@@ -92,9 +133,9 @@ func updateToken(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 	if amount < 0 {
-		err = pvc.consume(user, -amount)
+		err = pvc.Consume(user, big.NewInt(int64(-amount)))
 	} else if amount > 0 {
-		err = pvc.reward(user, amount)
+		err = pvc.Award(user, big.NewInt(int64(amount)))
 	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -111,11 +152,11 @@ func transfer(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 	kind := ps.ByName("chain")
 	if kind == "public" {
-		nonce, err := pbc.sendSignedTransaction(user)
+		err = pbc.SendTransaction(tx)
 	} else if kind == "private" {
-		nonce, err := pvc.sendSignedTransaction(user)
+		err = pvc.SendTransaction(tx)
 	} else {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Fatal("this should not happend")
 		return
 	}
 	if err != nil {
@@ -124,16 +165,33 @@ func transfer(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 }
 
-var c *Client
+func init() {
+	cc := new(ChainConfig)
+	data, err := ioutil.ReadFile(chainConfigJson)
+	if err != nil {
+		panic("can not read chain config file")
+	}
+	err = json.Unmarshal(data, cc)
+	if err != nil {
+		panic("can not unmarsh json")
+	}
+	pbc = new(contract.Pbc)
+	pbc.Connect(cc.Pub.Port)
+	pbc.LoadKey(cc.Pub.Keystore, cc.Pub.Password)
+	pbc.LoadContract(cc.Pub.Address)
+
+	pvc = new(contract.Pvc)
+	pvc.Connect(cc.Pri.Port)
+	pvc.LoadKey(cc.Pri.Keystore, cc.Pri.Password)
+	pvc.LoadContract(cc.Pri.Address)
+}
 
 func main() {
-	c, err := rpc.Dial("tcp", "127.0.0.1:8000")
 	router := httprouter.New()
 	router.GET("/:chain(public|private)/tokens/:user", getToken)
 	router.GET("/:chain(public|private)/nonce/:user", getUserNonce)
 	router.GET("/:chain(public|private)/ether/:user", getUserEther)
 	router.PUT("/private/tokens/:user", updateToken)
 	router.PUT("/:chain(public|private)/transfer", transfer)
-
 	log.Fatal(http.ListenAndServe(":4000", router))
 }
