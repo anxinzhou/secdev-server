@@ -1,7 +1,7 @@
 pragma solidity ^0.4.25;
 
-import './utils.sol';
-import './basic_token.sol';
+import './utils.sol'
+import './basic_token.sol'
 
 contract PrivateSlot is Slot{
     

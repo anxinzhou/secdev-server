@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"runtime"
 )
 
 const (
@@ -187,6 +188,7 @@ func init() {
 }
 
 func main() {
+	runtime.GOMAXPROCS = 8
 	router := httprouter.New()
 	router.GET("/:chain(public|private)/tokens/:user", getToken)
 	router.GET("/:chain(public|private)/nonce/:user", getUserNonce)
