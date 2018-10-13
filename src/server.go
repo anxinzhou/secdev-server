@@ -4,6 +4,7 @@ package main
 import (
 	"contract"
 	"encoding/json"
+	"github.com/bitly/go-simplejson"
 	"github.com/julienschmidt/httprouter"
 	"io/ioutil"
 	"log"
@@ -13,7 +14,7 @@ import (
 )
 
 const (
-	chainConfigJson = "./etc/config.json"
+	chainConfigJson = "src/etc/config.json"
 )
 
 var (
@@ -37,8 +38,8 @@ type PrivateConfig struct {
 }
 
 type ChainConfig struct {
-	Pub PublicConfig
-	Pri PrivateConfig
+	Pub PublicConfig   `json: "public"`
+	Pri PrivateConfig  `json: "private"`
 }
 
 func getToken(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -166,20 +167,29 @@ func transfer(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 }
 
+
+
 func init() {
 	cc := new(ChainConfig)
 	data, err := ioutil.ReadFile(chainConfigJson)
 	if err != nil {
 		panic("can not read chain config file")
 	}
+	js,err:=simplejson.NewJson(data)
+	js.Get("public")
+	js.Get("private")
+	if err!=nil {
+		panic("can not get json")
+	}
 	err = json.Unmarshal(data, cc)
+
 	if err != nil {
 		panic("can not unmarsh json")
 	}
-	pbc = new(contract.Pbc)
-	pbc.Connect(cc.Pub.Port)
-	pbc.LoadKey(cc.Pub.Keystore, cc.Pub.Password)
-	pbc.LoadContract(cc.Pub.Address)
+	//	pbc = new(contract.Pbc)
+	//	pbc.Connect(cc.Pub.Port)
+	//	pbc.LoadKey(cc.Pub.Keystore, cc.Pub.Password)
+	//	pbc.LoadContract(cc.Pub.Address)
 
 	pvc = new(contract.Pvc)
 	pvc.Connect(cc.Pri.Port)
@@ -188,7 +198,7 @@ func init() {
 }
 
 func main() {
-	runtime.GOMAXPROCS = 8
+	runtime.GOMAXPROCS(16)
 	router := httprouter.New()
 	router.GET("/:chain(public|private)/tokens/:user", getToken)
 	router.GET("/:chain(public|private)/nonce/:user", getUserNonce)

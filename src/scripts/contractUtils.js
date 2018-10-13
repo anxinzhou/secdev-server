@@ -37,24 +37,29 @@ program
             bytecode = output.contracts[contractName].bytecode
             abi = JSON.parse(output.contracts[contractName].interface)
             contract = new web3.eth.Contract(abi)
-	    args = JSON.parse(options.arguments)
+            args = JSON.parse(options.arguments)
             readJson(options.keystore).then(ks => {
                 account = web3.eth.accounts.decrypt(ks, options.password)
-                tx = contract.deploy({
+                dp = contract.deploy({
                     data: '0x' + bytecode,
-                    arguments:args 
+                    arguments: args
                 })
-		console.log(120)
-                return web3.eth.accounts.signTransaction(tx, account.privateKey)
+                var tx = {
+                    data: dp.encodeABI(),
+                    from: account.address,
+                    gas: "3000000",
+                    gasPrice: '0',
+                }
+                return account.signTransaction(tx)
             }).then(signedTx => {
-		   console.log(110)
-                return web3.eth.sendSignedTransaction(signedTx)
+                console.log(110)
+                return web3.eth.sendSignedTransaction(signedTx.rawTransaction)
             }).then(receipt => {
-                if (receipt.status = '0x0') {
+                if (receipt.status == '0x0') {
                     throw new Error("contract deploy revert")
                 }
                 console.log(receipt.contractAddress)
-            })
+            }).catch(console.log)
         })
     })
 
