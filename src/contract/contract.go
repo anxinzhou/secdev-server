@@ -22,12 +22,12 @@ type Contract struct {
 }
 
 type Pbc struct {
-	*Contract
+	Contract
 	Instance *publicSlot.PublicSlot
 }
 
 type Pvc struct {
-	*Contract
+	Contract
 	Instance *privateSlot.PrivateSlot
 }
 
@@ -117,7 +117,7 @@ func (p *Pvc) LoadContract(rawAddress string) {
 
 func (p *Pvc) GetToken(rawAddress string) (*big.Int, error) {
 	address := common.HexToAddress(rawAddress)
-	token, err := p.Instance.BalanceOf(&bind.CallOpts{}, address)
+	token, err := p.Instance.BalanceOf(nil, address)
 	return token, err
 }
 

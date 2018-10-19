@@ -29,7 +29,7 @@ geth --gasprice 0 --txpool.pricelimit 0  --mine --datadir node2/ --syncmode 'ful
  --etherbase "0x752befae2efee656811eceeeea46a2d6d9621733" --unlock "0x752befae2efee656811eceeeea46a2d6d9621733" --password password.txt 
 elif [ $node = "node3" ]
 then
- geth --gasprice 0 --txpool.pricelimit 0 --mine --datadir node3/ --targetgaslimit '9000000000000' --syncmode 'full' --port 30311 --rpc --rpcaddr 'localhost' \
+ geth --gasprice 0 --txpool.pricelimit 0 --mine --datadir node3/ --targetgaslimit '9000000000000' --syncmode 'full' --port 30313 --rpc --rpcaddr 'localhost' \
   --rpcport 8542 --rpcapi 'personal,db,eth,net,web3,txpool,miner' --rpccorsdomain '*'  \
  --ws --wsport 8452 --wsapi="personal,db,eth,net,web3,txpool,miner" --wsorigins "*" --targetgaslimit '9000000000000'  --networkid 1515  \
  --etherbase "0x81a5c09bb2f15f4548f458b7f3b4d49080e0eb4a" --unlock '0x81a5c09bb2f15f4548f458b7f3b4d49080e0eb4a' --password password.txt 
