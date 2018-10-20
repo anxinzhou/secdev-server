@@ -5,13 +5,11 @@ import (
 	"contract"
 	"encoding/json"
 	"fmt"
-	"github.com/bitly/go-simplejson"
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
 	"math/big"
 	"net/http"
-	"runtime"
 )
 
 const (
@@ -39,8 +37,8 @@ type PrivateConfig struct {
 }
 
 type ChainConfig struct {
-	Pub PublicConfig  `json: "public"`
-	Pri PrivateConfig `json: "private"`
+	Pub * PublicConfig   `json:"public"`
+	Pri * PrivateConfig  `json:"private"`
 }
 
 func getToken(w http.ResponseWriter, r *http.Request) {
@@ -56,9 +54,6 @@ func getToken(w http.ResponseWriter, r *http.Request) {
 		tokenNumber, err = pbc.GetToken(user)
 	} else if kind == "private" {
 		tokenNumber, err = pvc.GetToken(user)
-	} else {
-		log.Fatal("this should not happen")
-		return
 	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -69,6 +64,7 @@ func getToken(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	log.Println("Deal with get Token, token amount: ", tokenNumber.String())
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(tokenNumberWrapper)
 }
@@ -116,9 +112,6 @@ func getUserEther(w http.ResponseWriter, r *http.Request) {
 		ether, err = pbc.GetEther(user)
 	} else if kind == "private" {
 		ether, err = pvc.GetEther(user)
-	} else {
-		log.Fatal("this should not happen")
-		return
 	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -166,9 +159,6 @@ func transfer(w http.ResponseWriter, r *http.Request) {
 		err = pbc.SendTransaction(tx)
 	} else if kind == "private" {
 		err = pvc.SendTransaction(tx)
-	} else {
-		log.Fatal("this should not happend")
-		return
 	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -177,51 +167,26 @@ func transfer(w http.ResponseWriter, r *http.Request) {
 }
 
 func init() {
-	//pbc:= new(contract.Pbc)
-	pvc:= new(contract.Pvc)
-	cc := new(ChainConfig)
+	var cc ChainConfig
 	data, err := ioutil.ReadFile(chainConfigJson)
 	if err != nil {
 		panic("can not read chain config file")
 	}
-	js, err := simplejson.NewJson(data)
-	pubConfig:= js.Get("public")
-	priConfig:= js.Get("private")
-	if err != nil {
-		panic("can not load json")
-	}
+	json.Unmarshal(data,&cc)
 
-	cc.Pub.Port, _ = pubConfig.Get("port").String()
-	cc.Pub.Keystore, _ = pubConfig.Get("keystore").String()
-	cc.Pub.Password, _ = pubConfig.Get("password").String()
-	cc.Pub.Address, _ = pubConfig.Get("address").String()
-
-	cc.Pri.Port, _ = priConfig.Get("port").String()
-	cc.Pri.Keystore, _ = priConfig.Get("keystore").String()
-	cc.Pri.Password, _ = priConfig.Get("password").String()
-	cc.Pri.Address, _ = priConfig.Get("address").String()
-	pvc.Connect(cc.Pri.Port)
-	pvc.LoadKey(cc.Pri.Keystore, cc.Pri.Password)
-	pvc.LoadContract(cc.Pri.Address)
+	pbc = contract.NewPbc(cc.Pub.Port,cc.Pub.Keystore,cc.Pub.Password,cc.Pri.Address)
+	pvc = contract.NewPvc(cc.Pri.Port, cc.Pri.Keystore, cc.Pri.Password,cc.Pri.Address)
 }
 
 func main() {
-	runtime.GOMAXPROCS(8)
+	//runtime.GOMAXPROCS(8)
 	r:=mux.NewRouter()
 	r.HandleFunc("/{chain:public|private}/tokens/{user}",getToken).Methods("GET")
-	r.HandleFunc("//nonce/{user}", getUserNonce).Methods("GET")
+	r.HandleFunc("/nonce/{user}", getUserNonce).Methods("GET")
 	r.HandleFunc("/{chain:public|private}/ether/{user}", getUserEther).Methods("GET")
 	r.HandleFunc("/private/tokens/{user}",updateToken).Methods("PUT")
 	r.HandleFunc("/{chain:public|private}/transfer",transfer).Methods("PUT")
 
-
-	//router := httprouter.New()
-
-	//router.GET("/chain:(public|private)/tokens/:user", getToken)
-	//router.GET("/chain:(public|private)/nonce/:user", getUserNonce)
-	//router.GET("/chain:(public|private)/ether/:user", getUserEther)
-	//router.PUT("/private/tokens/:user", updateToken)
-	//router.PUT("/chain:(public|private)/transfer", transfer)
 	fmt.Println("Running http server")
 	log.Fatal(http.ListenAndServe(":4000", r))
 }
