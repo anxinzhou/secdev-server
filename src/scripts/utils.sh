@@ -3,10 +3,10 @@ if [[ $1 == "deploy" ]]
 then 
 	if [[ $2 == "public" ]]
 	then 
-		node contractUtils deploy "../etc/contracts/all/public_slot.sol" PublicSlot -r http://127.0.0.1:8640 -k "../etc/keystore/zx" -p "321" -a '[10000,1,["0x20A40B83a495DD2fbbE33E0b6ad119B09F09151f"]]'
+		node contractUtils deploy "../etc/contracts/all/publicBridgeToken.sol" BridgeToken -r http://127.0.0.1:8640 -k "../etc/keystore/zx" -p "321" -a '[100000,"bridgeToken","btk",0,1]'
 	elif  [[ $2 == "private" ]]
 	then 
-		node contractUtils deploy "../etc/contracts/all/private_slot.sol"  PrivateSlot -r http://127.0.0.1:8540 -k "../etc/keystore/zx" -p "321" -a '[10000,1,["0x20A40B83a495DD2fbbE33E0b6ad119B09F09151f"]]'
+		node contractUtils deploy "../etc/contracts/all/privateBridgeToken.sol"  BridgeToken -r http://127.0.0.1:8540 -k "../etc/keystore/zx" -p "321" -a '[100000,"bridgeToken","btk",0,1]'
 
 	else
 		echo $2
@@ -18,3 +18,6 @@ then
 else 
 	echo 'genkey or deploy'
 fi
+
+
+#0x20A40B83a495DD2fbbE33E0b6ad119B09F09151f

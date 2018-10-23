@@ -5,19 +5,33 @@ import (
 	"crypto/ecdsa"
 	"encoding/hex"
 	"errors"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rlp"
 	"io/ioutil"
+	"log"
 	"math/big"
 )
 
 const (
 	GasLimit = 3000000
 )
+
+var (
+	logExchangeSigHash common.Hash
+)
+
+type LogExchange struct{
+	User common.Address
+	Amount *big.Int
+
+	TxHash common.Hash
+}
 
 type TransactionConfig struct {
 	Gaslimit uint64
@@ -29,6 +43,12 @@ type TransactionConfig struct {
 type Contract struct {
 	Client *ethclient.Client
 	txConfig *TransactionConfig
+	Address common.Address
+}
+
+func init(){
+	exchangeSignature :=[]byte("Exchange(address,uint256)")
+	logExchangeSigHash = crypto.Keccak256Hash(exchangeSignature)
 }
 
 func NewAuth(key *ecdsa.PrivateKey, nonce uint64, value * big.Int) *bind.TransactOpts{
@@ -101,4 +121,19 @@ func (c *Contract) GenerateKeyStore(file string, password string) (common.Addres
 	keyJson, err := ks.Export(account, password, password)
 	ioutil.WriteFile(file, keyJson, 0777)
 	return account.Address, err
+}
+
+func (c *Contract) EventWatcher() (chan types.Log, <-chan error) {
+	log.Println("start to watching")
+	query:=ethereum.FilterQuery{
+		Addresses:[]common.Address{c.Address},
+	}
+	logs:=make(chan types.Log)
+	sub,err:= c.Client.SubscribeFilterLogs(context.Background(), query, logs)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return logs, sub.Err()
 }
