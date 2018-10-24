@@ -2,6 +2,8 @@ package contract
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -9,6 +11,7 @@ import (
 	"math/big"
 	"strings"
 	"sync/atomic"
+	"time"
 	"token/privateSlot"
 )
 
@@ -67,7 +70,9 @@ func (p *Pvc) Consume(rawAddress string, amount *big.Int) error {
 	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
 
-	_, err = p.Instance.Consume(auth, address, amount)
+	tx, err := p.Instance.Consume(auth, address, amount)
+	_,err =p.GetReceiptStatus(tx.Hash())
+
 	return err
 }
 
@@ -82,10 +87,9 @@ func (p *Pvc) Pay(address common.Address, amount *big.Int, transactionHash commo
 	log.Println(address.String())
 	log.Println(transactionHash.String())
 
-	_, err = p.Instance.Pay(auth, address, amount, transactionHash)
-	if err!=nil {
-		log.Println(err)
-	}
+	tx, err := p.Instance.Pay(auth, address, amount, transactionHash)
+
+	_,err =p.GetReceiptStatus(tx.Hash())
 
 	return err
 }
@@ -96,7 +100,11 @@ func (p *Pvc) Reward(rawAddress string, amount *big.Int) error {
 	address := common.HexToAddress(rawAddress)
 	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
-	_, err = p.Instance.Reward(auth, address, amount)
+	tx, err := p.Instance.Reward(auth, address, amount)
+
+
+	_,err =p.GetReceiptStatus(tx.Hash())
+
 	return err
 }
 
@@ -105,7 +113,9 @@ func (p *Pvc) AddGameMachine(rawMachine string) error {
 	machine := common.HexToAddress(rawMachine)
 	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
-	_, err = p.Instance.AddGameMachine(auth, machine)
+	tx, err := p.Instance.AddGameMachine(auth, machine)
+	_,err =p.GetReceiptStatus(tx.Hash())
+
 	return err
 }
 
@@ -114,8 +124,70 @@ func (p *Pvc) SubmitSignature(message []byte, signature []byte) error {
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
 	auth.GasLimit = p.txConfig.Gaslimit
 
-	_, err:= p.Instance.SubmitSignature(auth,message,signature)
+	tx, err:= p.Instance.SubmitSignature(auth,message,signature)
+	_,err =p.GetReceiptStatus(tx.Hash())
+
 	return err
+}
+
+func (p *Pvc) OwnedTokens(rawAddress string) (*big.Int,error) {
+	address := common.HexToAddress(rawAddress)
+	ownedAvatar,err:=p.Instance.OwnedAvatars(nil,address)
+	if err!=nil {
+		log.Println("get owned tokens fail",err.Error())
+	}
+	return ownedAvatar, err
+}
+
+func (p *Pvc) Mint(rawAddress string,tokenId *big.Int) error {
+	address := common.HexToAddress(rawAddress)
+
+	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
+	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
+	auth.GasLimit = p.txConfig.Gaslimit
+
+	tx , err:= p.Instance.Mint(auth, address, tokenId)
+
+	_,err =p.GetReceiptStatus(tx.Hash())
+
+	return err
+
+}
+
+func (p *Pvc) Upgrade (tokenId *big.Int) error{
+
+	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
+	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
+	auth.GasLimit = p.txConfig.Gaslimit
+
+	tx,err :=p.Instance.Upgrade(auth,tokenId)
+
+	_,err = p.GetReceiptStatus(tx.Hash())
+
+	return err
+}
+
+func (p *Pvc) EquipWeapon (tokenId *big.Int) error {
+	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
+	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
+	auth.GasLimit = p.txConfig.Gaslimit
+
+	tx,err :=p.Instance.EquipWeapon(auth,tokenId)
+
+	_,err = p.GetReceiptStatus(tx.Hash())
+
+	return err
+}
+
+func (p *Pvc) GetAvatar(tokenId *big.Int) (*Avatar, error){
+
+	avatar, err :=p.Instance.Avatar(nil,tokenId)
+	return &Avatar{
+		TokenId:tokenId,
+		Gene:avatar.Gene,
+		AvatarLevel:avatar.AvatarLevel,
+		Weaponed: avatar.Weaponed,
+	},err
 }
 
 func (p *Pvc) ExchangeHandler(exchangeEvent *LogExchange) error {
@@ -178,25 +250,6 @@ func (p *Pvc) CollectedSignaturesHandler(pbc *Pbc, collectedSignaturesEvent *Log
 	return err
 }
 
-func fillZero(src []byte, length int) []byte{
-	prefix:= make([]byte,length,length+len(src))
-	var buffer bytes.Buffer
-	buffer.Write(prefix)
-	buffer.Write(src)
-	dst:=buffer.Bytes()
-	return dst[len(dst)-length:]
-}
-
-//func (p *Pvc) Deploy(initialSupply *big.Int, requiredSignatures *big.Int, authorities []common.Address) (common.Address, error) {
-//	var err error
-//
-//	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
-//	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
-//
-//	address, _, _, err := privateSlot.DeployPrivateSlot(auth, p.Client, initialSupply, requiredSignatures, authorities)
-//	return address, err
-//}
-
 func (p *Pvc) EventReceiver(pbc *Pbc){
 	log.Println("start private watcher")
 	logs,eventError:=p.EventWatcher()
@@ -228,4 +281,44 @@ func (p *Pvc) EventReceiver(pbc *Pbc){
 		}
 	}
 }
+
+func fillZero(src []byte, length int) []byte{
+	prefix:= make([]byte,length,length+len(src))
+	var buffer bytes.Buffer
+	buffer.Write(prefix)
+	buffer.Write(src)
+	dst:=buffer.Bytes()
+	return dst[len(dst)-length:]
+}
+
+func (p *Pvc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
+	count := time.Second
+	for {
+		time.Sleep(privateChainTime)
+		receipt, err :=p.Client.TransactionReceipt(context.Background(),txHash)
+		if err==nil {
+			if receipt.Status==0{
+				return receipt.Status, errors.New("transaction time out")
+			}
+			return receipt.Status, nil
+		}
+		count +=time.Second
+		if count == privateChainTimeOut {
+			break
+		}
+	}
+	return 0, errors.New("Time out, can not get transaction status")
+}
+
+//func (p *Pvc) Deploy(initialSupply *big.Int, requiredSignatures *big.Int, authorities []common.Address) (common.Address, error) {
+//	var err error
+//
+//	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
+//	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
+//
+//	address, _, _, err := privateSlot.DeployPrivateSlot(auth, p.Client, initialSupply, requiredSignatures, authorities)
+//	return address, err
+//}
+
+
 

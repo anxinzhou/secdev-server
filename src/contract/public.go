@@ -1,6 +1,8 @@
 package contract
 
 import (
+	"context"
+	"errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -8,6 +10,7 @@ import (
 	"math/big"
 	"strings"
 	"sync/atomic"
+	"time"
 	"token/privateSlot"
 	"token/publicSlot"
 )
@@ -43,7 +46,9 @@ func (p *Pbc) AddGameMachine(rawMachine string) error {
 	machine := common.HexToAddress(rawMachine)
 	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
-	_, err = p.Instance.AddGameMachine(auth, machine)
+	tx, err := p.Instance.AddGameMachine(auth, machine)
+	_,err =p.GetReceiptStatus(tx.Hash())
+
 	return err
 }
 
@@ -52,7 +57,9 @@ func (p *Pbc) Pay(vs [] uint8, rs [][32]byte, ss[][32]byte, message []byte) erro
 	log.Println("public nonce:", nonce)
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
 	auth.GasLimit = p.txConfig.Gaslimit
-	_, err := p.Instance.Pay(auth, vs, rs, ss, message)
+	tx, err := p.Instance.Pay(auth, vs, rs, ss, message)
+	_,err =p.GetReceiptStatus(tx.Hash())
+
 	return err
 }
 
@@ -97,4 +104,23 @@ func (p *Pbc) EventReceiver(pvc *Pvc){
 			}
 		}
 	}
+}
+
+func (p *Pbc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
+	count := time.Second
+	for {
+		time.Sleep(privateChainTime)
+		receipt, err :=p.Client.TransactionReceipt(context.Background(),txHash)
+		if err==nil {
+			if receipt.Status==0{
+				return receipt.Status, errors.New("transaction time out")
+			}
+			return receipt.Status, nil
+		}
+		count +=time.Second
+		if count == privateChainTimeOut {
+			break
+		}
+	}
+	return 0, errors.New("Time out, can not get transaction status")
 }

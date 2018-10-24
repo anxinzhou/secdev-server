@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math/big"
+	"time"
 )
 
 const (
@@ -25,6 +26,20 @@ const (
 var (
 	logExchangeSigHash common.Hash
 )
+
+const (
+	privateChainTime = 1*time.Second
+	publicChainTime = 1*time.Second
+	privateChainTimeOut = 8*time.Second
+	publicChainTimeOut = 8*time.Second
+)
+
+type Avatar struct {
+	TokenId *big.Int `json:"tokenId"`
+	Gene        *big.Int `json:"gene"`
+	AvatarLevel *big.Int `json:"level"`
+	Weaponed    bool     `json:"weaponed"`
+}
 
 type LogExchange struct{
 	User common.Address

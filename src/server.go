@@ -4,6 +4,7 @@ package main
 import (
 	"contract"
 	"encoding/json"
+	"errors"
 	"fmt"
 	h "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -11,6 +12,7 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"strconv"
 )
 
 const (
@@ -146,7 +148,7 @@ func updateToken(w http.ResponseWriter, r *http.Request) {
 
 func transfer(w http.ResponseWriter, r *http.Request) {
 	log.Println("receive a transfer")
-	tx, _ :=ioutil.ReadAll(r.Body)
+	tx, _ := ioutil.ReadAll(r.Body)
 
 	var err error
 	vars := mux.Vars(r)
@@ -161,6 +163,118 @@ func transfer(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+func mint(w http.ResponseWriter, r *http.Request) {
+	log.Println("receive a mint")
+	tx, _ := ioutil.ReadAll(r.Body)
+
+	var err error
+	vars := mux.Vars(r)
+	tokenId, err := strconv.ParseInt(vars["tokenId"], 10, 64)
+
+	if err != nil {
+		log.Println("can not parse tokenId", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = pvc.Mint(string(tx), big.NewInt(tokenId))
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	avatar, err := pvc.GetAvatar(big.NewInt(tokenId))
+	if err!=nil {
+		log.Println("can not get avatar")
+	}
+
+	avatarWrapper, err:= json.Marshal(avatar)
+
+	if err!=nil {
+		log.Println("can not unmarshal json")
+	}
+
+	w.Write(avatarWrapper)
+
+}
+
+func getNFT(w http.ResponseWriter, r *http.Request) {
+	log.Println("receive get nft")
+
+	var err error
+	vars := mux.Vars(r)
+	user := vars["user"]
+
+	ownedAvatar, err := pvc.OwnedTokens(user)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if ownedAvatar.Int64()==0 {
+		log.Println("user do not own avatar")
+		http.Error(w,errors.New("you don not have an avatar").Error(), http.StatusNotFound)
+		return
+	}
+
+	avatar, err := pvc.GetAvatar(ownedAvatar)
+	if err!=nil {
+		log.Println("can not get avatar")
+	}
+
+	avatarWrapper, err:= json.Marshal(avatar)
+
+	if err!=nil {
+		log.Println("can not unmarshal json")
+	}
+
+	w.Write(avatarWrapper)
+}
+
+func upgradeNFT(w http.ResponseWriter, r *http.Request){
+	log.Println("receive a upgradeNFT")
+
+	var err error
+	vars := mux.Vars(r)
+	tokenId, err := strconv.ParseInt(vars["tokenId"], 10, 64)
+
+	err = pvc.Upgrade(big.NewInt(tokenId))
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+}
+
+func equipWeapon(w http.ResponseWriter, r *http.Request){
+	log.Println("receive buy Weapon")
+	user, _ := ioutil.ReadAll(r.Body)
+
+	var err error
+	var amount int64 = 2
+	err = pvc.Consume(string(user),big.NewInt(amount))
+	if err!=nil {
+		log.Println("buy weapon fail maybe not enough money")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	vars := mux.Vars(r)
+	tokenId, err := strconv.ParseInt(vars["tokenId"], 10, 64)
+
+	err = pvc.EquipWeapon(big.NewInt(tokenId))
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		pvc.Reward(string(user),big.NewInt(amount))
+	}
+}
+
+func nftTransfer(w http.ResponseWriter, r *http.Request) {
+
 }
 
 func init() {
@@ -192,7 +306,12 @@ func main() {
 	r.HandleFunc("/api/v1/{chain:public|private}/nonce/{user}", getNonce).Methods("GET")
 	r.HandleFunc("/api/v1/{chain:public|private}/ether/{user}", getEther).Methods("GET")
 	r.HandleFunc("/api/v1/private/tokens/{user}", updateToken).Methods("PUT")
-	r.HandleFunc("/api/v1/{chain:public|private}/transfer", transfer).Methods("PUT")
+	r.HandleFunc("/api/v1/{chain:public|private}/tokens/transfer", transfer).Methods("PUT")
+	r.HandleFunc("/api/v1/{chain:public|private}/nft/transfer",nftTransfer).Methods("PUT")
+	r.HandleFunc("/api/v1/nft/{tokenId}", mint).Methods("POST")
+	r.HandleFunc("/api/v1/nft/{user}", getNFT).Methods("GET")
+	r.HandleFunc("/api/v1/nft/{tokenId}/level", upgradeNFT).Methods("PUT")
+	r.HandleFunc("/api/v1/nft/{tokenId}/weapon", equipWeapon).Methods("PUT")
 
 	fmt.Println("Running http server")
 	http.ListenAndServe(":4000",
