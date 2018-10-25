@@ -1,0 +1,17 @@
+pkg
+github.com
+.idea
+static-nodes.json
+node_modules
+package-lock.json
+bin
+geth
+*.xml
+.tern-project
+tmp.go
+golang.org
+*.abi
+*.bin
+*Abi
+*Bin
+

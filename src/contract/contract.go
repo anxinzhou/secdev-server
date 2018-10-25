@@ -25,13 +25,14 @@ const (
 
 var (
 	logExchangeSigHash common.Hash
+	logExchangeNFTHash common.Hash
 )
 
 const (
 	privateChainTime = 1*time.Second
 	publicChainTime = 1*time.Second
-	privateChainTimeOut = 8*time.Second
-	publicChainTimeOut = 8*time.Second
+	privateChainTimeOut = 10*time.Second
+	publicChainTimeOut = 10*time.Second
 )
 
 type Avatar struct {
@@ -39,6 +40,7 @@ type Avatar struct {
 	Gene        *big.Int `json:"gene"`
 	AvatarLevel *big.Int `json:"level"`
 	Weaponed    bool     `json:"weaponed"`
+	Armored bool  `json:"armored"`
 }
 
 type LogExchange struct{
@@ -46,6 +48,14 @@ type LogExchange struct{
 	Amount *big.Int
 
 	TxHash common.Hash
+}
+
+type LogExchangeNFT struct {
+	TokenID *big.Int
+	Owner common.Address
+	Gene *big.Int
+	AvatarLevel *big.Int
+	Weaponed bool
 }
 
 type TransactionConfig struct {
@@ -64,6 +74,9 @@ type Contract struct {
 func init(){
 	exchangeSignature :=[]byte("Exchange(address,uint256)")
 	logExchangeSigHash = crypto.Keccak256Hash(exchangeSignature)
+
+	exchangeNFTSignature:= []byte("ExchangeNFT(uint256,address,uint256,uint256,bool)")
+	logExchangeNFTHash = crypto.Keccak256Hash(exchangeNFTSignature)
 }
 
 func NewAuth(key *ecdsa.PrivateKey, nonce uint64, value * big.Int) *bind.TransactOpts{
@@ -110,12 +123,12 @@ func (c *Contract) Close() error {
 	return nil
 }
 
-func (c *Contract) SendTransaction(rawTx string) error {
+func (c *Contract) SendTransaction(rawTx string) (*types.Transaction,error) {
 	rawTxBytes, err := hex.DecodeString(rawTx)
 	tx := new(types.Transaction)
 	rlp.DecodeBytes(rawTxBytes, &tx)
 	err = c.Client.SendTransaction(context.Background(), tx)
-	return err
+	return tx,err
 }
 
 func (c *Contract) GetEther(rawAccount string) (*big.Int, error) {

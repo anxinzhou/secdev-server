@@ -125,6 +125,10 @@ func (p *Pvc) SubmitSignature(message []byte, signature []byte) error {
 	auth.GasLimit = p.txConfig.Gaslimit
 
 	tx, err:= p.Instance.SubmitSignature(auth,message,signature)
+
+	if err!=nil {
+		log.Println(err.Error())
+	}
 	_,err =p.GetReceiptStatus(tx.Hash())
 
 	return err
@@ -167,12 +171,32 @@ func (p *Pvc) Upgrade (tokenId *big.Int) error{
 	return err
 }
 
-func (p *Pvc) EquipWeapon (tokenId *big.Int) error {
+func (p *Pvc) EquipWeapon (rawAddress string,tokenId *big.Int) error {
+	address := common.HexToAddress(rawAddress)
 	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
 	auth.GasLimit = p.txConfig.Gaslimit
 
-	tx,err :=p.Instance.EquipWeapon(auth,tokenId)
+	tx,err :=p.Instance.EquipWeapon(auth,tokenId,address)
+
+	_,err = p.GetReceiptStatus(tx.Hash())
+
+	return err
+}
+
+func (p*Pvc) OwnerOf(tokenId *big.Int) common.Address{
+	owner, _:=p.Instance.OwnerOf(nil, tokenId)
+	return owner
+}
+
+func (p *Pvc) EquipArmor(rawAddress string, tokenId *big.Int) error {
+	address := common.HexToAddress(rawAddress)
+
+	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
+	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
+	auth.GasLimit = p.txConfig.Gaslimit
+
+	tx,err :=p.Instance.EquipArmor(auth,tokenId,address)
 
 	_,err = p.GetReceiptStatus(tx.Hash())
 
@@ -187,7 +211,20 @@ func (p *Pvc) GetAvatar(tokenId *big.Int) (*Avatar, error){
 		Gene:avatar.Gene,
 		AvatarLevel:avatar.AvatarLevel,
 		Weaponed: avatar.Weaponed,
+		Armored: avatar.Armored,
 	},err
+}
+
+func (p *Pvc) PayNFT(tokenID *big.Int, address common.Address) error {
+	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
+	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
+	auth.GasLimit = p.txConfig.Gaslimit
+
+	tx, err:= p.Instance.PayNFT(auth, tokenID, address)
+
+	_, err = p.GetReceiptStatus(tx.Hash())
+
+	return err
 }
 
 func (p *Pvc) ExchangeHandler(exchangeEvent *LogExchange) error {
@@ -201,8 +238,11 @@ func (p *Pvc) ExchangeHandler(exchangeEvent *LogExchange) error {
 	hash:= crypto.Keccak256Hash(message)
 	signature, err:=crypto.Sign(hash.Bytes(), p.txConfig.key.PrivateKey)
 	log.Println("signature:",signature)
-
-	p.SubmitSignature(message, signature)
+	log.Println(len(message),len(signature))
+	err = p.SubmitSignature(message, signature)
+	if err!=nil {
+		log.Println(err.Error())
+	}
 
 	return err
 }
@@ -250,6 +290,16 @@ func (p *Pvc) CollectedSignaturesHandler(pbc *Pbc, collectedSignaturesEvent *Log
 	return err
 }
 
+func (p *Pvc) ExchangeNFTHandler(pbc *Pbc, nft *LogExchangeNFT){
+	log.Println("receive an exchangeNFT")
+	err:= pbc.PayNFT(nft.TokenID,nft.Owner)
+	log.Println(nft.TokenID.Uint64(), nft.Owner.String())
+	if err!=nil {
+		log.Println("pay nft fail in privatechain", err.Error())
+		p.PayNFT(nft.TokenID,nft.Owner)
+	}
+}
+
 func (p *Pvc) EventReceiver(pbc *Pbc){
 	log.Println("start private watcher")
 	logs,eventError:=p.EventWatcher()
@@ -267,16 +317,22 @@ func (p *Pvc) EventReceiver(pbc *Pbc){
 		case vLog := <-logs:
 			switch vLog.Topics[0].Hex() {
 			case logExchangeSigHash.Hex():
+
 				var exchangeEvent LogExchange
-				log.Println(len(vLog.Data))
-				log.Println(vLog.Data)
 				contractAbi.Unpack(&exchangeEvent, "Exchange", vLog.Data)
 				exchangeEvent.TxHash = vLog.TxHash
 				go p.ExchangeHandler(&exchangeEvent)
+
 			case logCollectedSignaturesHash.Hex():
+
 				var collectedSignaturesEvent LogCollectedSignatures
 				contractAbi.Unpack(&collectedSignaturesEvent, "CollectedSignatures", vLog.Data)
 				go p.CollectedSignaturesHandler(pbc, &collectedSignaturesEvent)
+
+			case logExchangeNFTHash.Hex():
+				var exchangeNFTEvent LogExchangeNFT
+				contractAbi.Unpack(&exchangeNFTEvent, "ExchangeNFT",vLog.Data)
+				go p.ExchangeNFTHandler(pbc,&exchangeNFTEvent)
 			}
 		}
 	}
@@ -291,6 +347,12 @@ func fillZero(src []byte, length int) []byte{
 	return dst[len(dst)-length:]
 }
 
+func (p *Pvc) SendTransaction(rawTx string) error {
+	tx,err:= p.Contract.SendTransaction(rawTx)
+	_, err = p.GetReceiptStatus(tx.Hash())
+	return err
+}
+
 func (p *Pvc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
 	count := time.Second
 	for {
@@ -298,7 +360,7 @@ func (p *Pvc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
 		receipt, err :=p.Client.TransactionReceipt(context.Background(),txHash)
 		if err==nil {
 			if receipt.Status==0{
-				return receipt.Status, errors.New("transaction time out")
+				return receipt.Status, errors.New("transaction revert")
 			}
 			return receipt.Status, nil
 		}

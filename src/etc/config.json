@@ -3,12 +3,12 @@
         "port": "ws://localhost:8550",
         "keystore": "src/etc/keystore/zx",
         "password": "321",
-        "address": "0x313A934B20325A4A3958162caf24a27DE4897701"
+        "address": "0x042f5149eCACBf6A83865eaF07A863c85aA4890B"
     },
     "private": {
         "port": "ws://localhost:8650",
         "keystore": "src/etc/keystore/zx",
         "password": "321",
-        "address": "0xC9eec83430a1a7d69bFA56ec5CED58ad4878Ed89"
+        "address": "0x3Fd992e9cb24e99085aFA04daEfE1589e19CB237"
     }
 }

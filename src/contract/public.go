@@ -11,7 +11,6 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
-	"token/privateSlot"
 	"token/publicSlot"
 )
 
@@ -63,6 +62,35 @@ func (p *Pbc) Pay(vs [] uint8, rs [][32]byte, ss[][32]byte, message []byte) erro
 	return err
 }
 
+func (p *Pbc) PayNFT(tokenID *big.Int, address common.Address) error {
+	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
+	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
+	auth.GasLimit = p.txConfig.Gaslimit
+
+	tx, err:= p.Instance.PayNFT(auth, tokenID, address)
+
+	_, err = p.GetReceiptStatus(tx.Hash())
+
+	return err
+}
+
+func (p *Pbc) SendTransaction(rawTx string) error {
+	tx,err:= p.Contract.SendTransaction(rawTx)
+	_, err = p.GetReceiptStatus(tx.Hash())
+	return err
+}
+
+func (p *Pbc) ExchangeNFTHandler(pvc *Pvc, nft *LogExchangeNFT){
+	log.Println("receive an exchangeNFT")
+	err:= pvc.PayNFT(nft.TokenID,nft.Owner)
+	log.Println(nft.TokenID.Uint64(), nft.Owner.String())
+	if err!=nil {
+		log.Println("pay nft fail in privatechain", err.Error())
+		p.PayNFT(nft.TokenID,nft.Owner)
+	}
+
+}
+
 //func (p *Pbc) Deploy(initialSupply *big.Int, requiredSignatures *big.Int, authorities []common.Address) (common.Address, error) {
 //	var err error
 //
@@ -74,14 +102,19 @@ func (p *Pbc) Pay(vs [] uint8, rs [][32]byte, ss[][32]byte, message []byte) erro
 //}
 
 func (p *Pbc) ExchangeHandler(pvc *Pvc, exchangeEvent *LogExchange){
-	log.Println("receive an exchange event from private chain")
-	pvc.Pay(exchangeEvent.User, exchangeEvent.Amount, exchangeEvent.TxHash)
+	log.Println("receive an exchange event from public chain")
+	log.Println(exchangeEvent.User.String())
+	log.Println(exchangeEvent.Amount.Uint64())
+	err:=pvc.Pay(exchangeEvent.User, exchangeEvent.Amount, exchangeEvent.TxHash)
+	if err!=nil {
+		log.Println(err.Error())
+	}
 }
 
 func (p *Pbc) EventReceiver(pvc *Pvc){
 	logs,eventError:=p.EventWatcher()
 
-	contractAbi, err:= abi.JSON(strings.NewReader(string(privateSlot.PrivateSlotABI)))
+	contractAbi, err:= abi.JSON(strings.NewReader(string(publicSlot.PublicSlotABI)))
 	if err !=nil{
 		log.Fatal(err.Error())
 	}
@@ -101,6 +134,10 @@ func (p *Pbc) EventReceiver(pvc *Pvc){
 				log.Println(vLog.TxHash.String())
 				exchangeEvent.TxHash = vLog.TxHash
 				go p.ExchangeHandler(pvc, &exchangeEvent)
+			case logExchangeNFTHash.Hex():
+				var exchangeNFTEvent LogExchangeNFT
+				contractAbi.Unpack(&exchangeNFTEvent, "ExchangeNFT",vLog.Data)
+				go p.ExchangeNFTHandler(pvc,&exchangeNFTEvent)
 			}
 		}
 	}
@@ -113,7 +150,7 @@ func (p *Pbc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
 		receipt, err :=p.Client.TransactionReceipt(context.Background(),txHash)
 		if err==nil {
 			if receipt.Status==0{
-				return receipt.Status, errors.New("transaction time out")
+				return receipt.Status, errors.New("transaction revert")
 			}
 			return receipt.Status, nil
 		}

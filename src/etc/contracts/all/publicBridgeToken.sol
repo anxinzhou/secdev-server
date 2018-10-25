@@ -219,6 +219,7 @@ contract GameToken is BasicToken {
       uint256 gene;
       uint256 avatarLevel;
       bool weaponed;
+      bool armored;
     }
 
     uint constant internal MAXLEVEL= 2;
@@ -273,12 +274,18 @@ contract GameToken is BasicToken {
     function upgrade(uint256 tokenId) public {
         require(avatar[tokenId].avatarLevel < MAXLEVEL);
         avatar[tokenId].avatarLevel +=1;
-        avatar[tokenId].weaponed = false;
     }
 
-    function equipWeapon(uint256 tokenId) public {
+    function equipWeapon(uint256 tokenId, address user) public {
+        require(_avatarOwner[tokenId]==user);
         require(!avatar[tokenId].weaponed);
         avatar[tokenId].weaponed = true;
+    }
+
+    function equipArmor(uint256 tokenId, address user) public {
+        require(_avatarOwner[tokenId]==user);
+        require(!avatar[tokenId].armored);
+        avatar[tokenId].armored = true;
     }
 
     function addGameMachine(address machine) public onlyOwner() {
@@ -310,6 +317,7 @@ contract BridgeToken is GameToken{
 
     event Exchange(address user, uint amount);
     event Pay(address user, uint amount ,bytes32 transactionHash);
+    event ExchangeNFT(uint256 tokenID, address owner, uint256 gene, uint256 avatarLevel, bool weaponed);
 
     constructor (uint256 totalSupply,
                 string tokenName,
@@ -354,9 +362,22 @@ contract BridgeToken is GameToken{
         requiredSignatures = newRequiredSignatures;
     }
 
-    function exchange(uint amount) public{
-        _transfer(msg.sender, _owner, amount);
-        emit Exchange(msg.sender, amount);
+    function exchange(address user,uint amount) public{
+        _transfer(user, _owner, amount);
+        emit Exchange(user, amount);
+    }
+
+    function exchangeNFT (uint256 tokenID) public {
+        address avatarOwner = _avatarOwner[tokenID];
+        require(msg.sender == avatarOwner);
+        _ownedAvatars[avatarOwner]=0;
+        _avatarOwner[tokenID]=0;
+        emit ExchangeNFT(tokenID,avatarOwner,avatar[tokenID].gene,avatar[tokenID].avatarLevel,avatar[tokenID].weaponed);
+    }
+
+    function payNFT (uint256 tokenID, address avatarOwner) public {
+        _ownedAvatars[avatarOwner]=tokenID;
+        _avatarOwner[tokenID]=avatarOwner;
     }
 
     // vs, rs, ss is used for ecrecover(a built-in function of solidity)
@@ -366,10 +387,10 @@ contract BridgeToken is GameToken{
     // 32bytes -- bytes32 transaction hash
     // 20bytes -- address recipient address
     // 32bytes -- uint payment value
-    function pay(uint8 []vs, bytes32 []rs, bytes32 []ss, bytes message) public {
+    function pay(uint8 []vs, bytes32 []rs, bytes32 []ss, bytes message) public{
         require(message.length == 84);
 
-        //check that at least `requiredSignatures` `authorities` have signed `message`
+        // check that at least `requiredSignatures` `authorities` have signed `message`
         //require(hasEnoughValidSignatures(message, vs, rs, ss));
 
         address recipient = Message.getRecipients(message);
@@ -380,6 +401,7 @@ contract BridgeToken is GameToken{
 
         payed[hash] = true;
         _transfer(_owner, recipient, value);
+
         emit Pay(recipient, value, hash);
     }
 }

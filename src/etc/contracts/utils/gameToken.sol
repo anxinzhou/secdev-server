@@ -15,6 +15,7 @@ contract GameToken is BasicToken {
       uint256 gene;
       uint256 avatarLevel;
       bool weaponed;
+      bool armored;
     }
 
     uint constant internal MAXLEVEL= 2;
@@ -69,12 +70,18 @@ contract GameToken is BasicToken {
     function upgrade(uint256 tokenId) public {
         require(avatar[tokenId].avatarLevel < MAXLEVEL);
         avatar[tokenId].avatarLevel +=1;
-        avatar[tokenId].weaponed = false;
     }
 
-    function equipWeapon(uint256 tokenId) public {
+    function equipWeapon(uint256 tokenId, address user) public {
+        require(_avatarOwner[tokenId]==user);
         require(!avatar[tokenId].weaponed);
         avatar[tokenId].weaponed = true;
+    }
+
+    function equipArmor(uint256 tokenId, address user) public {
+        require(_avatarOwner[tokenId]==user);
+        require(!avatar[tokenId].armored);
+        avatar[tokenId].armored = true;
     }
 
     function addGameMachine(address machine) public onlyOwner() {

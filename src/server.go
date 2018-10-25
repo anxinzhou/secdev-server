@@ -256,16 +256,26 @@ func equipWeapon(w http.ResponseWriter, r *http.Request){
 
 	var err error
 	var amount int64 = 2
+	vars := mux.Vars(r)
+	tokenId, err := strconv.ParseInt(vars["tokenId"], 10, 64)
+
+	//owner := hex.EncodeToString(pvc.OwnerOf(big.NewInt(tokenId)).Bytes())
+	//if owner != string(user) {
+	//	log.Println("wrong owner")
+	//	http.Error(w, errors.New("wrong  owner").Error(), http.StatusInternalServerError)
+	//	return
+	//}
+
 	err = pvc.Consume(string(user),big.NewInt(amount))
+
 	if err!=nil {
 		log.Println("buy weapon fail maybe not enough money")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	vars := mux.Vars(r)
-	tokenId, err := strconv.ParseInt(vars["tokenId"], 10, 64)
 
-	err = pvc.EquipWeapon(big.NewInt(tokenId))
+
+	err = pvc.EquipWeapon(string(user),big.NewInt(tokenId))
 	if err != nil {
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -273,7 +283,35 @@ func equipWeapon(w http.ResponseWriter, r *http.Request){
 	}
 }
 
-func nftTransfer(w http.ResponseWriter, r *http.Request) {
+func equipArmor(w http.ResponseWriter, r *http.Request) {
+	log.Println("receive buy Armor")
+	user, _ := ioutil.ReadAll(r.Body)
+
+	var err error
+	var amount int64 = 2
+	vars := mux.Vars(r)
+	tokenId, err := strconv.ParseInt(vars["tokenId"], 10, 64)
+
+	//owner := hex.EncodeToString(pvc.OwnerOf(big.NewInt(tokenId)).Bytes())
+	//if owner != string(user) {
+	//	log.Println("wrong owner")
+	//	http.Error(w, errors.New("wrong  owner").Error(), http.StatusInternalServerError)
+	//	return
+	//}
+
+	err = pvc.Consume(string(user),big.NewInt(amount))
+	if err!=nil {
+		log.Println("buy armor fail maybe not enough money")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = pvc.EquipArmor(string(user),big.NewInt(tokenId))
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		pvc.Reward(string(user),big.NewInt(amount))
+	}
 
 }
 
@@ -306,12 +344,12 @@ func main() {
 	r.HandleFunc("/api/v1/{chain:public|private}/nonce/{user}", getNonce).Methods("GET")
 	r.HandleFunc("/api/v1/{chain:public|private}/ether/{user}", getEther).Methods("GET")
 	r.HandleFunc("/api/v1/private/tokens/{user}", updateToken).Methods("PUT")
-	r.HandleFunc("/api/v1/{chain:public|private}/tokens/transfer", transfer).Methods("PUT")
-	r.HandleFunc("/api/v1/{chain:public|private}/nft/transfer",nftTransfer).Methods("PUT")
+	r.HandleFunc("/api/v1/{chain:public|private}/transfer", transfer).Methods("PUT")
 	r.HandleFunc("/api/v1/nft/{tokenId}", mint).Methods("POST")
 	r.HandleFunc("/api/v1/nft/{user}", getNFT).Methods("GET")
 	r.HandleFunc("/api/v1/nft/{tokenId}/level", upgradeNFT).Methods("PUT")
 	r.HandleFunc("/api/v1/nft/{tokenId}/weapon", equipWeapon).Methods("PUT")
+	r.HandleFunc("/api/v1/nft/{tokenId}/armor", equipArmor).Methods("PUT")
 
 	fmt.Println("Running http server")
 	http.ListenAndServe(":4000",
