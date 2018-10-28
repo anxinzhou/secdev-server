@@ -3,10 +3,13 @@ package contract
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/goware/disque"
 	"log"
 	"math/big"
 	"strings"
@@ -48,7 +51,17 @@ func NewPvc(port string, keystore string, password string, contractAdd string) *
 	pvc.Connect(port)
 	pvc.LoadKey(keystore, password)
 	pvc.LoadContract(contractAdd)
+	pvc.LoadABI()
 	return pvc
+}
+
+func (p* Pvc) LoadABI() {
+	var err error
+	p.ABI= new(abi.ABI)
+	*p.ABI, err = abi.JSON(strings.NewReader(string(privateSlot.PrivateSlotABI)))
+	if err !=nil{
+		log.Fatal(err.Error())
+	}
 }
 
 func (p *Pvc) LoadContract(rawAddress string) {
@@ -101,7 +114,9 @@ func (p *Pvc) Reward(rawAddress string, amount *big.Int) error {
 	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
 	tx, err := p.Instance.Reward(auth, address, amount)
-
+	if err!=nil {
+		log.Fatal(err.Error(),"reward fail")
+	}
 
 	_,err =p.GetReceiptStatus(tx.Hash())
 
@@ -227,32 +242,29 @@ func (p *Pvc) PayNFT(tokenID *big.Int, address common.Address) error {
 	return err
 }
 
-func (p *Pvc) ExchangeHandler(exchangeEvent *LogExchange) error {
+func (p *Pvc) ExchangeHandler(jobs * disque.Pool,exchangeEvent *LogExchange) {
 	log.Println("receive an exchange event from private chain")
-	log.Println(exchangeEvent.User.String())
-	log.Println(exchangeEvent.Amount.Uint64())
+
 	message := bytes.Join([][]byte{ exchangeEvent.TxHash[:],
 		exchangeEvent.User[:],
 		fillZero(exchangeEvent.Amount.Bytes(), 32)}, []byte(""))
 	//hash:= crypto.Keccak256Hash([]byte("\x19Ethereum Signed Message:\n"),[]byte(strconv.Itoa(len(message))),message)
 	hash:= crypto.Keccak256Hash(message)
-	signature, err:=crypto.Sign(hash.Bytes(), p.txConfig.key.PrivateKey)
-	log.Println("signature:",signature)
-	log.Println(len(message),len(signature))
-	err = p.SubmitSignature(message, signature)
-	if err!=nil {
-		log.Println(err.Error())
-	}
+	signature, _:=crypto.Sign(hash.Bytes(), p.txConfig.key.PrivateKey)
 
-	return err
+	input, _:= p.ABI.Pack("submitSignature",message, signature)
+	tx:=types.NewTransaction( 0, p.Address, big.NewInt(0), p.txConfig.Gaslimit, p.txConfig.GasPrice, input)
+	txWrapper, _:= tx.MarshalJSON()
+	jobs.Add(string(txWrapper), submitSignatureQueue)
+
 }
 
-func (p *Pvc) CollectedSignaturesHandler(pbc *Pbc, collectedSignaturesEvent *LogCollectedSignatures) error{
+func (p *Pvc) CollectedSignaturesHandler(pbc *Pbc,jobs * disque.Pool, collectedSignaturesEvent *LogCollectedSignatures) {
 	log.Println("receive an collectedSignatures event from private chain")
 
 	if collectedSignaturesEvent.AuthorityMachineResponsibleForRelay != p.txConfig.key.Address {
 		log.Println("Collected signature should be submited by", collectedSignaturesEvent.AuthorityMachineResponsibleForRelay)
-		return nil
+		return
 	}
 
 	message, _ := p.Instance.Message(nil, collectedSignaturesEvent.MessageHash)
@@ -283,31 +295,33 @@ func (p *Pvc) CollectedSignaturesHandler(pbc *Pbc, collectedSignaturesEvent *Log
 		ss=append(ss,s)
 	}
 
-	err := pbc.Pay(vs, rs, ss, message)
+	input, _:= pbc.ABI.Pack("pay",vs, rs, ss, message)
+	tx:=types.NewTransaction( 0, pbc.Address, big.NewInt(0), pbc.txConfig.Gaslimit, pbc.txConfig.GasPrice, input)
+	txWrapper, _:= tx.MarshalJSON()
+	jobs.Add(string(txWrapper), pbcPayQueue)
+}
+
+func (p *Pvc) ExchangeNFTHandler(pbc *Pbc,jobs *disque.Pool,nft *LogExchangeNFT){
+
+	// pack method to raw byte
+	input, err := pbc.ABI.Pack("payNFT",nft.TokenID,nft.Owner)
+
+	log.Println(hex.EncodeToString(input))
 	if err!=nil {
 		log.Println(err.Error())
+		log.Println("can not unpack from payNFT")
 	}
-	return err
+
+	//nonce:= atomic.AddUint64(&pbc.txConfig.nonce, 1)
+	tx:=types.NewTransaction( 0, pbc.Address, big.NewInt(0), pbc.txConfig.Gaslimit, pbc.txConfig.GasPrice, input)
+	txWrapper, err:= tx.MarshalJSON()
+	jobs.Add(string(txWrapper),pbcPayNFTQueue)
+
 }
 
-func (p *Pvc) ExchangeNFTHandler(pbc *Pbc, nft *LogExchangeNFT){
-	log.Println("receive an exchangeNFT")
-	err:= pbc.PayNFT(nft.TokenID,nft.Owner)
-	log.Println(nft.TokenID.Uint64(), nft.Owner.String())
-	if err!=nil {
-		log.Println("pay nft fail in privatechain", err.Error())
-		p.PayNFT(nft.TokenID,nft.Owner)
-	}
-}
-
-func (p *Pvc) EventReceiver(pbc *Pbc){
+func (p *Pvc) EventReceiver(pbc *Pbc, jobs *disque.Pool){
 	log.Println("start private watcher")
 	logs,eventError:=p.EventWatcher()
-
-	contractAbi, err:= abi.JSON(strings.NewReader(string(privateSlot.PrivateSlotABI)))
-	if err !=nil{
-		log.Fatal(err.Error())
-	}
 
 	log.Println("Waiting for an event")
 	for {
@@ -319,20 +333,20 @@ func (p *Pvc) EventReceiver(pbc *Pbc){
 			case logExchangeSigHash.Hex():
 
 				var exchangeEvent LogExchange
-				contractAbi.Unpack(&exchangeEvent, "Exchange", vLog.Data)
+				p.ABI.Unpack(&exchangeEvent, "Exchange", vLog.Data)
 				exchangeEvent.TxHash = vLog.TxHash
-				go p.ExchangeHandler(&exchangeEvent)
+				go p.ExchangeHandler(jobs,&exchangeEvent)
 
 			case logCollectedSignaturesHash.Hex():
 
 				var collectedSignaturesEvent LogCollectedSignatures
-				contractAbi.Unpack(&collectedSignaturesEvent, "CollectedSignatures", vLog.Data)
-				go p.CollectedSignaturesHandler(pbc, &collectedSignaturesEvent)
+				p.ABI.Unpack(&collectedSignaturesEvent, "CollectedSignatures", vLog.Data)
+				go p.CollectedSignaturesHandler(pbc, jobs,&collectedSignaturesEvent)
 
 			case logExchangeNFTHash.Hex():
 				var exchangeNFTEvent LogExchangeNFT
-				contractAbi.Unpack(&exchangeNFTEvent, "ExchangeNFT",vLog.Data)
-				go p.ExchangeNFTHandler(pbc,&exchangeNFTEvent)
+				p.ABI.Unpack(&exchangeNFTEvent, "ExchangeNFT",vLog.Data)
+				go p.ExchangeNFTHandler(pbc, jobs, &exchangeNFTEvent)
 			}
 		}
 	}
@@ -381,6 +395,4 @@ func (p *Pvc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
 //	address, _, _, err := privateSlot.DeployPrivateSlot(auth, p.Client, initialSupply, requiredSignatures, authorities)
 //	return address, err
 //}
-
-
 

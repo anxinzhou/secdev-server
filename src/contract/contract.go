@@ -4,23 +4,24 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/goware/disque"
 	"io/ioutil"
 	"log"
 	"math/big"
+	"sync/atomic"
 	"time"
-)
-
-const (
-	GasLimit = 3000000
 )
 
 var (
@@ -33,7 +34,28 @@ const (
 	publicChainTime = 1*time.Second
 	privateChainTimeOut = 10*time.Second
 	publicChainTimeOut = 10*time.Second
+	GasLimit = 3000000
+
+	pbcPayNFTQueue = "pbcNFTPay"
+	pbcPayQueue = "pbcPay"
+
+	pvcPayNFTQueue = "pvcNFTPay"
+	pvcPayQueue ="pvcPay"
+	submitSignatureQueue ="submitSignature"
 )
+
+type txdata struct {
+	AccountNonce hexutil.Uint64  `json:"nonce"    gencodec:"required"`
+	Price        *hexutil.Big    `json:"gasPrice" gencodec:"required"`
+	GasLimit     hexutil.Uint64  `json:"gas"      gencodec:"required"`
+	Recipient    *common.Address `json:"to"       rlp:"nil"`
+	Amount       *hexutil.Big    `json:"value"    gencodec:"required"`
+	Payload      hexutil.Bytes   `json:"input"    gencodec:"required"`
+	V            *hexutil.Big    `json:"v" gencodec:"required"`
+	R            *hexutil.Big    `json:"r" gencodec:"required"`
+	S            *hexutil.Big    `json:"s" gencodec:"required"`
+	Hash         *common.Hash    `json:"hash" rlp:"-"`
+}
 
 type Avatar struct {
 	TokenId *big.Int `json:"tokenId"`
@@ -69,9 +91,11 @@ type Contract struct {
 	Client *ethclient.Client
 	txConfig *TransactionConfig
 	Address common.Address
+	ABI *abi.ABI
 }
 
 func init(){
+
 	exchangeSignature :=[]byte("Exchange(address,uint256)")
 	logExchangeSigHash = crypto.Keccak256Hash(exchangeSignature)
 
@@ -164,4 +188,73 @@ func (c *Contract) EventWatcher() (chan types.Log, <-chan error) {
 	}
 
 	return logs, sub.Err()
+}
+
+func (c *Contract) ProcessJob(job *disque.Job) error {
+
+	log.Println("process ", job.Queue)
+
+	txWrapper := []byte(job.Data)
+	var data txdata
+	json.Unmarshal(txWrapper,&data)
+
+
+	var nonce uint64
+	nonce = atomic.AddUint64(&c.txConfig.nonce, 1)
+	data.AccountNonce = hexutil.Uint64(nonce-1)
+	dataByte, err:=json.Marshal(&data)
+
+	tx := new(types.Transaction)
+	tx.UnmarshalJSON(dataByte)
+
+	chainID, err := c.Client.NetworkID(context.Background())
+	signedTx,err:= types.SignTx(tx, types.NewEIP155Signer(chainID), c.txConfig.key.PrivateKey)
+	err = c.Client.SendTransaction(context.Background(), signedTx)
+	if err!=nil {
+		log.Fatalln(err.Error(), "send transaction fail")
+	}
+	return err
+}
+
+func Consumer(jobs *disque.Pool, pvc *Pvc, pbc *Pbc){
+	for {
+		job,_:=jobs.Get(pbcPayQueue,pvcPayQueue,pbcPayNFTQueue,pvcPayNFTQueue,submitSignatureQueue)
+		switch job.Queue {
+		case pbcPayQueue:
+			err := pbc.ProcessJob(job)
+			if err != nil {
+				jobs.Nack(job)
+			} else {
+				jobs.Ack(job)
+			}
+		case pbcPayNFTQueue:
+			err := pbc.ProcessJob(job)
+			if err != nil {
+				jobs.Nack(job)
+			} else {
+				jobs.Ack(job)
+			}
+		case submitSignatureQueue:
+			err := pvc.ProcessJob(job)
+			if err != nil {
+				jobs.Nack(job)
+			} else {
+				jobs.Ack(job)
+			}
+		case pvcPayQueue:
+			err := pvc.ProcessJob(job)
+			if err != nil {
+				jobs.Nack(job)
+			} else {
+				jobs.Ack(job)
+			}
+		case pvcPayNFTQueue:
+			err := pvc.ProcessJob(job)
+			if err != nil {
+				jobs.Nack(job)
+			} else {
+				jobs.Ack(job)
+			}
+		}
+	}
 }

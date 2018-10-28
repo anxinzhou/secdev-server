@@ -6,6 +6,8 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/goware/disque"
 	"log"
 	"math/big"
 	"strings"
@@ -25,7 +27,17 @@ func NewPbc(port string, keystore string, password string, contractAdd string) *
 	pbc.Connect(port)
 	pbc.LoadKey(keystore, password)
 	pbc.LoadContract(contractAdd)
+	pbc.LoadABI()
 	return pbc
+}
+
+func (p* Pbc) LoadABI() {
+	var err error
+	p.ABI = new(abi.ABI)
+	*p.ABI, err = abi.JSON(strings.NewReader(string(publicSlot.PublicSlotABI)))
+	if err !=nil{
+		log.Fatal(err.Error())
+	}
 }
 
 func (p *Pbc) LoadContract(rawAddress string) {
@@ -57,6 +69,9 @@ func (p *Pbc) Pay(vs [] uint8, rs [][32]byte, ss[][32]byte, message []byte) erro
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
 	auth.GasLimit = p.txConfig.Gaslimit
 	tx, err := p.Instance.Pay(auth, vs, rs, ss, message)
+	if err!=nil {
+		log.Fatal(err.Error() ," pay in public fail")
+	}
 	_,err =p.GetReceiptStatus(tx.Hash())
 
 	return err
@@ -80,45 +95,36 @@ func (p *Pbc) SendTransaction(rawTx string) error {
 	return err
 }
 
-func (p *Pbc) ExchangeNFTHandler(pvc *Pvc, nft *LogExchangeNFT){
-	log.Println("receive an exchangeNFT")
-	err:= pvc.PayNFT(nft.TokenID,nft.Owner)
-	log.Println(nft.TokenID.Uint64(), nft.Owner.String())
-	if err!=nil {
-		log.Println("pay nft fail in privatechain", err.Error())
-		p.PayNFT(nft.TokenID,nft.Owner)
-	}
+func (p *Pbc) ExchangeNFTHandler(pvc *Pvc,jobs *disque.Pool, nft *LogExchangeNFT){
+	input, _ := pvc.ABI.Pack("payNFT",nft.TokenID,nft.Owner)
 
+
+	tx:=types.NewTransaction( 0, pvc.Address, big.NewInt(0), pvc.txConfig.Gaslimit, pvc.txConfig.GasPrice, input)
+	txWrapper, _:= tx.MarshalJSON()
+	jobs.Add(string(txWrapper),pvcPayNFTQueue)
 }
 
 //func (p *Pbc) Deploy(initialSupply *big.Int, requiredSignatures *big.Int, authorities []common.Address) (common.Address, error) {
 //	var err error
 //
 //	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
-//	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce, big.NewInt(0))
+//	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
 //
 //	address, _, _, err := publicSlot.DeployPublicSlot(auth, p.Client, initialSupply, requiredSignatures, authorities)
 //	return address, err
 //}
 
-func (p *Pbc) ExchangeHandler(pvc *Pvc, exchangeEvent *LogExchange){
-	log.Println("receive an exchange event from public chain")
-	log.Println(exchangeEvent.User.String())
-	log.Println(exchangeEvent.Amount.Uint64())
-	err:=pvc.Pay(exchangeEvent.User, exchangeEvent.Amount, exchangeEvent.TxHash)
-	if err!=nil {
-		log.Println(err.Error())
-	}
+func (p *Pbc) ExchangeHandler(pvc *Pvc, jobs *disque.Pool,exchangeEvent *LogExchange){
+	input, _:= pvc.ABI.Pack("pay",exchangeEvent.User, exchangeEvent.Amount, exchangeEvent.TxHash)
+
+	//nonce:= atomic.AddUint64(&pbc.txConfig.nonce, 1)
+	tx:=types.NewTransaction( 0, pvc.Address, big.NewInt(0), pvc.txConfig.Gaslimit, pvc.txConfig.GasPrice, input)
+	txWrapper, _:= tx.MarshalJSON()
+	jobs.Add(string(txWrapper),pvcPayQueue)
 }
 
-func (p *Pbc) EventReceiver(pvc *Pvc){
+func (p *Pbc) EventReceiver(pvc *Pvc, jobs *disque.Pool){
 	logs,eventError:=p.EventWatcher()
-
-	contractAbi, err:= abi.JSON(strings.NewReader(string(publicSlot.PublicSlotABI)))
-	if err !=nil{
-		log.Fatal(err.Error())
-	}
-
 
 	for {
 		select {
@@ -128,16 +134,16 @@ func (p *Pbc) EventReceiver(pvc *Pvc){
 			switch vLog.Topics[0].Hex() {
 			case logExchangeSigHash.Hex():
 				var exchangeEvent LogExchange
-				contractAbi.Unpack(&exchangeEvent, "Exchange", vLog.Data)
+				p.ABI.Unpack(&exchangeEvent, "Exchange", vLog.Data)
 				log.Println(len(vLog.Data))
 				log.Println(vLog.Data)
 				log.Println(vLog.TxHash.String())
 				exchangeEvent.TxHash = vLog.TxHash
-				go p.ExchangeHandler(pvc, &exchangeEvent)
+				go p.ExchangeHandler(pvc, jobs,&exchangeEvent)
 			case logExchangeNFTHash.Hex():
 				var exchangeNFTEvent LogExchangeNFT
-				contractAbi.Unpack(&exchangeNFTEvent, "ExchangeNFT",vLog.Data)
-				go p.ExchangeNFTHandler(pvc,&exchangeNFTEvent)
+				p.ABI.Unpack(&exchangeNFTEvent, "ExchangeNFT",vLog.Data)
+				go p.ExchangeNFTHandler(pvc,jobs,&exchangeNFTEvent)
 			}
 		}
 	}

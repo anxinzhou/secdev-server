@@ -8,6 +8,7 @@ import (
 	"fmt"
 	h "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/goware/disque"
 	"io/ioutil"
 	"log"
 	"math/big"
@@ -16,13 +17,19 @@ import (
 )
 
 const (
-	chainConfigJson = "src/etc/config.json"
+	chainConfigJson = "src/etc/chainConfig.json"
+	disqueConfigJson = "src/etc/disqueConfig.json"
 )
 
 var (
 	pbc *contract.Pbc
 	pvc *contract.Pvc
+	jobs *disque.Pool
 )
+
+type DisqueConfig struct {
+	Port string `json:"port"`
+}
 
 type BasicChainConfig struct {
 	Port     string `json:"port"`
@@ -202,7 +209,6 @@ func mint(w http.ResponseWriter, r *http.Request) {
 }
 
 func getNFT(w http.ResponseWriter, r *http.Request) {
-	log.Println("receive get nft")
 
 	var err error
 	vars := mux.Vars(r)
@@ -216,7 +222,6 @@ func getNFT(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if ownedAvatar.Int64()==0 {
-		log.Println("user do not own avatar")
 		http.Error(w,errors.New("you don not have an avatar").Error(), http.StatusNotFound)
 		return
 	}
@@ -331,13 +336,28 @@ func init() {
 	pvc.AddGameMachine("0x20A40B83a495DD2fbbE33E0b6ad119B09F09151f")
 	pbc.AddGameMachine("0x20A40B83a495DD2fbbE33E0b6ad119B09F09151f")
 	//
+}
 
+func init() {
+	var dc DisqueConfig
+	data, err:= ioutil.ReadFile(disqueConfigJson)
+	if err!=nil {
+		panic("can not read chain config file")
+	}
+	json.Unmarshal(data,&dc)
+
+	jobs, err =disque.New(dc.Port)
+	if err!=nil {
+		panic(err.Error())
+	}
 }
 
 func main() {
 	//runtime.GOMAXPROCS(8)
-	go pbc.EventReceiver(pvc)
-	go pvc.EventReceiver(pbc)
+	defer jobs.Close()
+	go pbc.EventReceiver(pvc, jobs)
+	go pvc.EventReceiver(pbc, jobs)
+	go contract.Consumer(jobs,pvc,pbc)
 	r := mux.NewRouter()
 
 	r.HandleFunc("/api/v1/{chain:public|private}/tokens/{user}", getToken).Methods("GET")
