@@ -8,12 +8,14 @@ import (
 	"fmt"
 	h "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/goware/disque"
 	"io/ioutil"
 	"log"
 	"math/big"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 const (
@@ -213,6 +215,7 @@ func getNFT(w http.ResponseWriter, r *http.Request) {
 	var err error
 	vars := mux.Vars(r)
 	user := vars["user"]
+	kind := vars["chain"]
 
 	ownedAvatar, err := pvc.OwnedTokens(user)
 	if err != nil {
@@ -222,11 +225,17 @@ func getNFT(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if ownedAvatar.Int64()==0 {
-		http.Error(w,errors.New("you don not have an avatar").Error(), http.StatusNotFound)
+		http.Error(w,errors.New("you don not have an avatar").Error(), http.StatusBadRequest)
 		return
 	}
 
-	avatar, err := pvc.GetAvatar(ownedAvatar)
+	var avatar *contract.Avatar
+	if kind=="private" {
+		avatar, err = pvc.GetAvatar(ownedAvatar)
+	} else {
+		avatar, err = pbc.GetAvatar(ownedAvatar)
+	}
+
 	if err!=nil {
 		log.Println("can not get avatar")
 	}
@@ -320,6 +329,33 @@ func equipArmor(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func messagePush(w http.ResponseWriter, r *http.Request) {
+	log.Println("websocket connected")
+	var upgrader = websocket.Upgrader{}
+	upgrader.CheckOrigin = func(rq *http.Request) bool { return true }
+	c, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Print("upgrade:", err)
+		return
+	}
+	defer c.Close()
+	for {
+		job,_:=jobs.Get("pbcNFT"+user)
+		time.Sleep(1*time.Second)
+		_, message, err := c.ReadMessage()
+		if err != nil {
+			log.Println("read:", err)
+			break
+		}
+		log.Printf("recv: %s", message)
+		//err = c.WriteMessage(websocket.TextMessage, []byte("dsad"))
+		//if err != nil {
+		//	log.Println("write:", err)
+		//	break
+		//}
+	}
+}
+
 func init() {
 	var cc ChainConfig
 	data, err := ioutil.ReadFile(chainConfigJson)
@@ -366,10 +402,11 @@ func main() {
 	r.HandleFunc("/api/v1/private/tokens/{user}", updateToken).Methods("PUT")
 	r.HandleFunc("/api/v1/{chain:public|private}/transfer", transfer).Methods("PUT")
 	r.HandleFunc("/api/v1/nft/{tokenId}", mint).Methods("POST")
-	r.HandleFunc("/api/v1/nft/{user}", getNFT).Methods("GET")
+	r.HandleFunc("/api/v1/{chain:public|private}/nft/{user}", getNFT).Methods("GET")
 	r.HandleFunc("/api/v1/nft/{tokenId}/level", upgradeNFT).Methods("PUT")
 	r.HandleFunc("/api/v1/nft/{tokenId}/weapon", equipWeapon).Methods("PUT")
 	r.HandleFunc("/api/v1/nft/{tokenId}/armor", equipArmor).Methods("PUT")
+	r.HandleFunc("/ws",messagePush)
 
 	fmt.Println("Running http server")
 	http.ListenAndServe(":4000",

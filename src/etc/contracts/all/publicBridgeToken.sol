@@ -317,7 +317,7 @@ contract BridgeToken is GameToken{
 
     event Exchange(address user, uint amount);
     event Pay(address user, uint amount ,bytes32 transactionHash);
-    event ExchangeNFT(uint256 tokenID, address owner, uint256 gene, uint256 avatarLevel, bool weaponed);
+    event ExchangeNFT(uint256 tokenID, address owner, uint256 gene, uint256 avatarLevel, bool weaponed, bool armored);
 
     constructor (uint256 totalSupply,
                 string tokenName,
@@ -372,12 +372,24 @@ contract BridgeToken is GameToken{
         require(msg.sender == avatarOwner);
         _ownedAvatars[avatarOwner]=0;
         _avatarOwner[tokenID]=0;
-        emit ExchangeNFT(tokenID,avatarOwner,avatar[tokenID].gene,avatar[tokenID].avatarLevel,avatar[tokenID].weaponed);
+        uint256 gene = avatar[tokenID].gene ;
+        uint256 avatarLevel = avatar[tokenID].avatarLevel;
+        bool weaponed = avatar[tokenID].weaponed;
+        bool armored = avatar[tokenID].armored;
+        avatar[tokenID].gene=0;
+        avatar[tokenID].avatarLevel = 0;
+        avatar[tokenID].weaponed = false;
+        avatar[tokenID].armored = false;
+        emit ExchangeNFT(tokenID,avatarOwner, gene, avatarLevel, weaponed, armored);
     }
 
-    function payNFT (uint256 tokenID, address avatarOwner) public {
+    function payNFT (uint256 tokenID, address avatarOwner, uint256 gene, uint256 avatarLevel, bool weaponed, bool armored) public {
         _ownedAvatars[avatarOwner]=tokenID;
         _avatarOwner[tokenID]=avatarOwner;
+        avatar[tokenID].gene = gene;
+        avatar[tokenID].avatarLevel = avatarLevel;
+        avatar[tokenID].weaponed = weaponed;
+        avatar[tokenID].armored = armored;
     }
 
     // vs, rs, ss is used for ecrecover(a built-in function of solidity)

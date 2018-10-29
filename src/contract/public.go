@@ -77,17 +77,17 @@ func (p *Pbc) Pay(vs [] uint8, rs [][32]byte, ss[][32]byte, message []byte) erro
 	return err
 }
 
-func (p *Pbc) PayNFT(tokenID *big.Int, address common.Address) error {
-	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
-	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
-	auth.GasLimit = p.txConfig.Gaslimit
-
-	tx, err:= p.Instance.PayNFT(auth, tokenID, address)
-
-	_, err = p.GetReceiptStatus(tx.Hash())
-
-	return err
-}
+//func (p *Pbc) PayNFT(tokenID *big.Int, address common.Address) error {
+//	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
+//	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
+//	auth.GasLimit = p.txConfig.Gaslimit
+//
+//	tx, err:= p.Instance.PayNFT(auth, tokenID, address)
+//
+//	_, err = p.GetReceiptStatus(tx.Hash())
+//
+//	return err
+//}
 
 func (p *Pbc) SendTransaction(rawTx string) error {
 	tx,err:= p.Contract.SendTransaction(rawTx)
@@ -95,9 +95,20 @@ func (p *Pbc) SendTransaction(rawTx string) error {
 	return err
 }
 
-func (p *Pbc) ExchangeNFTHandler(pvc *Pvc,jobs *disque.Pool, nft *LogExchangeNFT){
-	input, _ := pvc.ABI.Pack("payNFT",nft.TokenID,nft.Owner)
+func (p *Pbc) GetAvatar(tokenId *big.Int) (*Avatar, error){
 
+	avatar, err :=p.Instance.Avatar(nil,tokenId)
+	return &Avatar{
+		TokenId:tokenId,
+		Gene:avatar.Gene,
+		AvatarLevel:avatar.AvatarLevel,
+		Weaponed: avatar.Weaponed,
+		Armored: avatar.Armored,
+	},err
+}
+
+func (p *Pbc) ExchangeNFTHandler(pvc *Pvc,jobs *disque.Pool, nft *LogExchangeNFT){
+	input, _ := pvc.ABI.Pack("payNFT",nft.TokenID,nft.Owner,nft.Gene,nft.AvatarLevel,nft.Weaponed,nft.Armored)
 
 	tx:=types.NewTransaction( 0, pvc.Address, big.NewInt(0), pvc.txConfig.Gaslimit, pvc.txConfig.GasPrice, input)
 	txWrapper, _:= tx.MarshalJSON()

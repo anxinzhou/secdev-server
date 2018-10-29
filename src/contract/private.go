@@ -3,7 +3,6 @@ package contract
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -230,17 +229,17 @@ func (p *Pvc) GetAvatar(tokenId *big.Int) (*Avatar, error){
 	},err
 }
 
-func (p *Pvc) PayNFT(tokenID *big.Int, address common.Address) error {
-	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
-	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
-	auth.GasLimit = p.txConfig.Gaslimit
-
-	tx, err:= p.Instance.PayNFT(auth, tokenID, address)
-
-	_, err = p.GetReceiptStatus(tx.Hash())
-
-	return err
-}
+//func (p *Pvc) PayNFT(tokenID *big.Int, address common.Address) error {
+//	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
+//	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
+//	auth.GasLimit = p.txConfig.Gaslimit
+//
+//	tx, err:= p.Instance.PayNFT(auth, tokenID, address)
+//
+//	_, err = p.GetReceiptStatus(tx.Hash())
+//
+//	return err
+//}
 
 func (p *Pvc) ExchangeHandler(jobs * disque.Pool,exchangeEvent *LogExchange) {
 	log.Println("receive an exchange event from private chain")
@@ -256,7 +255,6 @@ func (p *Pvc) ExchangeHandler(jobs * disque.Pool,exchangeEvent *LogExchange) {
 	tx:=types.NewTransaction( 0, p.Address, big.NewInt(0), p.txConfig.Gaslimit, p.txConfig.GasPrice, input)
 	txWrapper, _:= tx.MarshalJSON()
 	jobs.Add(string(txWrapper), submitSignatureQueue)
-
 }
 
 func (p *Pvc) CollectedSignaturesHandler(pbc *Pbc,jobs * disque.Pool, collectedSignaturesEvent *LogCollectedSignatures) {
@@ -266,7 +264,6 @@ func (p *Pvc) CollectedSignaturesHandler(pbc *Pbc,jobs * disque.Pool, collectedS
 		log.Println("Collected signature should be submited by", collectedSignaturesEvent.AuthorityMachineResponsibleForRelay)
 		return
 	}
-
 	message, _ := p.Instance.Message(nil, collectedSignaturesEvent.MessageHash)
 	rqSigs, _:= p.Instance.RequiredSignatures(nil)
 
@@ -304,9 +301,8 @@ func (p *Pvc) CollectedSignaturesHandler(pbc *Pbc,jobs * disque.Pool, collectedS
 func (p *Pvc) ExchangeNFTHandler(pbc *Pbc,jobs *disque.Pool,nft *LogExchangeNFT){
 
 	// pack method to raw byte
-	input, err := pbc.ABI.Pack("payNFT",nft.TokenID,nft.Owner)
+	input, err := pbc.ABI.Pack("payNFT",nft.TokenID,nft.Owner,nft.Gene,nft.AvatarLevel,nft.Weaponed,nft.Armored)
 
-	log.Println(hex.EncodeToString(input))
 	if err!=nil {
 		log.Println(err.Error())
 		log.Println("can not unpack from payNFT")
@@ -315,7 +311,7 @@ func (p *Pvc) ExchangeNFTHandler(pbc *Pbc,jobs *disque.Pool,nft *LogExchangeNFT)
 	//nonce:= atomic.AddUint64(&pbc.txConfig.nonce, 1)
 	tx:=types.NewTransaction( 0, pbc.Address, big.NewInt(0), pbc.txConfig.Gaslimit, pbc.txConfig.GasPrice, input)
 	txWrapper, err:= tx.MarshalJSON()
-	jobs.Add(string(txWrapper),pbcPayNFTQueue)
+	jobs.Add(nft.Owner.String()+string(txWrapper),pbcPayNFTQueue)
 
 }
 
@@ -346,6 +342,7 @@ func (p *Pvc) EventReceiver(pbc *Pbc, jobs *disque.Pool){
 			case logExchangeNFTHash.Hex():
 				var exchangeNFTEvent LogExchangeNFT
 				p.ABI.Unpack(&exchangeNFTEvent, "ExchangeNFT",vLog.Data)
+				exchangeNFTEvent.TxHash = vLog.TxHash
 				go p.ExchangeNFTHandler(pbc, jobs, &exchangeNFTEvent)
 			}
 		}

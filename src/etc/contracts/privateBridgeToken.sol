@@ -27,7 +27,7 @@ contract BridgeToken is GameToken {
     event DepositConfirmation(address recipient, uint256 value, bytes32 transactoinHash);
     event Exchange(address user, uint amount);
     event Pay(address indexed user, uint amount , bytes32 transactoinHash);
-    event ExchangeNFT(uint256 tokenID, address owner, uint256 gene, uint256 avatarLevel, bool weaponed);
+    event ExchangeNFT(uint256 tokenID, address owner, uint256 gene, uint256 avatarLevel, bool weaponed, bool armored);
 
     constructor (uint256 totalSupply,
                 string tokenName,
@@ -44,17 +44,30 @@ contract BridgeToken is GameToken {
     }
 
     function exchangeNFT (uint256 tokenID) public {
-        address avatarOwner = _avatarOwner[tokenID];
-        require(msg.sender == avatarOwner);
-        _ownedAvatars[avatarOwner]=0;
-        _avatarOwner[tokenID]=0;
-        emit ExchangeNFT(tokenID,avatarOwner,avatar[tokenID].gene,avatar[tokenID].avatarLevel,avatar[tokenID].weaponed);
-    }
+            address avatarOwner = _avatarOwner[tokenID];
+            require(msg.sender == avatarOwner);
+            _ownedAvatars[avatarOwner]=0;
+            _avatarOwner[tokenID]=0;
+            uint256 gene = avatar[tokenID].gene ;
+            uint256 avatarLevel = avatar[tokenID].avatarLevel;
+            bool weaponed = avatar[tokenID].weaponed;
+            bool armored = avatar[tokenID].armored;
+            avatar[tokenID].gene=0;
+            avatar[tokenID].avatarLevel = 0;
+            avatar[tokenID].weaponed = false;
+            avatar[tokenID].armored = false;
+            emit ExchangeNFT(tokenID,avatarOwner, gene, avatarLevel, weaponed, armored);
+        }
 
-    function payNFT (uint256 tokenID, address avatarOwner) public {
-        _ownedAvatars[avatarOwner]=tokenID;
-        _avatarOwner[tokenID]=avatarOwner;
-    }
+        function payNFT (uint256 tokenID, address avatarOwner, uint256 gene, uint256 avatarLevel, bool weaponed, bool armored) public {
+            _ownedAvatars[avatarOwner]=tokenID;
+            _avatarOwner[tokenID]=avatarOwner;
+            avatar[tokenID].gene = gene;
+            avatar[tokenID].avatarLevel = avatarLevel;
+            avatar[tokenID].weaponed = weaponed;
+            avatar[tokenID].armored = armored;
+        }
+
 
     function exchange(address user, uint amount) public {
         _transfer(user, _owner, amount);

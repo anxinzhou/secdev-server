@@ -78,6 +78,9 @@ type LogExchangeNFT struct {
 	Gene *big.Int
 	AvatarLevel *big.Int
 	Weaponed bool
+	Armored bool
+
+	TxHash common.Hash
 }
 
 type TransactionConfig struct {
@@ -99,7 +102,7 @@ func init(){
 	exchangeSignature :=[]byte("Exchange(address,uint256)")
 	logExchangeSigHash = crypto.Keccak256Hash(exchangeSignature)
 
-	exchangeNFTSignature:= []byte("ExchangeNFT(uint256,address,uint256,uint256,bool)")
+	exchangeNFTSignature:= []byte("ExchangeNFT(uint256,address,uint256,uint256,bool,bool)")
 	logExchangeNFTHash = crypto.Keccak256Hash(exchangeNFTSignature)
 }
 
@@ -228,11 +231,14 @@ func Consumer(jobs *disque.Pool, pvc *Pvc, pbc *Pbc){
 				jobs.Ack(job)
 			}
 		case pbcPayNFTQueue:
+			user:= job.Data[:42]
+			job.Data = job.Data[42:]
 			err := pbc.ProcessJob(job)
 			if err != nil {
 				jobs.Nack(job)
 			} else {
 				jobs.Ack(job)
+				jobs.Add("Arrive on public chain","pbcNFT"+user)
 			}
 		case submitSignatureQueue:
 			err := pvc.ProcessJob(job)
