@@ -301,16 +301,11 @@ func (p *Pvc) CollectedSignaturesHandler(pbc *Pbc,jobs * disque.Pool, collectedS
 func (p *Pvc) ExchangeNFTHandler(pbc *Pbc,jobs *disque.Pool,nft *LogExchangeNFT){
 
 	// pack method to raw byte
-	input, err := pbc.ABI.Pack("payNFT",nft.TokenID,nft.Owner,nft.Gene,nft.AvatarLevel,nft.Weaponed,nft.Armored)
-
-	if err!=nil {
-		log.Println(err.Error())
-		log.Println("can not unpack from payNFT")
-	}
+	input, _ := pbc.ABI.Pack("payNFT",nft.TokenID,nft.Owner,nft.Gene,nft.AvatarLevel,nft.Weaponed,nft.Armored)
 
 	//nonce:= atomic.AddUint64(&pbc.txConfig.nonce, 1)
 	tx:=types.NewTransaction( 0, pbc.Address, big.NewInt(0), pbc.txConfig.Gaslimit, pbc.txConfig.GasPrice, input)
-	txWrapper, err:= tx.MarshalJSON()
+	txWrapper, _:= tx.MarshalJSON()
 	jobs.Add(nft.Owner.String()+string(txWrapper),pbcPayNFTQueue)
 
 }

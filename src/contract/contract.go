@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math/big"
+	"strings"
 	"sync/atomic"
 	"time"
 )
@@ -231,14 +232,19 @@ func Consumer(jobs *disque.Pool, pvc *Pvc, pbc *Pbc){
 				jobs.Ack(job)
 			}
 		case pbcPayNFTQueue:
-			user:= job.Data[:42]
+			user:= strings.ToLower(job.Data[:42])
 			job.Data = job.Data[42:]
 			err := pbc.ProcessJob(job)
 			if err != nil {
+				log.Println(err.Error())
 				jobs.Nack(job)
 			} else {
 				jobs.Ack(job)
-				jobs.Add("Arrive on public chain","pbcNFT"+user)
+				log.Println("test", "pbcNFT"+user)
+				_,err:=jobs.Add("NFTonPbc","pbcNFT"+user)
+				if err!=nil {
+					log.Println(err.Error())
+				}
 			}
 		case submitSignatureQueue:
 			err := pvc.ProcessJob(job)
@@ -255,11 +261,19 @@ func Consumer(jobs *disque.Pool, pvc *Pvc, pbc *Pbc){
 				jobs.Ack(job)
 			}
 		case pvcPayNFTQueue:
+			user:= strings.ToLower(job.Data[:42])
+			job.Data = job.Data[42:]
 			err := pvc.ProcessJob(job)
 			if err != nil {
+				log.Println(err.Error())
 				jobs.Nack(job)
 			} else {
 				jobs.Ack(job)
+				log.Println("test", "pvcNFT"+user)
+				_,err=jobs.Add("NFTonPvc","pvcNFT"+user)
+				if err!=nil {
+					log.Println(err.Error())
+				}
 			}
 		}
 	}

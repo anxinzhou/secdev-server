@@ -15,7 +15,7 @@ import (
 	"math/big"
 	"net/http"
 	"strconv"
-	"time"
+	"strings"
 )
 
 const (
@@ -237,15 +237,10 @@ func getNFT(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err!=nil {
-		log.Println("can not get avatar")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	avatarWrapper, err:= json.Marshal(avatar)
-
-	if err!=nil {
-		log.Println("can not unmarshal json")
-	}
-
+	avatarWrapper, _:= json.Marshal(avatar)
 	w.Write(avatarWrapper)
 }
 
@@ -338,21 +333,24 @@ func messagePush(w http.ResponseWriter, r *http.Request) {
 		log.Print("upgrade:", err)
 		return
 	}
+
+	_, message, err:= c.ReadMessage()
+	user:= strings.ToLower(string(message))
+	log.Println(user, "connect websocket")
 	defer c.Close()
 	for {
-		job,_:=jobs.Get("pbcNFT"+user)
-		time.Sleep(1*time.Second)
-		_, message, err := c.ReadMessage()
-		if err != nil {
-			log.Println("read:", err)
-			break
+		log.Println("test websocket")
+		job ,err:=jobs.Get("pbcNFT"+user,"pvcNFT"+user)
+		if err!=nil {
+			log.Println(err.Error())
+			continue
 		}
-		log.Printf("recv: %s", message)
-		//err = c.WriteMessage(websocket.TextMessage, []byte("dsad"))
-		//if err != nil {
-		//	log.Println("write:", err)
-		//	break
-		//}
+		log.Println(job.Data)
+		jobs.Ack(job)
+		err = c.WriteMessage(websocket.TextMessage, []byte(job.Data))
+		if err!=nil {
+			log.Println(err.Error())
+		}
 	}
 }
 

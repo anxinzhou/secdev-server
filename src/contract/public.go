@@ -112,7 +112,7 @@ func (p *Pbc) ExchangeNFTHandler(pvc *Pvc,jobs *disque.Pool, nft *LogExchangeNFT
 
 	tx:=types.NewTransaction( 0, pvc.Address, big.NewInt(0), pvc.txConfig.Gaslimit, pvc.txConfig.GasPrice, input)
 	txWrapper, _:= tx.MarshalJSON()
-	jobs.Add(string(txWrapper),pvcPayNFTQueue)
+	jobs.Add(nft.Owner.String()+string(txWrapper),pvcPayNFTQueue)
 }
 
 //func (p *Pbc) Deploy(initialSupply *big.Int, requiredSignatures *big.Int, authorities []common.Address) (common.Address, error) {
