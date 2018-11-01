@@ -37,12 +37,17 @@ const (
 	publicChainTimeOut = 10*time.Second
 	GasLimit = 3000000
 
-	pbcPayNFTQueue = "pbcNFTPay"
-	pbcPayQueue = "pbcPay"
+	PbcPayNFTQueue = "pbcNFTPay"
+	PbcPayQueue = "pbcPay"
 
-	pvcPayNFTQueue = "pvcNFTPay"
-	pvcPayQueue ="pvcPay"
-	submitSignatureQueue ="submitSignature"
+	PvcPayNFTQueue = "pvcNFTPay"
+	PvcPayQueue ="pvcPay"
+	SubmitSignatureQueue ="submitSignature"
+
+	NFTArriveOnPbc = "NFTonPbc"
+	NFTArriveOnPvc = "NFTonPvc"
+	ArriveOnPbc = "onPbc"
+	ArriveOnPvc = "onPvc"
 )
 
 type txdata struct {
@@ -194,7 +199,7 @@ func (c *Contract) EventWatcher() (chan types.Log, <-chan error) {
 	return logs, sub.Err()
 }
 
-func (c *Contract) ProcessJob(job *disque.Job) error {
+func (c *Contract) ProcessJob(job *disque.Job) (*types.Transaction,error){
 
 	log.Println("process ", job.Queue)
 
@@ -215,23 +220,26 @@ func (c *Contract) ProcessJob(job *disque.Job) error {
 	signedTx,err:= types.SignTx(tx, types.NewEIP155Signer(chainID), c.txConfig.key.PrivateKey)
 	err = c.Client.SendTransaction(context.Background(), signedTx)
 	if err!=nil {
-		log.Fatalln(err.Error(), "send transaction fail")
+		log.Println(err.Error(), "send transaction fail")
 	}
-	return err
+	return signedTx,err
 }
 
 func Consumer(jobs *disque.Pool, pvc *Pvc, pbc *Pbc){
 	for {
-		job,_:=jobs.Get(pbcPayQueue,pvcPayQueue,pbcPayNFTQueue,pvcPayNFTQueue,submitSignatureQueue)
+		job,_:=jobs.Get(PbcPayQueue,PvcPayQueue,PbcPayNFTQueue,PvcPayNFTQueue,SubmitSignatureQueue)
 		switch job.Queue {
-		case pbcPayQueue:
+		case PbcPayQueue:
+			user:= strings.ToLower(job.Data[:42])
+			job.Data = job.Data[42:]
 			err := pbc.ProcessJob(job)
 			if err != nil {
 				jobs.Nack(job)
 			} else {
 				jobs.Ack(job)
+				jobs.Add(ArriveOnPbc, PbcPayQueue + user)
 			}
-		case pbcPayNFTQueue:
+		case PbcPayNFTQueue:
 			user:= strings.ToLower(job.Data[:42])
 			job.Data = job.Data[42:]
 			err := pbc.ProcessJob(job)
@@ -240,27 +248,26 @@ func Consumer(jobs *disque.Pool, pvc *Pvc, pbc *Pbc){
 				jobs.Nack(job)
 			} else {
 				jobs.Ack(job)
-				log.Println("test", "pbcNFT"+user)
-				_,err:=jobs.Add("NFTonPbc","pbcNFT"+user)
-				if err!=nil {
-					log.Println(err.Error())
-				}
+				jobs.Add(NFTArriveOnPbc,PbcPayNFTQueue+user)
 			}
-		case submitSignatureQueue:
+		case SubmitSignatureQueue:
 			err := pvc.ProcessJob(job)
 			if err != nil {
 				jobs.Nack(job)
 			} else {
 				jobs.Ack(job)
 			}
-		case pvcPayQueue:
+		case PvcPayQueue:
+			user:= strings.ToLower(job.Data[:42])
+			job.Data = job.Data[42:]
 			err := pvc.ProcessJob(job)
 			if err != nil {
 				jobs.Nack(job)
 			} else {
 				jobs.Ack(job)
+				jobs.Add(ArriveOnPvc, PvcPayQueue+user)
 			}
-		case pvcPayNFTQueue:
+		case PvcPayNFTQueue:
 			user:= strings.ToLower(job.Data[:42])
 			job.Data = job.Data[42:]
 			err := pvc.ProcessJob(job)
@@ -269,11 +276,7 @@ func Consumer(jobs *disque.Pool, pvc *Pvc, pbc *Pbc){
 				jobs.Nack(job)
 			} else {
 				jobs.Ack(job)
-				log.Println("test", "pvcNFT"+user)
-				_,err=jobs.Add("NFTonPvc","pvcNFT"+user)
-				if err!=nil {
-					log.Println(err.Error())
-				}
+				jobs.Add(NFTArriveOnPvc,PbcPayNFTQueue+user)
 			}
 		}
 	}

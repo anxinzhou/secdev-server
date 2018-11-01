@@ -139,8 +139,6 @@ func updateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("updating private token! amount:", amount)
-
 	if amount < 0 {
 		log.Println("consume")
 		err = pvc.Consume(user, big.NewInt(int64(-amount)))
@@ -339,8 +337,11 @@ func messagePush(w http.ResponseWriter, r *http.Request) {
 	log.Println(user, "connect websocket")
 	defer c.Close()
 	for {
-		log.Println("test websocket")
-		job ,err:=jobs.Get("pbcNFT"+user,"pvcNFT"+user)
+		job ,err:=jobs.Get(contract.PbcPayNFTQueue+user,
+			contract.PvcPayNFTQueue+user,
+			contract.PbcPayQueue+user,
+			contract.PvcPayQueue+user,
+			)
 		if err!=nil {
 			log.Println(err.Error())
 			continue

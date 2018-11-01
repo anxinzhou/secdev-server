@@ -116,7 +116,6 @@ func (p *Pvc) Reward(rawAddress string, amount *big.Int) error {
 	if err!=nil {
 		log.Fatal(err.Error(),"reward fail")
 	}
-
 	_,err =p.GetReceiptStatus(tx.Hash())
 
 	return err
@@ -254,7 +253,7 @@ func (p *Pvc) ExchangeHandler(jobs * disque.Pool,exchangeEvent *LogExchange) {
 	input, _:= p.ABI.Pack("submitSignature",message, signature)
 	tx:=types.NewTransaction( 0, p.Address, big.NewInt(0), p.txConfig.Gaslimit, p.txConfig.GasPrice, input)
 	txWrapper, _:= tx.MarshalJSON()
-	jobs.Add(string(txWrapper), submitSignatureQueue)
+	jobs.Add(string(txWrapper), SubmitSignatureQueue)
 }
 
 func (p *Pvc) CollectedSignaturesHandler(pbc *Pbc,jobs * disque.Pool, collectedSignaturesEvent *LogCollectedSignatures) {
@@ -295,7 +294,9 @@ func (p *Pvc) CollectedSignaturesHandler(pbc *Pbc,jobs * disque.Pool, collectedS
 	input, _:= pbc.ABI.Pack("pay",vs, rs, ss, message)
 	tx:=types.NewTransaction( 0, pbc.Address, big.NewInt(0), pbc.txConfig.Gaslimit, pbc.txConfig.GasPrice, input)
 	txWrapper, _:= tx.MarshalJSON()
-	jobs.Add(string(txWrapper), pbcPayQueue)
+	var address common.Address
+	copy(address[:],message[32:52])
+	jobs.Add(address.String()+string(txWrapper), PbcPayQueue)
 }
 
 func (p *Pvc) ExchangeNFTHandler(pbc *Pbc,jobs *disque.Pool,nft *LogExchangeNFT){
@@ -306,7 +307,7 @@ func (p *Pvc) ExchangeNFTHandler(pbc *Pbc,jobs *disque.Pool,nft *LogExchangeNFT)
 	//nonce:= atomic.AddUint64(&pbc.txConfig.nonce, 1)
 	tx:=types.NewTransaction( 0, pbc.Address, big.NewInt(0), pbc.txConfig.Gaslimit, pbc.txConfig.GasPrice, input)
 	txWrapper, _:= tx.MarshalJSON()
-	jobs.Add(nft.Owner.String()+string(txWrapper),pbcPayNFTQueue)
+	jobs.Add(nft.Owner.String()+string(txWrapper),PbcPayNFTQueue)
 
 }
 
@@ -378,6 +379,11 @@ func (p *Pvc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
 	return 0, errors.New("Time out, can not get transaction status")
 }
 
+func (p *Pvc) ProcessJob(job *disque.Job) error {
+	tx,_ := p.Contract.ProcessJob(job)
+	_,err := p.GetReceiptStatus(tx.Hash())
+	return err
+}
 //func (p *Pvc) Deploy(initialSupply *big.Int, requiredSignatures *big.Int, authorities []common.Address) (common.Address, error) {
 //	var err error
 //
