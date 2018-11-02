@@ -3,7 +3,6 @@ package contract
 import (
 	"context"
 	"crypto/ecdsa"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"github.com/ethereum/go-ethereum"
@@ -15,7 +14,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/goware/disque"
 	"io/ioutil"
 	"log"
@@ -48,6 +46,14 @@ const (
 	NFTArriveOnPvc = "NFTonPvc"
 	ArriveOnPbc = "onPbc"
 	ArriveOnPvc = "onPvc"
+
+	NFTPvcWFSig = "NFTPvcWFSig"
+	NFTPvcWFPay = "NFTPvcWFPay"
+	NFTPbcWFPay = "NFTPbcWFPay"
+
+	PvcWFSig = "PvcWFSig"
+	PvcWFPay = "PvcWFPay"
+	PbcWFPay = "PbcWFPay"
 )
 
 type txdata struct {
@@ -156,11 +162,8 @@ func (c *Contract) Close() error {
 	return nil
 }
 
-func (c *Contract) SendTransaction(rawTx string) (*types.Transaction,error) {
-	rawTxBytes, err := hex.DecodeString(rawTx)
-	tx := new(types.Transaction)
-	rlp.DecodeBytes(rawTxBytes, &tx)
-	err = c.Client.SendTransaction(context.Background(), tx)
+func (c *Contract) SendTransaction(tx *types.Transaction) (*types.Transaction,error) {
+	err := c.Client.SendTransaction(context.Background(), tx)
 	return tx,err
 }
 

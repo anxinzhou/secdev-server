@@ -89,8 +89,8 @@ func (p *Pbc) Pay(vs [] uint8, rs [][32]byte, ss[][32]byte, message []byte) erro
 //	return err
 //}
 
-func (p *Pbc) SendTransaction(rawTx string) error {
-	tx,err:= p.Contract.SendTransaction(rawTx)
+func (p *Pbc) SendTransaction(tx *types.Transaction) error {
+	tx,err:= p.Contract.SendTransaction(tx)
 	_, err = p.GetReceiptStatus(tx.Hash())
 	return err
 }

@@ -354,8 +354,8 @@ func fillZero(src []byte, length int) []byte{
 	return dst[len(dst)-length:]
 }
 
-func (p *Pvc) SendTransaction(rawTx string) error {
-	tx,err:= p.Contract.SendTransaction(rawTx)
+func (p *Pvc) SendTransaction(tx *types.Transaction) error {
+	tx,err:= p.Contract.SendTransaction(tx)
 	_, err = p.GetReceiptStatus(tx.Hash())
 	return err
 }

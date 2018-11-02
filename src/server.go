@@ -3,9 +3,13 @@ package main
 
 import (
 	"contract"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/go-redis/redis"
 	h "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -16,21 +20,44 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
 	chainConfigJson = "src/etc/chainConfig.json"
 	disqueConfigJson = "src/etc/disqueConfig.json"
+	redisConfigJson = "src/etc/redisConfig.json"
+)
+
+const (
+	ToPbc = "ToPbc"
+	ToPvc = "ToPvc"
+	AvatarToPbc ="AvatarToPbc"
+	AvatarToPvc ="AvatarToPvc"
 )
 
 var (
 	pbc *contract.Pbc
 	pvc *contract.Pvc
 	jobs *disque.Pool
+	db *redis.Client
+
 )
+
+type RedisConfig struct {
+	Port string `json:"port"`
+	Password string `json:"password"`
+	DB int `json:"DB"`
+}
 
 type DisqueConfig struct {
 	Port string `json:"port"`
+}
+
+type ExchangePayLoad struct {
+	Tx string `json:"tx"`
+	User string `json:"user"`
+	Kind string `json:"kind"`
 }
 
 type BasicChainConfig struct {
@@ -155,21 +182,44 @@ func updateToken(w http.ResponseWriter, r *http.Request) {
 
 func transfer(w http.ResponseWriter, r *http.Request) {
 	log.Println("receive a transfer")
-	tx, _ := ioutil.ReadAll(r.Body)
+	var payload ExchangePayLoad
+	data, err := ioutil.ReadAll(r.Body)
+	log.Println(string(data))
+	if err!=nil {
+		log.Println("can not parse transfer payload")
+	}
+	json.Unmarshal(data,&payload)
 
-	var err error
+	rawTxBytes, err := hex.DecodeString(payload.Tx)
+	tx := new(types.Transaction)
+	rlp.DecodeBytes(rawTxBytes, &tx)
+
 	vars := mux.Vars(r)
 	kind := vars["chain"]
 	if kind == "public" {
-		err = pbc.SendTransaction(string(tx))
+		err = pbc.SendTransaction(tx)
 	} else if kind == "private" {
-		err = pvc.SendTransaction(string(tx))
+		err = pvc.SendTransaction(tx)
 	}
 	if err != nil {
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	key:= payload.User + ":"+payload.Kind+":"+tx.Hash().String()
+	var value string
+	switch payload.Kind {
+	case ToPbc:
+		value = contract.PvcWFSig
+	case ToPvc:
+		value = contract.PvcWFPay
+	case AvatarToPbc:
+		value = contract.NFTPvcWFSig
+	case AvatarToPvc:
+		value = contract.NFTPvcWFPay
+	}
+	db.Set(key,value,time.Hour)
 }
 
 func mint(w http.ResponseWriter, r *http.Request) {
@@ -355,6 +405,7 @@ func messagePush(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// initial contract
 func init() {
 	var cc ChainConfig
 	data, err := ioutil.ReadFile(chainConfigJson)
@@ -373,6 +424,7 @@ func init() {
 	//
 }
 
+// initial disque
 func init() {
 	var dc DisqueConfig
 	data, err:= ioutil.ReadFile(disqueConfigJson)
@@ -385,6 +437,21 @@ func init() {
 	if err!=nil {
 		panic(err.Error())
 	}
+}
+
+func init() {
+	var rc RedisConfig
+	data, err:= ioutil.ReadFile(redisConfigJson)
+	if err!=nil {
+		panic("can not read chain config file")
+	}
+	json.Unmarshal(data,&rc)
+
+	db = redis.NewClient(&redis.Options{
+		Addr: rc.Port,
+		Password: rc.Password,
+		DB: rc.DB,
+	})
 }
 
 func main() {
@@ -408,7 +475,12 @@ func main() {
 	r.HandleFunc("/ws",messagePush)
 
 	fmt.Println("Running http server")
-	http.ListenAndServe(":4000",
-		h.CORS(h.AllowedMethods([]string{"get", "options", "post", "put", "head"}),
-			h.AllowedOrigins([]string{"*"}))(r))
+	http.ListenAndServe(
+		":4000",
+		h.CORS(
+			h.AllowedMethods([]string{"get", "options", "post", "put", "head"}),
+			h.AllowedOrigins([]string{"*"}),
+			h.AllowedHeaders([]string{"Content-Type"}),
+			)(r),
+			)
 }
