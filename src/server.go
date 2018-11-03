@@ -20,7 +20,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 )
 
 const (
@@ -54,10 +53,20 @@ type DisqueConfig struct {
 	Port string `json:"port"`
 }
 
-type ExchangePayLoad struct {
+type ExPayLoad struct {
 	Tx string `json:"tx"`
 	User string `json:"user"`
 	Kind string `json:"kind"`
+}
+
+type ExTokensPayLoad struct {
+	*ExPayLoad
+	Amount int `json:"amount"`
+}
+
+type ExNFTPayLoad struct {
+	*ExPayLoad
+	TokenId *big.Int `json:"tokenId"`
 }
 
 type BasicChainConfig struct {
@@ -159,7 +168,9 @@ func updateToken(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	user := vars["user"]
 	var amount int
-	err := json.NewDecoder(r.Body).Decode(&amount)
+	data, err := ioutil.ReadAll(r.Body)
+	log.Println(string(data))
+	err = json.Unmarshal(data,&amount)
 	if err != nil {
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -180,9 +191,53 @@ func updateToken(w http.ResponseWriter, r *http.Request) {
 	log.Println("Deal with consume/award amount:", amount, "user: ", user)
 }
 
+func nftTransfer(w http.ResponseWriter, r *http.Request) {
+	log.Println("receive a nft transfer")
+	var payload ExNFTPayLoad
+	data, err := ioutil.ReadAll(r.Body)
+	if err!=nil {
+		log.Println("can not parse transfer payload")
+	}
+	json.Unmarshal(data,&payload)
+
+	rawTxBytes, err := hex.DecodeString(payload.Tx)
+	tx := new(types.Transaction)
+	rlp.DecodeBytes(rawTxBytes, &tx)
+
+	vars := mux.Vars(r)
+	kind := vars["chain"]
+	if kind == "public" {
+		err = pbc.SendTransaction(tx)
+	} else if kind == "private" {
+		err = pvc.SendTransaction(tx)
+	}
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var status string
+	switch payload.Kind {
+	case AvatarToPbc:
+		status = contract.NFTPvcWFSig
+	case AvatarToPvc:
+		status = contract.NFTPvcWFPay
+	}
+	kvs := make(map[string]interface{})
+	kvs["kind"]=payload.Kind
+	kvs["status"]=status
+	kvs["tokenId"]=payload.TokenId.Uint64()
+	_, err = db.HMSet(tx.Hash().String(), kvs).Result()
+	if err!=nil {
+		log.Println(err.Error())
+	}
+	db.SAdd(payload.User, tx.Hash().String())
+}
+
 func transfer(w http.ResponseWriter, r *http.Request) {
 	log.Println("receive a transfer")
-	var payload ExchangePayLoad
+	var payload ExTokensPayLoad
 	data, err := ioutil.ReadAll(r.Body)
 	log.Println(string(data))
 	if err!=nil {
@@ -207,19 +262,20 @@ func transfer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key:= payload.User + ":"+payload.Kind+":"+tx.Hash().String()
-	var value string
+	var status string
 	switch payload.Kind {
 	case ToPbc:
-		value = contract.PvcWFSig
+		status = contract.PvcWFSig
 	case ToPvc:
-		value = contract.PvcWFPay
-	case AvatarToPbc:
-		value = contract.NFTPvcWFSig
-	case AvatarToPvc:
-		value = contract.NFTPvcWFPay
+		status = contract.PvcWFPay
 	}
-	db.Set(key,value,time.Hour)
+
+	kvs:=make(map[string]interface{})
+	kvs["kind"]=payload.Kind
+	kvs["status"]=status
+	kvs["amount"]=payload.Amount
+	db.HMSet(tx.Hash().String(),kvs)
+	db.SAdd(payload.User, tx.Hash().String())
 }
 
 func mint(w http.ResponseWriter, r *http.Request) {
@@ -407,6 +463,8 @@ func messagePush(w http.ResponseWriter, r *http.Request) {
 
 // initial contract
 func init() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	var cc ChainConfig
 	data, err := ioutil.ReadFile(chainConfigJson)
 	if err != nil {
@@ -459,14 +517,15 @@ func main() {
 	defer jobs.Close()
 	go pbc.EventReceiver(pvc, jobs)
 	go pvc.EventReceiver(pbc, jobs)
-	go contract.Consumer(jobs,pvc,pbc)
+	go contract.Consumer(jobs,pvc,pbc,db)
 	r := mux.NewRouter()
 
 	r.HandleFunc("/api/v1/{chain:public|private}/tokens/{user}", getToken).Methods("GET")
 	r.HandleFunc("/api/v1/{chain:public|private}/nonce/{user}", getNonce).Methods("GET")
 	r.HandleFunc("/api/v1/{chain:public|private}/ether/{user}", getEther).Methods("GET")
 	r.HandleFunc("/api/v1/private/tokens/{user}", updateToken).Methods("PUT")
-	r.HandleFunc("/api/v1/{chain:public|private}/transfer", transfer).Methods("PUT")
+	r.HandleFunc("/api/v1/{chain:public|private}/transfer/tokens", transfer).Methods("PUT")
+	r.HandleFunc("/api/v1/{chain:public|private}/transfer/nft", nftTransfer).Methods("PUT")
 	r.HandleFunc("/api/v1/nft/{tokenId}", mint).Methods("POST")
 	r.HandleFunc("/api/v1/{chain:public|private}/nft/{user}", getNFT).Methods("GET")
 	r.HandleFunc("/api/v1/nft/{tokenId}/level", upgradeNFT).Methods("PUT")

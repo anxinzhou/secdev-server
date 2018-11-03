@@ -15,6 +15,7 @@ import (
 	"sync/atomic"
 	"time"
 	"token/privateSlot"
+	"utils"
 )
 
 type Pvc struct {
@@ -26,15 +27,6 @@ type LogCollectedSignatures struct {
 	AuthorityMachineResponsibleForRelay common.Address
 	MessageHash common.Hash
 }
-
-//event DepositConfirmation(address recipient, uint256 value, bytes32 transactoinHash);
-//event Login(address indexed privateAdd, address indexed publicAdd, uint time);
-//event Sync(address []  _from, address [] _to, uint [] _amount, uint [] time);
-//event SyncConfirmation(address indexed _from, address indexed _to, uint time);
-//event Pay(address indexed _user, uint _amount , bytes32 transactoinHash);
-//event Award(address indexed _user, uint _amount );
-//event Consume(address indexed _user, uint _amount);
-//event ExchangeToken(address user, uint amount);
 
 var (
 	logCollectedSignaturesHash common.Hash
@@ -245,7 +237,7 @@ func (p *Pvc) ExchangeHandler(jobs * disque.Pool,exchangeEvent *LogExchange) {
 
 	message := bytes.Join([][]byte{ exchangeEvent.TxHash[:],
 		exchangeEvent.User[:],
-		fillZero(exchangeEvent.Amount.Bytes(), 32)}, []byte(""))
+		utils.FillZero(exchangeEvent.Amount.Bytes(), 32)}, []byte(""))
 	//hash:= crypto.Keccak256Hash([]byte("\x19Ethereum Signed Message:\n"),[]byte(strconv.Itoa(len(message))),message)
 	hash:= crypto.Keccak256Hash(message)
 	signature, _:=crypto.Sign(hash.Bytes(), p.txConfig.key.PrivateKey)
@@ -253,7 +245,9 @@ func (p *Pvc) ExchangeHandler(jobs * disque.Pool,exchangeEvent *LogExchange) {
 	input, _:= p.ABI.Pack("submitSignature",message, signature)
 	tx:=types.NewTransaction( 0, p.Address, big.NewInt(0), p.txConfig.Gaslimit, p.txConfig.GasPrice, input)
 	txWrapper, _:= tx.MarshalJSON()
-	jobs.Add(string(txWrapper), SubmitSignatureQueue)
+	log.Println(exchangeEvent.User.String())
+	log.Println(exchangeEvent.TxHash.String())
+	jobs.Add(exchangeEvent.User.String()+exchangeEvent.TxHash.String()+string(txWrapper), SubmitSignatureQueue)
 }
 
 func (p *Pvc) CollectedSignaturesHandler(pbc *Pbc,jobs * disque.Pool, collectedSignaturesEvent *LogCollectedSignatures) {
@@ -295,8 +289,10 @@ func (p *Pvc) CollectedSignaturesHandler(pbc *Pbc,jobs * disque.Pool, collectedS
 	tx:=types.NewTransaction( 0, pbc.Address, big.NewInt(0), pbc.txConfig.Gaslimit, pbc.txConfig.GasPrice, input)
 	txWrapper, _:= tx.MarshalJSON()
 	var address common.Address
+	var txHash common.Hash
+	copy(txHash[:],message[:32])
 	copy(address[:],message[32:52])
-	jobs.Add(address.String()+string(txWrapper), PbcPayQueue)
+	jobs.Add(address.String()+txHash.String()+string(txWrapper), PbcPayQueue)
 }
 
 func (p *Pvc) ExchangeNFTHandler(pbc *Pbc,jobs *disque.Pool,nft *LogExchangeNFT){
@@ -307,9 +303,53 @@ func (p *Pvc) ExchangeNFTHandler(pbc *Pbc,jobs *disque.Pool,nft *LogExchangeNFT)
 	//nonce:= atomic.AddUint64(&pbc.txConfig.nonce, 1)
 	tx:=types.NewTransaction( 0, pbc.Address, big.NewInt(0), pbc.txConfig.Gaslimit, pbc.txConfig.GasPrice, input)
 	txWrapper, _:= tx.MarshalJSON()
-	jobs.Add(nft.Owner.String()+string(txWrapper),PbcPayNFTQueue)
+	log.Println(nft.Owner.String())
+	log.Println(nft.TxHash.String())
+	log.Println(len(nft.Owner.String())+len(nft.TxHash.String()))
+	jobs.Add(nft.Owner.String()+nft.TxHash.String()+string(txWrapper),PbcPayNFTQueue)
 
 }
+
+
+func (p *Pvc) SendTransaction(tx *types.Transaction) error {
+	tx,err:= p.Contract.SendTransaction(tx)
+	_, err = p.GetReceiptStatus(tx.Hash())
+	return err
+}
+
+func (p *Pvc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
+	count := time.Second
+	for {
+		time.Sleep(privateChainTime)
+		receipt, err :=p.Client.TransactionReceipt(context.Background(),txHash)
+		if err==nil {
+			if receipt.Status==0{
+				return receipt.Status, errors.New("transaction revert")
+			}
+			return receipt.Status, nil
+		}
+		count +=time.Second
+		if count == privateChainTimeOut {
+			break
+		}
+	}
+	return 0, errors.New("Time out, can not get transaction status")
+}
+
+func (p *Pvc) ProcessJob(job *disque.Job) (*types.Transaction,error) {
+	tx,_ := p.Contract.ProcessJob(job)
+	_,err := p.GetReceiptStatus(tx.Hash())
+	return tx, err
+}
+//func (p *Pvc) Deploy(initialSupply *big.Int, requiredSignatures *big.Int, authorities []common.Address) (common.Address, error) {
+//	var err error
+//
+//	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
+//	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
+//
+//	address, _, _, err := privateSlot.DeployPrivateSlot(auth, p.Client, initialSupply, requiredSignatures, authorities)
+//	return address, err
+//}
 
 func (p *Pvc) EventReceiver(pbc *Pbc, jobs *disque.Pool){
 	log.Println("start private watcher")
@@ -344,53 +384,3 @@ func (p *Pvc) EventReceiver(pbc *Pbc, jobs *disque.Pool){
 		}
 	}
 }
-
-func fillZero(src []byte, length int) []byte{
-	prefix:= make([]byte,length,length+len(src))
-	var buffer bytes.Buffer
-	buffer.Write(prefix)
-	buffer.Write(src)
-	dst:=buffer.Bytes()
-	return dst[len(dst)-length:]
-}
-
-func (p *Pvc) SendTransaction(tx *types.Transaction) error {
-	tx,err:= p.Contract.SendTransaction(tx)
-	_, err = p.GetReceiptStatus(tx.Hash())
-	return err
-}
-
-func (p *Pvc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
-	count := time.Second
-	for {
-		time.Sleep(privateChainTime)
-		receipt, err :=p.Client.TransactionReceipt(context.Background(),txHash)
-		if err==nil {
-			if receipt.Status==0{
-				return receipt.Status, errors.New("transaction revert")
-			}
-			return receipt.Status, nil
-		}
-		count +=time.Second
-		if count == privateChainTimeOut {
-			break
-		}
-	}
-	return 0, errors.New("Time out, can not get transaction status")
-}
-
-func (p *Pvc) ProcessJob(job *disque.Job) error {
-	tx,_ := p.Contract.ProcessJob(job)
-	_,err := p.GetReceiptStatus(tx.Hash())
-	return err
-}
-//func (p *Pvc) Deploy(initialSupply *big.Int, requiredSignatures *big.Int, authorities []common.Address) (common.Address, error) {
-//	var err error
-//
-//	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
-//	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
-//
-//	address, _, _, err := privateSlot.DeployPrivateSlot(auth, p.Client, initialSupply, requiredSignatures, authorities)
-//	return address, err
-//}
-

@@ -112,7 +112,7 @@ func (p *Pbc) ExchangeNFTHandler(pvc *Pvc,jobs *disque.Pool, nft *LogExchangeNFT
 
 	tx:=types.NewTransaction( 0, pvc.Address, big.NewInt(0), pvc.txConfig.Gaslimit, pvc.txConfig.GasPrice, input)
 	txWrapper, _:= tx.MarshalJSON()
-	jobs.Add(nft.Owner.String()+string(txWrapper),PvcPayNFTQueue)
+	jobs.Add(nft.Owner.String()+nft.TxHash.String()+string(txWrapper),PvcPayNFTQueue)
 }
 
 //func (p *Pbc) Deploy(initialSupply *big.Int, requiredSignatures *big.Int, authorities []common.Address) (common.Address, error) {
@@ -131,7 +131,7 @@ func (p *Pbc) ExchangeHandler(pvc *Pvc, jobs *disque.Pool,exchangeEvent *LogExch
 	//nonce:= atomic.AddUint64(&pbc.txConfig.nonce, 1)
 	tx:=types.NewTransaction( 0, pvc.Address, big.NewInt(0), pvc.txConfig.Gaslimit, pvc.txConfig.GasPrice, input)
 	txWrapper, _:= tx.MarshalJSON()
-	jobs.Add(exchangeEvent.User.String() + string(txWrapper),PvcPayQueue)
+	jobs.Add(exchangeEvent.User.String() +exchangeEvent.TxHash.String()+ string(txWrapper),PvcPayQueue)
 }
 
 func (p *Pbc) EventReceiver(pvc *Pvc, jobs *disque.Pool){
@@ -146,14 +146,12 @@ func (p *Pbc) EventReceiver(pvc *Pvc, jobs *disque.Pool){
 			case logExchangeSigHash.Hex():
 				var exchangeEvent LogExchange
 				p.ABI.Unpack(&exchangeEvent, "Exchange", vLog.Data)
-				log.Println(len(vLog.Data))
-				log.Println(vLog.Data)
-				log.Println(vLog.TxHash.String())
 				exchangeEvent.TxHash = vLog.TxHash
 				go p.ExchangeHandler(pvc, jobs,&exchangeEvent)
 			case logExchangeNFTHash.Hex():
 				var exchangeNFTEvent LogExchangeNFT
 				p.ABI.Unpack(&exchangeNFTEvent, "ExchangeNFT",vLog.Data)
+				exchangeNFTEvent.TxHash = vLog.TxHash
 				go p.ExchangeNFTHandler(pvc,jobs,&exchangeNFTEvent)
 			}
 		}
@@ -179,8 +177,8 @@ func (p *Pbc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
 	return 0, errors.New("Time out, can not get transaction status")
 }
 
-func (p *Pbc) ProcessJob(job *disque.Job) error {
+func (p *Pbc) ProcessJob(job *disque.Job) (*types.Transaction,error) {
 	tx,_ := p.Contract.ProcessJob(job)
 	_,err := p.GetReceiptStatus(tx.Hash())
-	return err
+	return tx,err
 }
