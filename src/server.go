@@ -20,7 +20,12 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	app "appClient"
 )
+
+
+// websocket gcuid
+
 
 const (
 	chainConfigJson = "src/etc/chainConfig.json"
@@ -33,6 +38,7 @@ const (
 	ToPvc = "ToPvc"
 	AvatarToPbc ="AvatarToPbc"
 	AvatarToPvc ="AvatarToPvc"
+	User = "0x20A40B83a495DD2fbbE33E0b6ad119B09F09151f"
 )
 
 var (
@@ -461,6 +467,162 @@ func messagePush(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func SigninHandler (data []byte,c *websocket.Conn) {
+	var signin app.SigninReq
+	json.Unmarshal(data, &signin)
+	if signin.LoginCode!=app.LoginCode {
+		reqError:= app.Error{
+			Status: app.FailedStatus,
+			Code: app.ErrorCode,
+			Gcuid: app.Signin,
+			Reason: app.InvalidRequestInfo,
+		}
+		reqErrorWrapper,err:=json.Marshal(reqError)
+		if err!=nil {
+			log.Println(err.Error())
+		}
+		c.WriteMessage(websocket.TextMessage, reqErrorWrapper)
+	} else {
+		res:= app.SigninRes{
+			Status:app.OkStatus,
+			Gcuid:app.Signin,
+			Guuid:app.Guuid,
+		}
+		resWrapper, err:=json.Marshal(res)
+		if err!=nil {
+			log.Println(err.Error())
+		}
+		c.WriteMessage(websocket.TextMessage, resWrapper)
+	}
+}
+
+func SignoutHandler (data []byte,c *websocket.Conn) {
+	res:= app.SignoutRes{
+		&app.PostRes{
+			Status: app.OkStatus,
+			Gcuid: app.Signout,
+		},
+	}
+	resWrapper, err:=json.Marshal(res)
+	if err!=nil {
+		log.Println(err.Error())
+	}
+	c.WriteMessage(websocket.TextMessage, resWrapper)
+}
+
+func
+
+func GetWalletsAndMachineHandler(data []byte, c *websocket.Conn) {
+
+}
+
+func GetWalletsHandler(data []byte, c *websocket.Conn) {
+
+}
+
+func GetTransactionsHandler(data []byte, c *websocket.Conn) {
+
+}
+
+func GetExchangeRateHandler(data []byte, c *websocket.Conn) {
+
+}
+
+func PostExchangeHandler(data []byte, c *websocket.Conn){
+
+}
+
+func PostQRCodeHandler(data []byte, c *websocket.Conn) {
+
+}
+
+func MachineLogoutHandler(data []byte, c *websocket.Conn) {
+
+}
+
+func PostTokenUserOrRewardHandler(data []byte, c *websocket.Conn) {
+
+}
+
+
+
+func requestHandler(c *websocket.Conn) {
+	for {
+		_,data,err := c.ReadMessage()
+		var kvs map[string]interface{}
+		if err!=nil {
+			log.Println(err.Error())
+		}
+		json.Unmarshal(data, &kvs)
+		gid,ok := kvs["gcuid"]
+		if !ok {
+			log.Println(errors.New("gcuid not exist"))
+		}
+
+		gcuid,err:= gid.(int)
+		if err!=nil {
+			log.Println(err.Error())
+		}
+
+		switch gcuid {
+		case app.Signin:
+			SigninHandler(data,c)
+		case app.Signout:
+			SignoutHandler(data,c)
+		case app.GetWalletsAndMachine:
+			GetWalletsAndMachineHandler(data,c)
+		case app.GetWallets:
+			GetWalletsHandler(data,c)
+		case app.GetTransactions:
+			GetTransactionsHandler(data,c)
+		case app.GetExchangeRate:
+			GetExchangeRateHandler(data,c)
+		case app.PostExchange:
+			PostExchangeHandler(data,c)
+		case app.PostQRCode:
+			PostExchangeHandler(data,c)
+		//case app.NotifyMachineStatusChange:
+		//case app.NotifyTokenChange:
+		//case app.NotifyExchangeResult:
+		case app.MachineLogout:
+			MachineLogoutHandler(data,c)
+		case app.PostTokenUseOrReward:
+			PostTokenUserOrRewardHandler(data,c)
+		}
+	}
+}
+
+func requestParser(w http.ResponseWriter, r *http.Request) {
+	log.Println("receive a reqeust")
+	var upgrader = websocket.Upgrader{}
+	upgrader.CheckOrigin = func(rq *http.Request) bool { return true }
+	c, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Print("upgrade:", err)
+		return
+	}
+
+	go requestHandler(c)
+	defer c.Close()
+	for {
+		job ,err:=jobs.Get(contract.PbcPayNFTQueue+User,
+			contract.PvcPayNFTQueue+User,
+			contract.PbcPayQueue+User,
+			contract.PvcPayQueue+User,
+		)
+		if err!=nil {
+			log.Println(err.Error())
+			continue
+		}
+		log.Println(job.Data)
+		jobs.Ack(job)
+		err = c.WriteMessage(websocket.TextMessage, []byte(job.Data))
+		if err!=nil {
+			log.Println(err.Error())
+		}
+	}
+}
+
 // initial contract
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -512,6 +674,8 @@ func init() {
 	})
 }
 
+
+
 func main() {
 	//runtime.GOMAXPROCS(8)
 	defer jobs.Close()
@@ -520,18 +684,19 @@ func main() {
 	go contract.Consumer(jobs,pvc,pbc,db)
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/v1/{chain:public|private}/tokens/{user}", getToken).Methods("GET")
-	r.HandleFunc("/api/v1/{chain:public|private}/nonce/{user}", getNonce).Methods("GET")
-	r.HandleFunc("/api/v1/{chain:public|private}/ether/{user}", getEther).Methods("GET")
-	r.HandleFunc("/api/v1/private/tokens/{user}", updateToken).Methods("PUT")
-	r.HandleFunc("/api/v1/{chain:public|private}/transfer/tokens", transfer).Methods("PUT")
-	r.HandleFunc("/api/v1/{chain:public|private}/transfer/nft", nftTransfer).Methods("PUT")
-	r.HandleFunc("/api/v1/nft/{tokenId}", mint).Methods("POST")
-	r.HandleFunc("/api/v1/{chain:public|private}/nft/{user}", getNFT).Methods("GET")
-	r.HandleFunc("/api/v1/nft/{tokenId}/level", upgradeNFT).Methods("PUT")
-	r.HandleFunc("/api/v1/nft/{tokenId}/weapon", equipWeapon).Methods("PUT")
-	r.HandleFunc("/api/v1/nft/{tokenId}/armor", equipArmor).Methods("PUT")
-	r.HandleFunc("/ws",messagePush)
+	//r.HandleFunc("/api/v1/{chain:public|private}/tokens/{user}", getToken).Methods("GET")
+	//r.HandleFunc("/api/v1/{chain:public|private}/nonce/{user}", getNonce).Methods("GET")
+	//r.HandleFunc("/api/v1/{chain:public|private}/ether/{user}", getEther).Methods("GET")
+	//r.HandleFunc("/api/v1/private/tokens/{user}", updateToken).Methods("PUT")
+	//r.HandleFunc("/api/v1/{chain:public|private}/transfer/tokens", transfer).Methods("PUT")
+	//r.HandleFunc("/api/v1/{chain:public|private}/transfer/nft", nftTransfer).Methods("PUT")
+	//r.HandleFunc("/api/v1/nft/{tokenId}", mint).Methods("POST")
+	//r.HandleFunc("/api/v1/{chain:public|private}/nft/{user}", getNFT).Methods("GET")
+	//r.HandleFunc("/api/v1/nft/{tokenId}/level", upgradeNFT).Methods("PUT")
+	//r.HandleFunc("/api/v1/nft/{tokenId}/weapon", equipWeapon).Methods("PUT")
+	//r.HandleFunc("/api/v1/nft/{tokenId}/armor", equipArmor).Methods("PUT")
+	//r.HandleFunc("/ws",messagePush)
+	r.HandleFunc("/", requestParser).Methods("GET")
 
 	fmt.Println("Running http server")
 	http.ListenAndServe(
