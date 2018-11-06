@@ -17,6 +17,7 @@ import (
 	"math/big"
 	"net/http"
 	"time"
+	"utils"
 )
 
 const (
@@ -268,6 +269,11 @@ func GetExchangeRateHandler(data []byte, c *websocket.Conn) {
 		sendError(app.GetExchangeRate,app.ServerErrorCode,app.ServerChainError,c)
 		return
 	}
+	switch req.ExchangeType {
+	case app.SlotToEth:
+		rateWrapper,_,_:=new(big.Float).Parse(rate,10)
+		rate = new(big.Float).Quo(big.NewFloat(1),rateWrapper).String()
+	}
 
 	res:= &app.GetExchangeRateRes{
 		Gcuid: app.GetExchangeRate,
@@ -317,7 +323,7 @@ func exchangeResultHandler(req *app.PostExchangeReq,transaction *types.Transacti
 		rawExchangeRate,_:=pvc.GetExchangeRate()
 		exchangeRate,_,_ := new(big.Float).Parse(rawExchangeRate,10)
 		// "2006-01-02 15:04:05 is the birth day of golang, fixed format"
-	    date:= time.Now().Format("2006-01-02 15:04:05")
+	    date:= utils.GetCurrentTime()
 		switch req.ExchangeType {
 		case app.EthToSLot:
 			withdrawTokenAmount := new(big.Float).Mul(amountWrapper,exchangeRate)
@@ -371,8 +377,7 @@ func exchangeResultHandler(req *app.PostExchangeReq,transaction *types.Transacti
 		Status:status,
 		ExchangeType: req.ExchangeType,
 		Amount: req.Amount,
-		// "2006-01-02 15:04:05 is the birth day of golang, fixed format"
-		CreatedDate: time.Now().Format("2006-01-02 15:04:05"),
+		CreatedDate: utils.GetCurrentTime(),
 	}
 	resultResWrapper, err:=json.Marshal(resultRes)
 	if err!=nil {
@@ -417,7 +422,7 @@ func machineStatusChange(state int64, c *websocket.Conn){
 		State:state,
 		MachineId:app.MachineId,
 		Act:app.MachineStatusChange,
-		CreatedDate: time.Now().Format("2006-01-02 15:04:05"),
+		CreatedDate: utils.GetCurrentTime(),
 	}
 	resWrapper, err:=json.Marshal(res)
 	if err!=nil {
@@ -506,7 +511,7 @@ func updateResultHandler(req *app.PostTokenUseOrRewardReq, transaction *types.Tr
 		tx:=app.Transaction{
 			Type: txType,
 			Amount: req.Amount,
-			CreatedDate:time.Now().Format("2006-01-02 15:04:05"),
+			CreatedDate: utils.GetCurrentTime(),
 		}
 		txWrapper,_:=json.Marshal(tx)
 		_,err:=db.LPush(app.User+":"+string(app.Slot),txWrapper).Result()
@@ -531,8 +536,7 @@ func updateResultHandler(req *app.PostTokenUseOrRewardReq, transaction *types.Tr
 		TokenUpdate: tokenUpdate,
 		TokenTotal: token,
 		Act: app.TokenChange,
-		// "2006-01-02 15:04:05 is the birth day of golang, fixed format"
-		CreatedDate: time.Now().Format("2006-01-02 15:04:05"),
+		CreatedDate: utils.GetCurrentTime(),
 	}
 	resultResWrapper, err:=json.Marshal(resultRes)
 	if err!=nil {

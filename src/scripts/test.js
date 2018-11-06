@@ -48,9 +48,15 @@ var tokenRecordReq = {
 }
 
 //done
-var exchangeRateReq = {
+var exchangeSTERateReq = {
     gcuid: 104,
     exchange_type : 1,
+    act: "get_exchange_rate"
+}
+
+var exchangeETSRateReq = {
+    gcuid: 104,
+    exchange_type : 2,
     act: "get_exchange_rate"
 }
 
@@ -106,8 +112,9 @@ ws.on('open', function open() {
     // ws.send(JSON.stringify(walletAndMachineReq))
     // //ws.send(JSON.stringify(tokenUse))
     // ws.send(JSON.stringify(tokenReward))
-    // ws.send(JSON.stringify(exchangeRateReq))
-    // ws.send(JSON.stringify(SlotToEthReq))
+    ws.send(JSON.stringify(exchangeETSRateReq))
+    ws.send(JSON.stringify(exchangeSTERateReq))
+    ws.send(JSON.stringify(SlotToEthReq))
     //
     // ws.send(JSON.stringify(ethToSlotReq))
     ws.send(JSON.stringify(ethRecordReq))

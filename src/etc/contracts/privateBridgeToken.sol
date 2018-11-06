@@ -155,8 +155,8 @@ contract BasicToken {
 contract GameToken is BasicToken {
     // creator of this contract
     address internal _owner;
-    uint public exchangeRate = 210;
-    uint public exchangeBase = 100;
+    uint public exchangeRate = 500;
+    uint public exchangeBase = 1;
 
     constructor (
         uint256 totalSupply,

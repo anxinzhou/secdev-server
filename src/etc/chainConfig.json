@@ -3,6 +3,6 @@
         "port": "ws://localhost:8650",
         "keystore": "./etc/keystore/zx",
         "password": "321",
-        "address": "0xe8F8c9cbF96b14510A1bE5DDBb1745da2d7617CA"
+        "address": "0xf17F6c1451449d35Aa8f33244e6822D981cc255a"
     }
 }
