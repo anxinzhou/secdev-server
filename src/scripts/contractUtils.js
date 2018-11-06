@@ -49,6 +49,7 @@ program
                     from: account.address,
                     gas: "3000000",
                     gasPrice: '0',
+                    value: "10000000000000000000000", // 1000 ether
                 }
                 return account.signTransaction(tx)
             }).then(signedTx => {

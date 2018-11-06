@@ -1,118 +1,189 @@
-pragma solidity ^0.4.25;
+pragma solidity ^0.4.21;
 
-import './utils/gameToken.sol';
-import './utils/helpers.sol';
-
-
-contract BridgeToken is GameToken {
-
-    // A signature collection
-    struct SignaturesCollection {
-        bytes message;
-        // signed machines
-        address[] authorizedMachines;
-        // signatures of machines
-        bytes[] signatures;
+library SafeMath {
+  function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+    // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
+    // benefit is lost if 'b' is also tested.
+    // See: https://github.com/OpenZeppelin/openzeppelin-solidity/pull/522
+    if (a == 0) {
+      return 0;
     }
 
-    // Need required amount of signatures of machines to reach concensus.
-    uint256 public requiredSignatures;
+    uint256 c = a * b;
+    require(c / a == b);
 
-    mapping(bytes32 => address[]) internal deposits;
+    return c;
+  }
 
-    mapping (bytes32 => SignaturesCollection) internal signatures;
+  function div(uint256 a, uint256 b) internal pure returns (uint256) {
+    require(b > 0); // Solidity only automatically asserts when dividing by 0
+    uint256 c = a / b;
+    // assert(a == b * c + a % b); // There is no case in which this doesn't hold
 
-    event WithdrawSignatureSubmitted(bytes32 messageHash);
-    event CollectedSignatures(address authorityMachineResponsibleForRelay, bytes32 messageHash);
-    event DepositConfirmation(address recipient, uint256 value, bytes32 transactoinHash);
-    event Exchange(address user, uint amount);
-    event Pay(address indexed user, uint amount , bytes32 transactoinHash);
-    event ExchangeNFT(uint256 tokenID, address owner, uint256 gene, uint256 avatarLevel, bool weaponed, bool armored);
+    return c;
+  }
 
-    constructor (uint256 totalSupply,
-                string tokenName,
-                string tokenSymbol,
-                uint8 decimalUnits,
-                uint _requiredSignatures
-    ) GameToken(totalSupply,tokenName,tokenSymbol,decimalUnits) public {
-        requiredSignatures = _requiredSignatures;
+  function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+    require(b <= a);
+    uint256 c = a - b;
+
+    return c;
+  }
+
+  function add(uint256 a, uint256 b) internal pure returns (uint256) {
+    uint256 c = a + b;
+    require(c >= a);
+
+    return c;
+  }
+
+  function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+    require(b != 0);
+    return a % b;
+  }
+}
+
+library Helpers {
+    // returns whether `array` contains `value`.
+    function addressArrayContains(address[] array, address value) internal pure returns (bool) {
+        for (uint256 i = 0; i < array.length; i++) {
+            if (array[i] == value) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // returns the digits of `inputValue` as a string.
+    // example: `uintToString(12345678)` returns `"12345678"`
+    function uintToString(uint256 inputValue) internal pure returns (string) {
+        // figure out the length of the resulting string
+        uint256 length = 0;
+        uint256 currentValue = inputValue;
+        do {
+            length++;
+            currentValue /= 10;
+        } while (currentValue != 0);
+        // allocate enough memory
+        bytes memory result = new bytes(length);
+        // construct the string backwards
+        uint256 i = length - 1;
+        currentValue = inputValue;
+        do {
+            result[i--] = byte(48 + currentValue % 10);
+            currentValue /= 10;
+        } while (currentValue != 0);
+        return string(result);
+    }
+}
+
+contract BasicToken {
+    using SafeMath for uint256;
+
+    uint256 internal _totalSupply;
+
+    string public name;
+
+    uint8 public decimals;
+
+    string public symbol;
+
+    mapping (address => uint256) internal _balances;
+
+    mapping (address => mapping (address => uint256)) internal _allowed;
+
+
+    event Transfer(address indexed _from, address indexed _to, uint256 _value);
+    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
+
+    constructor (
+        uint256 totalSupply,
+        string tokenName,
+        string tokenSymbol
+    ) public {
+        decimals = 18;
+        _totalSupply = totalSupply* 10**uint(decimals);
+        _balances[msg.sender] = _totalSupply;
+        name = tokenName;
+        symbol = tokenSymbol;
+    }
+
+    function totalSupply() public view returns (uint256) {
+        return _totalSupply;
+    }
+
+    function balanceOf(address owner) public view returns (uint256) {
+        return _balances[owner];
+    }
+
+    function allowance(address owner, address spender) public view returns (uint256) {
+        return _allowed[owner][spender];
+    }
+
+    function _transfer(address from, address to, uint256 value) internal {
+        require(value <= _balances[from]);
+        require(to != address(0));
+
+        _balances[from] = _balances[from].sub(value);
+        _balances[to] = _balances[to].add(value);
+    }
+
+    function transfer(address to, uint256 value) public returns (bool) {
+        _transfer(msg.sender, to, value);
+        emit Transfer(msg.sender, to, value);
+        return true;
+    }
+
+    function approve(address spender, uint256 value) public returns (bool) {
+        require(spender != address(0));
+
+        _allowed[msg.sender][spender] = value;
+        emit Approval(msg.sender, spender, value);
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 value) public returns (bool) {
+        require(value <= _allowed[from][msg.sender]);
+        _allowed[from][msg.sender] = _allowed[from][msg.sender].sub(value);
+
+        _transfer(from, to, value);
+        emit Transfer(from, to, value);
+        return true;
+    }
+}
+
+contract GameToken is BasicToken {
+    // creator of this contract
+    address internal _owner;
+    uint public exchangeRate = 210;
+    uint public exchangeBase = 100;
+
+    constructor (
+        uint256 totalSupply,
+        string tokenName,
+        string tokenSymbol
+    ) BasicToken(totalSupply,tokenName,tokenSymbol) payable public {
         _owner = msg.sender;
     }
 
-    function setRequiredSignatures(uint newRequiredSignatures) public onlyOwner(){
-        requiredSignatures = newRequiredSignatures;
+    function exchangeForToken(address user) public payable returns (bool) {
+        uint tokenAmount = msg.value * exchangeRate/exchangeBase;
+       _transfer(_owner, user ,tokenAmount);
     }
 
-    function exchangeNFT (uint256 tokenID) public {
-            address avatarOwner = _avatarOwner[tokenID];
-            require(msg.sender == avatarOwner);
-            _ownedAvatars[avatarOwner]=0;
-            _avatarOwner[tokenID]=0;
-            uint256 gene = avatar[tokenID].gene ;
-            uint256 avatarLevel = avatar[tokenID].avatarLevel;
-            bool weaponed = avatar[tokenID].weaponed;
-            bool armored = avatar[tokenID].armored;
-            avatar[tokenID].gene=0;
-            avatar[tokenID].avatarLevel = 0;
-            avatar[tokenID].weaponed = false;
-            avatar[tokenID].armored = false;
-            emit ExchangeNFT(tokenID,avatarOwner, gene, avatarLevel, weaponed, armored);
-        }
-
-        function payNFT (uint256 tokenID, address avatarOwner, uint256 gene, uint256 avatarLevel, bool weaponed, bool armored) public {
-            _ownedAvatars[avatarOwner]=tokenID;
-            _avatarOwner[tokenID]=avatarOwner;
-            avatar[tokenID].gene = gene;
-            avatar[tokenID].avatarLevel = avatarLevel;
-            avatar[tokenID].weaponed = weaponed;
-            avatar[tokenID].armored = armored;
-        }
-
-
-    function exchange(address user, uint amount) public {
-        _transfer(user, _owner, amount);
-        emit Exchange(user, amount);
+    function exchangeForEther(address user, uint amount) public returns (bool) {
+        uint etherAmount = amount*exchangeBase/exchangeRate;
+        _transfer(user,_owner,amount);
+        user.transfer(etherAmount);
     }
 
-    function pay(address user, uint amount, bytes32 transactionHash) public onlyAuthorizedMachine() {
-        bytes32 hash = keccak256(abi.encodePacked(user, amount, transactionHash));
-
-        require(!Helpers.addressArrayContains(deposits[hash], msg.sender));
-
-        deposits[hash].push(msg.sender);
-
-        if(deposits[hash].length == requiredSignatures) {
-            _transfer(_owner, user, amount);
-            emit Pay(user, amount, transactionHash);
-        } else {
-            emit DepositConfirmation(user, amount, transactionHash);
-        }
+    function reward(address to, uint256 value) public returns (bool) {
+        _transfer(msg.sender, to, value);
+        return true;
     }
 
-    function submitSignature(bytes message, bytes signature) public onlyAuthorizedMachine(){
-        //require(msg.sender == MessageSigning.recoverAddressFromSignedMessage(signature, message));
-
-        bytes32 hash = keccak256(message);
-
-        // each authority can only provide one signature per message
-        require(!Helpers.addressArrayContains(signatures[hash].authorizedMachines, msg.sender));
-
-        signatures[hash].message = message;
-        signatures[hash].authorizedMachines.push(msg.sender);
-        signatures[hash].signatures.push(signature);
-
-        if (signatures[hash].authorizedMachines.length == requiredSignatures) {
-            emit CollectedSignatures(msg.sender, hash);
-        } else {
-            emit WithdrawSignatureSubmitted(hash);
-        }
-    }
-
-    function signature(bytes32 messageHash, uint256 index) public view returns (bytes) {
-        return signatures[messageHash].signatures[index];
-    }
-
-    function message(bytes32 message_hash) public view returns (bytes) {
-        return signatures[message_hash].message;
+    function consume(address by, uint256 value) public returns (bool){
+        _transfer(by, msg.sender, value);
+        return true;
     }
 }

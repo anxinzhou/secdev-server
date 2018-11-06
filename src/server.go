@@ -2,58 +2,34 @@
 package main
 
 import (
+	app "appClient"
 	"contract"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/go-redis/redis"
 	h "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"github.com/goware/disque"
 	"io/ioutil"
 	"log"
 	"math/big"
 	"net/http"
-	"strconv"
-	"strings"
-	app "appClient"
+	"time"
 )
-
-
-// websocket gcuid
-
 
 const (
 	chainConfigJson = "src/etc/chainConfig.json"
-	disqueConfigJson = "src/etc/disqueConfig.json"
 	redisConfigJson = "src/etc/redisConfig.json"
 )
 
-const (
-	ToPbc = "ToPbc"
-	ToPvc = "ToPvc"
-	AvatarToPbc ="AvatarToPbc"
-	AvatarToPvc ="AvatarToPvc"
-	User = "0x20A40B83a495DD2fbbE33E0b6ad119B09F09151f"
-)
-
 var (
-	pbc *contract.Pbc
 	pvc *contract.Pvc
-	jobs *disque.Pool
+	machine *app.MachineState
+	QRCode string
 	db *redis.Client
-
 )
-
-type RedisConfig struct {
-	Port string `json:"port"`
-	Password string `json:"password"`
-	DB int `json:"DB"`
-}
 
 type DisqueConfig struct {
 	Port string `json:"port"`
@@ -82,8 +58,10 @@ type BasicChainConfig struct {
 	Address  string `json:"address"`
 }
 
-type PublicConfig struct {
-	BasicChainConfig
+type RedisConfig struct {
+	Port string `json:"port"`
+	Password string `json:"password"`
+	DB int `json:"DB"`
 }
 
 type PrivateConfig struct {
@@ -91,413 +69,52 @@ type PrivateConfig struct {
 }
 
 type ChainConfig struct {
-	Pub *PublicConfig  `json:"public"`
 	Pri *PrivateConfig `json:"private"`
 }
 
-func getToken(w http.ResponseWriter, r *http.Request) {
-	var (
-		err         error
-		tokenNumber *big.Int
-	)
-	vars := mux.Vars(r)
-	user := vars["user"]
-	kind := vars["chain"]
-
-	if kind == "public" {
-		tokenNumber, err = pbc.GetToken(user)
-	} else if kind == "private" {
-		tokenNumber, err = pvc.GetToken(user)
+func sendError(gcuid int,errorCode int, reason string, c *websocket.Conn) {
+	reqError:= &app.Error{
+		Status: app.FailedStatus,
+		Code: errorCode,
+		Gcuid: gcuid,
+		Reason: reason,
 	}
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Println(err.Error())
-		return
-	}
-	tokenNumberWrapper, err := json.Marshal(tokenNumber)
-
-	w.Write(tokenNumberWrapper)
-}
-
-func getNonce(w http.ResponseWriter, r *http.Request) {
-	var (
-		err   error
-		nonce uint64
-	)
-
-	vars := mux.Vars(r)
-	user := vars["user"]
-	kind := vars["chain"]
-
-	if kind == "public" {
-		nonce, err = pbc.GetNonce(user)
-	} else if kind == "private" {
-		nonce, err = pvc.GetNonce(user)
-	}
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	nonceWrapper, err := json.Marshal(nonce)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Write(nonceWrapper)
-}
-
-func getEther(w http.ResponseWriter, r *http.Request) {
-	var (
-		err   error
-		ether *big.Int
-	)
-	vars := mux.Vars(r)
-	user := vars["user"]
-	kind := vars["chain"]
-	if kind == "public" {
-		ether, err = pbc.GetEther(user)
-	} else if kind == "private" {
-		ether, err = pvc.GetEther(user)
-	}
-	//log.Println("kind:",kind,"Deal with get Ether, ether amount: ", ether, "user: ", user)
-	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	etherWrapper, err := json.Marshal(ether)
-
-	w.Write(etherWrapper)
-}
-
-func updateToken(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	user := vars["user"]
-	var amount int
-	data, err := ioutil.ReadAll(r.Body)
-	log.Println(string(data))
-	err = json.Unmarshal(data,&amount)
-	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if amount < 0 {
-		log.Println("consume")
-		err = pvc.Consume(user, big.NewInt(int64(-amount)))
-	} else if amount > 0 {
-		err = pvc.Reward(user, big.NewInt(int64(amount)))
-	}
-	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	log.Println("Deal with consume/award amount:", amount, "user: ", user)
-}
-
-func nftTransfer(w http.ResponseWriter, r *http.Request) {
-	log.Println("receive a nft transfer")
-	var payload ExNFTPayLoad
-	data, err := ioutil.ReadAll(r.Body)
-	if err!=nil {
-		log.Println("can not parse transfer payload")
-	}
-	json.Unmarshal(data,&payload)
-
-	rawTxBytes, err := hex.DecodeString(payload.Tx)
-	tx := new(types.Transaction)
-	rlp.DecodeBytes(rawTxBytes, &tx)
-
-	vars := mux.Vars(r)
-	kind := vars["chain"]
-	if kind == "public" {
-		err = pbc.SendTransaction(tx)
-	} else if kind == "private" {
-		err = pvc.SendTransaction(tx)
-	}
-	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var status string
-	switch payload.Kind {
-	case AvatarToPbc:
-		status = contract.NFTPvcWFSig
-	case AvatarToPvc:
-		status = contract.NFTPvcWFPay
-	}
-	kvs := make(map[string]interface{})
-	kvs["kind"]=payload.Kind
-	kvs["status"]=status
-	kvs["tokenId"]=payload.TokenId.Uint64()
-	_, err = db.HMSet(tx.Hash().String(), kvs).Result()
+	reqErrorWrapper,err:=json.Marshal(reqError)
 	if err!=nil {
 		log.Println(err.Error())
 	}
-	db.SAdd(payload.User, tx.Hash().String())
-}
-
-func transfer(w http.ResponseWriter, r *http.Request) {
-	log.Println("receive a transfer")
-	var payload ExTokensPayLoad
-	data, err := ioutil.ReadAll(r.Body)
-	log.Println(string(data))
-	if err!=nil {
-		log.Println("can not parse transfer payload")
-	}
-	json.Unmarshal(data,&payload)
-
-	rawTxBytes, err := hex.DecodeString(payload.Tx)
-	tx := new(types.Transaction)
-	rlp.DecodeBytes(rawTxBytes, &tx)
-
-	vars := mux.Vars(r)
-	kind := vars["chain"]
-	if kind == "public" {
-		err = pbc.SendTransaction(tx)
-	} else if kind == "private" {
-		err = pvc.SendTransaction(tx)
-	}
-	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var status string
-	switch payload.Kind {
-	case ToPbc:
-		status = contract.PvcWFSig
-	case ToPvc:
-		status = contract.PvcWFPay
-	}
-
-	kvs:=make(map[string]interface{})
-	kvs["kind"]=payload.Kind
-	kvs["status"]=status
-	kvs["amount"]=payload.Amount
-	db.HMSet(tx.Hash().String(),kvs)
-	db.SAdd(payload.User, tx.Hash().String())
-}
-
-func mint(w http.ResponseWriter, r *http.Request) {
-	log.Println("receive a mint")
-	tx, _ := ioutil.ReadAll(r.Body)
-
-	var err error
-	vars := mux.Vars(r)
-	tokenId, err := strconv.ParseInt(vars["tokenId"], 10, 64)
-
-	if err != nil {
-		log.Println("can not parse tokenId", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = pvc.Mint(string(tx), big.NewInt(tokenId))
-	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	avatar, err := pvc.GetAvatar(big.NewInt(tokenId))
-	if err!=nil {
-		log.Println("can not get avatar")
-	}
-
-	avatarWrapper, err:= json.Marshal(avatar)
-
-	if err!=nil {
-		log.Println("can not unmarshal json")
-	}
-
-	w.Write(avatarWrapper)
-
-}
-
-func getNFT(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-	vars := mux.Vars(r)
-	user := vars["user"]
-	kind := vars["chain"]
-
-	ownedAvatar, err := pvc.OwnedTokens(user)
-	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if ownedAvatar.Int64()==0 {
-		http.Error(w,errors.New("you don not have an avatar").Error(), http.StatusBadRequest)
-		return
-	}
-
-	var avatar *contract.Avatar
-	if kind=="private" {
-		avatar, err = pvc.GetAvatar(ownedAvatar)
-	} else {
-		avatar, err = pbc.GetAvatar(ownedAvatar)
-	}
-
-	if err!=nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	avatarWrapper, _:= json.Marshal(avatar)
-	w.Write(avatarWrapper)
-}
-
-func upgradeNFT(w http.ResponseWriter, r *http.Request){
-	log.Println("receive a upgradeNFT")
-
-	var err error
-	vars := mux.Vars(r)
-	tokenId, err := strconv.ParseInt(vars["tokenId"], 10, 64)
-
-	err = pvc.Upgrade(big.NewInt(tokenId))
-	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-}
-
-func equipWeapon(w http.ResponseWriter, r *http.Request){
-	log.Println("receive buy Weapon")
-	user, _ := ioutil.ReadAll(r.Body)
-
-	var err error
-	var amount int64 = 2
-	vars := mux.Vars(r)
-	tokenId, err := strconv.ParseInt(vars["tokenId"], 10, 64)
-
-	//owner := hex.EncodeToString(pvc.OwnerOf(big.NewInt(tokenId)).Bytes())
-	//if owner != string(user) {
-	//	log.Println("wrong owner")
-	//	http.Error(w, errors.New("wrong  owner").Error(), http.StatusInternalServerError)
-	//	return
-	//}
-
-	err = pvc.Consume(string(user),big.NewInt(amount))
-
-	if err!=nil {
-		log.Println("buy weapon fail maybe not enough money")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-
-
-	err = pvc.EquipWeapon(string(user),big.NewInt(tokenId))
-	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		pvc.Reward(string(user),big.NewInt(amount))
-	}
-}
-
-func equipArmor(w http.ResponseWriter, r *http.Request) {
-	log.Println("receive buy Armor")
-	user, _ := ioutil.ReadAll(r.Body)
-
-	var err error
-	var amount int64 = 2
-	vars := mux.Vars(r)
-	tokenId, err := strconv.ParseInt(vars["tokenId"], 10, 64)
-
-	//owner := hex.EncodeToString(pvc.OwnerOf(big.NewInt(tokenId)).Bytes())
-	//if owner != string(user) {
-	//	log.Println("wrong owner")
-	//	http.Error(w, errors.New("wrong  owner").Error(), http.StatusInternalServerError)
-	//	return
-	//}
-
-	err = pvc.Consume(string(user),big.NewInt(amount))
-	if err!=nil {
-		log.Println("buy armor fail maybe not enough money")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = pvc.EquipArmor(string(user),big.NewInt(tokenId))
-	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		pvc.Reward(string(user),big.NewInt(amount))
-	}
-
-}
-
-func messagePush(w http.ResponseWriter, r *http.Request) {
-	log.Println("websocket connected")
-	var upgrader = websocket.Upgrader{}
-	upgrader.CheckOrigin = func(rq *http.Request) bool { return true }
-	c, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Print("upgrade:", err)
-		return
-	}
-
-	_, message, err:= c.ReadMessage()
-	user:= strings.ToLower(string(message))
-	log.Println(user, "connect websocket")
-	defer c.Close()
-	for {
-		job ,err:=jobs.Get(contract.PbcPayNFTQueue+user,
-			contract.PvcPayNFTQueue+user,
-			contract.PbcPayQueue+user,
-			contract.PvcPayQueue+user,
-			)
-		if err!=nil {
-			log.Println(err.Error())
-			continue
-		}
-		log.Println(job.Data)
-		jobs.Ack(job)
-		err = c.WriteMessage(websocket.TextMessage, []byte(job.Data))
-		if err!=nil {
-			log.Println(err.Error())
-		}
-	}
+	c.WriteMessage(websocket.TextMessage, reqErrorWrapper)
 }
 
 func SigninHandler (data []byte,c *websocket.Conn) {
 	var signin app.SigninReq
-	json.Unmarshal(data, &signin)
-	if signin.LoginCode!=app.LoginCode {
-		reqError:= app.Error{
-			Status: app.FailedStatus,
-			Code: app.ErrorCode,
-			Gcuid: app.Signin,
-			Reason: app.InvalidRequestInfo,
-		}
-		reqErrorWrapper,err:=json.Marshal(reqError)
-		if err!=nil {
-			log.Println(err.Error())
-		}
-		c.WriteMessage(websocket.TextMessage, reqErrorWrapper)
-	} else {
-		res:= app.SigninRes{
-			Status:app.OkStatus,
-			Gcuid:app.Signin,
-			Guuid:app.Guuid,
-		}
-		resWrapper, err:=json.Marshal(res)
-		if err!=nil {
-			log.Println(err.Error())
-		}
-		c.WriteMessage(websocket.TextMessage, resWrapper)
+	err:=json.Unmarshal(data, &signin)
+	if err!=nil{
+		log.Println(err.Error())
+		sendError(app.Signin,app.ClientErrorCode, app.ClientFormatError,c)
+		return
 	}
+	if signin.LoginCode!=app.LoginCode {
+		sendError(app.Signin,app.ClientErrorCode,app.WrongUser,c)
+		return
+	}
+
+	res:= &app.SigninRes{
+		Status:app.OkStatus,
+		Gcuid:app.Signin,
+		Guuid:app.Guuid,
+	}
+	resWrapper, err:=json.Marshal(res)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.Signin,app.ServerErrorCode,app.ServerJsonError,c)
+		return
+	}
+	c.WriteMessage(websocket.TextMessage, resWrapper)
 }
 
 func SignoutHandler (data []byte,c *websocket.Conn) {
-	res:= app.SignoutRes{
+	res:= &app.SignoutRes{
 		&app.PostRes{
 			Status: app.OkStatus,
 			Gcuid: app.Signout,
@@ -506,45 +123,404 @@ func SignoutHandler (data []byte,c *websocket.Conn) {
 	resWrapper, err:=json.Marshal(res)
 	if err!=nil {
 		log.Println(err.Error())
+		sendError(app.Signout,app.ServerErrorCode,app.ServerJsonError,c)
+		return
 	}
 	c.WriteMessage(websocket.TextMessage, resWrapper)
 }
 
-func
+func getWallet() ([]*app.Wallet, error) {
+	ether,err:= pvc.GetEther(app.UserAddr)
+	if err!=nil {
+		return nil,err
+	}
+	token,err:=pvc.GetToken(app.UserAddr)
+	if err!=nil {
+		log.Println(err.Error())
+		return nil,err
+	}
+
+	tokenWallet :=&app.Wallet{
+		Name: app.TokenWalletName,
+		Amount: new(big.Float).Quo(new(big.Float).SetInt(token),app.TokenBase).String(),
+		Id: app.User,
+	}
+	etherWallet:=&app.Wallet{
+		Name: app.EthWalletName,
+		Amount: new(big.Float).Quo(new(big.Float).SetInt(ether),app.EtherBase).String(),
+		Id: app.User,
+	}
+
+	wallets:=make([]*app.Wallet,0,app.WalletCount)
+	wallets = append(wallets, etherWallet, tokenWallet)
+	return wallets,nil
+}
 
 func GetWalletsAndMachineHandler(data []byte, c *websocket.Conn) {
 
+	wallets,err:=getWallet()
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.GetWalletsAndMachine,app.ServerErrorCode,app.ServerChainError,c)
+		return
+	}
+	res:= &app.GetWalletsAndMachineRes{
+		Gcuid: app.GetWalletsAndMachine,
+		Machine: &app.MachineState {
+			State: machine.State,
+			MachineId: machine.MachineId,
+		},
+		WalletsCount: app.WalletCount,
+		Wallets: wallets,
+	}
+	resWrapper, err:=json.Marshal(res)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.GetWalletsAndMachine,app.ServerErrorCode,app.ServerJsonError,c)
+		return
+	}
+	c.WriteMessage(websocket.TextMessage, resWrapper)
 }
 
 func GetWalletsHandler(data []byte, c *websocket.Conn) {
-
+	wallets,err:=getWallet()
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.GetWallets,app.ServerErrorCode,app.ServerChainError,c)
+		return
+	}
+	res:= &app.GetWalletsAndMachineRes{
+		Gcuid: app.GetWallets,
+		WalletsCount: app.WalletCount,
+		Wallets: wallets,
+	}
+	resWrapper, err:=json.Marshal(res)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.GetWallets,app.ServerErrorCode,app.ServerJsonError,c)
+		return
+	}
+	c.WriteMessage(websocket.TextMessage, resWrapper)
 }
 
-func GetTransactionsHandler(data []byte, c *websocket.Conn) {
 
+func GetTransactionsHandler(data []byte, c *websocket.Conn) {
+	var req app.GetTransactionsReq
+	err:=json.Unmarshal(data,&req)
+	if err!=nil {
+		sendError(app.GetTransactions,app.ClientErrorCode,app.ClientFormatError,c)
+		return
+	}
+
+	switch req.From {
+	case app.ETH:
+	case app.Slot:
+	}
 }
 
 func GetExchangeRateHandler(data []byte, c *websocket.Conn) {
+	var req app.GetExchangeRateReq
+	err := json.Unmarshal(data, &req)
+	if err!=nil {
+		sendError(app.GetExchangeRate,app.ClientErrorCode,app.ClientFormatError,c)
+		return
+	}
 
+	rate,err:=pvc.GetExchangeRate()
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.GetExchangeRate,app.ServerErrorCode,app.ServerChainError,c)
+		return
+	}
+
+	res:= &app.GetExchangeRateRes{
+		Gcuid: app.GetExchangeRate,
+		ExchangeType: req.ExchangeType,
+		Rate: rate,
+	}
+	resWrapper, err:=json.Marshal(res)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.GetExchangeRate,app.ServerErrorCode,app.ServerJsonError,c)
+	} else {
+		c.WriteMessage(websocket.TextMessage, resWrapper)
+	}
+
+}
+
+func exchangeResultHandler(req *app.PostExchangeReq,txHash common.Hash, exchangeError error, c *websocket.Conn) {
+	if exchangeError!=nil {
+		log.Println(exchangeError.Error())
+		sendError(app.PostExchange,app.ClientErrorCode,app.ClientFormatError,c)
+		return
+	}
+	res:= &app.PostExchangeRes {
+		&app.PostRes{
+			Status: app.OkStatus,
+			Gcuid: app.PostExchange,
+		},
+	}
+	resWrapper, err:=json.Marshal(res)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.PostExchange, app.ServerErrorCode, app.ServerJsonError, c)
+		return
+	}
+	c.WriteMessage(websocket.TextMessage, resWrapper)
+
+	_,err=pvc.GetReceiptStatus(txHash)
+	var status string
+	if err!=nil {
+		log.Println(err.Error())
+		status = app.FailedStatus
+	} else {
+		status = app.SuccessStatus
+		amountWrapper,_,_ := new(big.Float).Parse(req.Amount,10)
+		rawExchangeRate,_:=pvc.GetExchangeRate()
+		exchangeRate,_,_ := new(big.Float).Parse(rawExchangeRate,10)
+		// "2006-01-02 15:04:05 is the birth day of golang, fixed format"
+	    date:= time.Now().Format("2006-01-02 15:04:05")
+		switch req.ExchangeType {
+		case app.EthToSLot:
+			withdrawTokenAmount := new(big.Float).Mul(amountWrapper,exchangeRate)
+			ethTx:= app.Transaction{
+				Type:app.Deposit,
+				Amount:req.Amount,
+				CreatedDate: date,
+			}
+			slotTx:= app.Transaction{
+				Type: app.Withdraw,
+				Amount: new(big.Float).Quo(withdrawTokenAmount,app.TokenBase).String(),
+				CreatedDate: date,
+			}
+			db.LPush(app.User+":"+string(app.ETH), ethTx)
+			db.LPush(app.User+":"+string(app.Slot),slotTx)
+		case app.SlotToEth:
+			withdrawEthAmount:= new(big.Float).Quo(amountWrapper,exchangeRate)
+			ethTx:=app.Transaction{
+				Type:app.Withdraw,
+				Amount:new(big.Float).Quo(withdrawEthAmount,app.EtherBase).String(),
+				CreatedDate: date,
+			}
+			slotTx:= app.Transaction{
+				Type:app.Deposit,
+				Amount: req.Amount,
+				CreatedDate: date,
+		    }
+			db.LPush(app.User+":"+string(app.ETH), ethTx)
+			db.LPush(app.User+":"+string(app.Slot),slotTx)
+		}
+	}
+
+	resultRes := & app.ExchangeResultRes {
+		Gcuid: app.NotifyExchangeResult,
+		Status:status,
+		ExchangeType: req.ExchangeType,
+		Amount: req.Amount,
+		// "2006-01-02 15:04:05 is the birth day of golang, fixed format"
+		CreatedDate: time.Now().Format("2006-01-02 15:04:05"),
+	}
+	resultResWrapper, err:=json.Marshal(resultRes)
+	if err!=nil {
+		log.Fatalln(err.Error())
+		return
+	}
+	c.WriteMessage(websocket.TextMessage, resultResWrapper)
 }
 
 func PostExchangeHandler(data []byte, c *websocket.Conn){
+	var req app.PostExchangeReq
+	err:=json.Unmarshal(data,&req)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.PostExchange,app.ClientErrorCode,app.ClientFormatError,c)
+		return
+	}
 
+	amount,_,err:=  new(big.Float).Parse(req.Amount,10)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.PostExchange,app.ClientErrorCode,app.ClientFormatError,c)
+		return
+	}
+
+	switch req.ExchangeType {
+	case app.EthToSLot:
+		amountWrapper,_:=new(big.Float).Mul(amount,app.EtherBase).Int(nil)
+		tx,err:=pvc.ExchangeForToken(app.UserAddr,amountWrapper)
+		exchangeResultHandler(&req,tx.Hash(),err,c)
+
+	case app.SlotToEth:
+		amountWrapper,_:=new(big.Float).Mul(amount,app.TokenBase).Int(nil)
+		tx,err:=pvc.ExchangeForEther(app.UserAddr,amountWrapper)
+		exchangeResultHandler(&req,tx.Hash(),err,c)
+	}
+}
+
+func machineStatusChange(state int, c *websocket.Conn){
+	res:= &app.MachineStatusChangeRes{
+		Gcuid: app.NotifyMachineStatusChange,
+		State:state,
+		MachineId:app.MachineId,
+		Act:app.MachineStatusChange,
+		CreatedDate: time.Now().Format("2006-01-02 15:04:05"),
+	}
+	resWrapper, err:=json.Marshal(res)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.NotifyMachineStatusChange, app.ServerErrorCode, app.ServerJsonError, c)
+		return
+	}
+	c.WriteMessage(websocket.TextMessage, resWrapper)
 }
 
 func PostQRCodeHandler(data []byte, c *websocket.Conn) {
-
+	res:= &app.PostQRCodeRes{
+		&app.PostRes{
+			Status:app.OkStatus,
+			Gcuid: app.PostQRCode,
+		},
+	}
+	resWrapper, err:=json.Marshal(res)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.PostQRCode, app.ServerErrorCode, app.ServerJsonError, c)
+		return
+	}
+	c.WriteMessage(websocket.TextMessage, resWrapper)
+	time.Sleep(app.SleepTime)
+	machineStatusChange(app.Login,c)
 }
 
-func MachineLogoutHandler(data []byte, c *websocket.Conn) {
 
+func MachineLogoutHandler(data []byte, c *websocket.Conn) {
+	res:= &app.PostMachineLogoutRes{
+		&app.PostRes{
+			Status: app.OkStatus,
+			Gcuid: app.MachineLogout,
+		},
+	}
+	resWrapper, err:=json.Marshal(res)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.MachineLogout, app.ServerErrorCode, app.ServerJsonError, c)
+		return
+	}
+	c.WriteMessage(websocket.TextMessage, resWrapper)
+	machineStatusChange(app.Logout,c)
+}
+
+func updateResultHandler(req *app.PostTokenUseOrRewardReq, txHash common.Hash, updateError error, c *websocket.Conn){
+	if updateError!=nil {
+		log.Println(updateError.Error())
+		sendError(app.PostTokenUseOrReward,app.ClientErrorCode,app.ClientFormatError,c)
+		return
+	}
+	res:= &app.PostTokenUserOrRewardRes {
+		&app.PostRes{
+			Status: app.OkStatus,
+			Gcuid: app.PostTokenUseOrReward,
+		},
+	}
+	resWrapper, err:=json.Marshal(res)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.PostTokenUseOrReward, app.ServerErrorCode, app.ServerJsonError, c)
+		return
+	}
+	c.WriteMessage(websocket.TextMessage, resWrapper)
+
+	_,err=pvc.GetReceiptStatus(txHash)
+	var tokenUpdate string
+	var state int
+	var token string
+	if err!=nil {
+		tokenUpdate = "0"
+		state = 0
+	} else {
+		var txType int
+		tokenUpdate = req.Amount
+		switch req.Type {
+		case app.Used:
+			txType = app.Spend
+			state = app.Decrease
+		case app.Reward:
+			state = app.Increase
+			txType = app.Reward
+		}
+		tx:=app.Transaction{
+			Type: txType,
+			Amount: req.Amount,
+			CreatedDate:time.Now().Format("2006-01-02 15:04:05"),
+		}
+		db.LPush(app.User+":"+string(app.Slot),tx)
+	}
+
+	rawToken,err:=pvc.GetToken(app.UserAddr)
+	if err!=nil {
+		log.Println(err.Error())
+		token = "0"
+	} else {
+		token =new(big.Float).Quo(new(big.Float).SetInt(rawToken),app.TokenBase).String()
+	}
+
+	resultRes := & app.TokenCountChangeRes {
+		Gcuid: app.PostTokenUseOrReward,
+		State: state,
+		WalletName: app.TokenWalletName,
+		WalletId: app.User,
+		TokenUpdate: tokenUpdate,
+		TokenTotal: token,
+		Act: app.TokenChange,
+		// "2006-01-02 15:04:05 is the birth day of golang, fixed format"
+		CreatedDate: time.Now().Format("2006-01-02 15:04:05"),
+	}
+	resultResWrapper, err:=json.Marshal(resultRes)
+	if err!=nil {
+		log.Fatalln(err.Error())
+		return
+	}
+	c.WriteMessage(websocket.TextMessage, resultResWrapper)
 }
 
 func PostTokenUserOrRewardHandler(data []byte, c *websocket.Conn) {
+	var req app.PostTokenUseOrRewardReq
+	err :=json.Unmarshal(data,&req)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.PostTokenUseOrReward,app.ClientErrorCode,app.ClientFormatError,c)
+	}
 
+	amount,_,err:=  new(big.Float).Parse(req.Amount,10)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.PostTokenUseOrReward,app.ClientErrorCode,app.ClientFormatError,c)
+		return
+	}
+
+	amountWrapper,_:=new(big.Float).Mul(amount,app.TokenBase).Int(nil)
+	switch req.Type {
+	case app.Used:
+		tx,err:=pvc.Consume(app.UserAddr,amountWrapper)
+		updateResultHandler(&req,tx.Hash(),err,c)
+	case app.Reward:
+		tx,err:=pvc.Reward(app.UserAddr,amountWrapper)
+		updateResultHandler(&req,tx.Hash(),err,c)
+	}
 }
 
-
+func disConnect(c *websocket.Conn) {
+	res:=&app.Disconnect{
+		Status:app.FailedStatus,
+		Code: app.ServerErrorCode,
+		Reason: app.ServerDisconnect,
+	}
+	resWrapper, err:=json.Marshal(res)
+	if err!=nil {
+		log.Println(err.Error())
+	}
+	c.WriteMessage(websocket.TextMessage, resWrapper)
+}
 
 func requestHandler(c *websocket.Conn) {
 	for {
@@ -559,10 +535,7 @@ func requestHandler(c *websocket.Conn) {
 			log.Println(errors.New("gcuid not exist"))
 		}
 
-		gcuid,err:= gid.(int)
-		if err!=nil {
-			log.Println(err.Error())
-		}
+		gcuid:= gid.(int)
 
 		switch gcuid {
 		case app.Signin:
@@ -582,8 +555,6 @@ func requestHandler(c *websocket.Conn) {
 		case app.PostQRCode:
 			PostExchangeHandler(data,c)
 		//case app.NotifyMachineStatusChange:
-		//case app.NotifyTokenChange:
-		//case app.NotifyExchangeResult:
 		case app.MachineLogout:
 			MachineLogoutHandler(data,c)
 		case app.PostTokenUseOrReward:
@@ -601,30 +572,15 @@ func requestParser(w http.ResponseWriter, r *http.Request) {
 		log.Print("upgrade:", err)
 		return
 	}
-
-	go requestHandler(c)
-	defer c.Close()
-	for {
-		job ,err:=jobs.Get(contract.PbcPayNFTQueue+User,
-			contract.PvcPayNFTQueue+User,
-			contract.PbcPayQueue+User,
-			contract.PvcPayQueue+User,
-		)
-		if err!=nil {
-			log.Println(err.Error())
-			continue
-		}
-		log.Println(job.Data)
-		jobs.Ack(job)
-		err = c.WriteMessage(websocket.TextMessage, []byte(job.Data))
-		if err!=nil {
-			log.Println(err.Error())
-		}
-	}
+	requestHandler(c)
+	defer func(){
+		disConnect(c)
+		c.Close()
+	}()
 }
 
-// initial contract
 func init() {
+	// initial contract
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	var cc ChainConfig
@@ -634,32 +590,20 @@ func init() {
 	}
 	json.Unmarshal(data, &cc)
 
-	pbc = contract.NewPbc(cc.Pub.Port, cc.Pub.Keystore, cc.Pub.Password, cc.Pub.Address)
 	pvc = contract.NewPvc(cc.Pri.Port, cc.Pri.Keystore, cc.Pri.Password, cc.Pri.Address)
 	log.Println("hello server")
-
-	//for test use
-	pvc.AddGameMachine("0x20A40B83a495DD2fbbE33E0b6ad119B09F09151f")
-	pbc.AddGameMachine("0x20A40B83a495DD2fbbE33E0b6ad119B09F09151f")
-	//
 }
 
-// initial disque
-func init() {
-	var dc DisqueConfig
-	data, err:= ioutil.ReadFile(disqueConfigJson)
-	if err!=nil {
-		panic("can not read chain config file")
-	}
-	json.Unmarshal(data,&dc)
-
-	jobs, err =disque.New(dc.Port)
-	if err!=nil {
-		panic(err.Error())
+func init(){
+	//inital game machine
+	machine = &app.MachineState{
+		State: app.Logout,
+		MachineId: app.MachineId,
 	}
 }
 
-func init() {
+func init(){
+	//inital redis
 	var rc RedisConfig
 	data, err:= ioutil.ReadFile(redisConfigJson)
 	if err!=nil {
@@ -674,28 +618,10 @@ func init() {
 	})
 }
 
-
-
 func main() {
 	//runtime.GOMAXPROCS(8)
-	defer jobs.Close()
-	go pbc.EventReceiver(pvc, jobs)
-	go pvc.EventReceiver(pbc, jobs)
-	go contract.Consumer(jobs,pvc,pbc,db)
 	r := mux.NewRouter()
 
-	//r.HandleFunc("/api/v1/{chain:public|private}/tokens/{user}", getToken).Methods("GET")
-	//r.HandleFunc("/api/v1/{chain:public|private}/nonce/{user}", getNonce).Methods("GET")
-	//r.HandleFunc("/api/v1/{chain:public|private}/ether/{user}", getEther).Methods("GET")
-	//r.HandleFunc("/api/v1/private/tokens/{user}", updateToken).Methods("PUT")
-	//r.HandleFunc("/api/v1/{chain:public|private}/transfer/tokens", transfer).Methods("PUT")
-	//r.HandleFunc("/api/v1/{chain:public|private}/transfer/nft", nftTransfer).Methods("PUT")
-	//r.HandleFunc("/api/v1/nft/{tokenId}", mint).Methods("POST")
-	//r.HandleFunc("/api/v1/{chain:public|private}/nft/{user}", getNFT).Methods("GET")
-	//r.HandleFunc("/api/v1/nft/{tokenId}/level", upgradeNFT).Methods("PUT")
-	//r.HandleFunc("/api/v1/nft/{tokenId}/weapon", equipWeapon).Methods("PUT")
-	//r.HandleFunc("/api/v1/nft/{tokenId}/armor", equipArmor).Methods("PUT")
-	//r.HandleFunc("/ws",messagePush)
 	r.HandleFunc("/", requestParser).Methods("GET")
 
 	fmt.Println("Running http server")

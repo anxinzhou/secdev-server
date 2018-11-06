@@ -1,14 +1,8 @@
 {
-    "public": {
-        "port": "ws://localhost:8550",
-        "keystore": "src/etc/keystore/zx",
-        "password": "321",
-        "address": "0x72b8468dE44fabC62969A245a05f01e3e3cebecD"
-    },
     "private": {
         "port": "ws://localhost:8650",
         "keystore": "src/etc/keystore/zx",
         "password": "321",
-        "address": "0x985800d34961144739c83a8Cc71024E18CC70F53"
+        "address": "0xD562E84e29E953C4CceE051f299949D666097A6d"
     }
 }

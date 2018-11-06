@@ -1,5 +1,14 @@
 package appClient
 
+import (
+	"github.com/ethereum/go-ethereum/common"
+	"log"
+	"math/big"
+	"time"
+)
+
+
+//Gcuid
 const (
 	Signin = 888
 	Signout = 100+iota
@@ -16,21 +25,101 @@ const (
 	PostTokenUseOrReward
 )
 
+
+// Constant Value
 const (
+	SleepTime = 2* time.Second
 	LoginCode = "6469D2959C1AA0D2AA9A6ACDF35BEA32524B5142684948576C4B31586D317475695364587A425552334A34"
 	Guuid = "gu9"
 	User = "0x20A40B83a495DD2fbbE33E0b6ad119B09F09151f"
+	MachineId = "0"
+	WalletCount = 2
+	EthWalletName = "ETH"
+	TokenWalletName = "SLOT"
+	EtherDecimals = "1000000000000000000"
+	TokenDecimals = "1000000000000000000"
 )
 
+//Error status
 const (
-	ErrorCode = 400
+	ClientErrorCode = 400
+	ServerErrorCode = 500
 	FailedStatus = "failed"
+	SuccessStatus = "success"
 	OkStatus = "ok"
+	Logout = 0+iota
+	Login
+	Fail
 )
 
+//Error Info
 const (
 	InvalidRequestInfo = "Invalid request Information"
+	WrongUser = "User id or password not correct"
+	ClientFormatError = "wrong data format"
+	ServerJsonError = "Can not marshal json"
+	ServerChainError = "Transaction time out or revert"
+	ServerDisconnect = "websocket disconenct"
 )
+
+// token type
+const (
+	ETH = iota+1
+	Slot
+)
+
+//Exchange Type
+const (
+	EthToSLot = iota +1
+	SlotToEth
+)
+
+//Update Type
+const (
+	Used = iota +1
+	Reward
+)
+
+
+// Token count change Type
+const (
+	Increase = iota
+	Decrease
+)
+
+// Act type
+const (
+	TokenChange = "notify_token_changes"
+	MachineStatusChange = "notify_machine_state"
+)
+
+// Transaction type
+const (
+	Deposit = iota+1
+	Withdraw
+	Gain
+	Spend
+)
+
+var (
+	EtherBase *big.Float
+	TokenBase *big.Float
+	UserAddr common.Address
+)
+
+func init(){
+	var err error
+	EtherBase,_,err = new(big.Float).Parse(EtherDecimals,10)
+	if err!=nil{
+		log.Fatalln("can not convert base")
+	}
+	TokenBase,_,err = new(big.Float).Parse(TokenDecimals,10)
+	if err!=nil{
+		log.Fatalln("can not convert base")
+	}
+	UserAddr = common.HexToAddress(User)
+}
+
 
 
 type PostRes struct {
@@ -84,7 +173,7 @@ type GetWalletsAndMachineReq struct {
 
 type GetWalletsAndMachineRes struct {
 	Gcuid int `json:"gcuid"`
-	*MachineState
+	Machine *MachineState `json:"machine"`
 	WalletsCount int `json:"wallets_count"`
 	Wallets []*Wallet `json:"wallets"`
 }
@@ -193,7 +282,7 @@ type PostTokenUseOrRewardReq struct {
 	Act string `json:"string"`
 }
 
-type PostTOkenUserOrRewardRes struct {
+type PostTokenUserOrRewardRes struct {
 	*PostRes
 }
 

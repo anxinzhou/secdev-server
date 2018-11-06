@@ -6,13 +6,14 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "bin":{
-	  "genkey":"contractUtils.js"
+  "bin": {
+    "genkey": "contractUtils.js"
   },
   "author": "zx",
   "license": "ISC",
   "dependencies": {
     "solc": "^0.4.25",
-    "web3": "^1.0.0-beta.36"
+    "web3": "^1.0.0-beta.36",
+    "ws": "^6.1.0"
   }
 }
