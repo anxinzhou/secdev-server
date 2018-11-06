@@ -10,7 +10,6 @@ import (
 
 //Gcuid
 const (
-	Signin = 888
 	Signout = 100+iota
 	GetWalletsAndMachine
 	GetWallets
@@ -23,6 +22,7 @@ const (
 	MachineLogout
 	NotifyExchangeResult
 	PostTokenUseOrReward
+	Signin = 888
 )
 
 
@@ -42,14 +42,14 @@ const (
 
 //Error status
 const (
+	Logout = 0+iota
+	Login
+	Fail
 	ClientErrorCode = 400
 	ServerErrorCode = 500
 	FailedStatus = "failed"
 	SuccessStatus = "success"
 	OkStatus = "ok"
-	Logout = 0+iota
-	Login
-	Fail
 )
 
 //Error Info
@@ -124,16 +124,16 @@ func init(){
 
 type PostRes struct {
 	Status string `json:"status"`
-	Gcuid int `json:"gcuid"`
+	Gcuid int64 `json:"gcuid"`
 }
 
 type MachineState struct {
-	State int `json:"state"`
+	State int64 `json:"state"`
 	MachineId string `json:"machine_id"`
 }
 
 type Transaction struct {
-	Type int `json:"type"`
+	Type int64 `json:"type"`
 	Amount string `json:"amount"`
 	CreatedDate string `json:"created_date"`
 }
@@ -145,19 +145,19 @@ type Wallet struct {
 }
 
 type SigninReq struct {
-	Gcuid int `json:"gcuid"`
+	Gcuid int64 `json:"gcuid"`
 	Act string `json:"act"`
 	LoginCode string `json:"login_code"`
 }
 
 type SigninRes struct {
 	Status string `json:"status"`
-	Gcuid int `json:"gcuid"`
+	Gcuid int64 `json:"gcuid"`
 	Guuid string `json:"guuid"`
 }
 
 type SignoutReq struct {
-	Gcuid int `json:"gcuid"`
+	Gcuid int64 `json:"gcuid"`
 	Act string `json:"act"`
 	Guuid string `json:"guuid"`
 }
@@ -167,60 +167,60 @@ type SignoutRes struct {
 }
 
 type GetWalletsAndMachineReq struct {
-	Gcuid int `json:"gcuid"`
+	Gcuid int64 `json:"gcuid"`
 	Act string `json:"act"`
 }
 
 type GetWalletsAndMachineRes struct {
-	Gcuid int `json:"gcuid"`
+	Gcuid int64 `json:"gcuid"`
 	Machine *MachineState `json:"machine"`
-	WalletsCount int `json:"wallets_count"`
+	WalletsCount int64 `json:"wallets_count"`
 	Wallets []*Wallet `json:"wallets"`
 }
 
 type GetWalletReq struct {
-	Gcuid int `json:"gcuid"`
+	Gcuid int64 `json:"gcuid"`
 	Act string `json:"act"`
 }
 
 type GetWalletRes struct {
-	Gcuid int `json:"gcuid"`
-	Count int `json:"count"`
+	Gcuid int64 `json:"gcuid"`
+	Count int64 `json:"count"`
 	Wallets []*Wallet `json:"wallets"`
 }
 
 type GetTransactionsReq struct {
-	Gcuid int `json:"gcuid"`
+	Gcuid int64 `json:"gcuid"`
 	Act string `json:"act"`
-	After int `json:"after"`
-	Amount int `json:"amount"`
-	From int `json:"from"`
+	After int64 `json:"after"`
+	Amount int64 `json:"amount"`
+	From int64 `json:"from"`
 }
 
 type GetTransactionRes struct {
-	Gcuid int `json:"gcuid"`
-	Count int `json:"count"`
-	After int `json:"after"`
-	From int `json:"from"`
+	Gcuid int64 `json:"gcuid"`
+	Count int64 `json:"count"`
+	After int64 `json:"after"`
+	From int64 `json:"from"`
 	Transactions []*Transaction `json:"transactions"`
 }
 
 type GetExchangeRateReq struct {
-	Gcuid int `json:"gcuid"`
+	Gcuid int64 `json:"gcuid"`
 	Act string `json:"act"`
-	ExchangeType int `json:"exchange_type"`
+	ExchangeType int64 `json:"exchange_type"`
 }
 
 type GetExchangeRateRes struct {
-	Gcuid int `json:"gcuid"`
-	ExchangeType int `json:"exchange_type"`
+	Gcuid int64 `json:"gcuid"`
+	ExchangeType int64 `json:"exchange_type"`
 	Rate string `json:"rate"`
 }
 
 type PostExchangeReq struct {
-	Gcuid int `json:"gcuid"`
+	Gcuid int64 `json:"gcuid"`
 	Act string `json:"act"`
-	ExchangeType int `json:"exchange_type"`
+	ExchangeType int64 `json:"exchange_type"`
 	Amount string `json:"amount"`
 }
 
@@ -229,7 +229,7 @@ type PostExchangeRes struct {
 }
 
 type PostQRCodeReq struct {
-	Gcuid int `json:"gcuid"`
+	Gcuid int64 `json:"gcuid"`
 	Act string `json:"act"`
 	QRCode string `json:"qrcode"`
 }
@@ -239,16 +239,16 @@ type PostQRCodeRes struct {
 }
 
 type MachineStatusChangeRes struct {
-	Gcuid int `json:"gcuid"`
-	State int `json:"state"`
+	Gcuid int64 `json:"gcuid"`
+	State int64 `json:"state"`
 	MachineId string `json:"machine_id"`
 	Act string `json:"act"`
 	CreatedDate string `json:"created_date"`
 }
 
 type TokenCountChangeRes struct {
-	Gcuid int `json:"gcuid"`
-	State int `json:"state"`
+	Gcuid int64 `json:"gcuid"`
+	State int64 `json:"state"`
 	WalletName string `json:"wallet_name"`
 	WalletId string `json:"wallet_id"`
 	TokenUpdate string `json:"token_update"`
@@ -258,7 +258,7 @@ type TokenCountChangeRes struct {
 }
 
 type PostMachineLogoutReq struct {
-	Gcuid int `json:"gcuid"`
+	Gcuid int64 `json:"gcuid"`
 	Act string `json:"act"`
 	MachineId string `json:"machine_id"`
 }
@@ -268,18 +268,18 @@ type PostMachineLogoutRes struct {
 }
 
 type ExchangeResultRes struct{
-	Gcuid int `json:"gcuid"`
+	Gcuid int64 `json:"gcuid"`
 	Status string `json:"status"`
-	ExchangeType int `json:"exchange_type"`
+	ExchangeType int64 `json:"exchange_type"`
 	Amount string `json:"amount"`
 	CreatedDate string `json:"created_date"`
 }
 
 type PostTokenUseOrRewardReq struct {
-	Gcuid int `json:"gcuid"`
-	Type int `json:"string"`
-	Amount string `json:"string"`
-	Act string `json:"string"`
+	Gcuid int64 `json:"gcuid"`
+	Type int64 `json:"type"`
+	Amount string `json:"amount"`
+	Act string `json:"act"`
 }
 
 type PostTokenUserOrRewardRes struct {
@@ -288,14 +288,14 @@ type PostTokenUserOrRewardRes struct {
 
 type Error struct {
 	Status string `json:"status"`
-	Code int `json:"code"`
-	Gcuid int `json:"gcuid"`
+	Code int64 `json:"code"`
+	Gcuid int64 `json:"gcuid"`
 	Reason string `json:"reason"`
 }
 
 type Disconnect struct {
 	Status string `json:"status"`
-	Code int `json:"code"`
+	Code int64 `json:"code"`
 	Reason string `json:"reason"`
 }
 

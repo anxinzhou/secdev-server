@@ -64,6 +64,7 @@ func (p *Pvc) GetExchangeRate() (string, error) {
 func (p *Pvc) Consume(address common.Address, amount *big.Int) (*types.Transaction,error) {
 	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
+	auth.GasLimit = p.txConfig.Gaslimit
 	tx, err := p.Instance.Consume(auth, address, amount)
 	return tx,err
 }
@@ -71,7 +72,7 @@ func (p *Pvc) Consume(address common.Address, amount *big.Int) (*types.Transacti
 func (p *Pvc) Reward(address common.Address, amount *big.Int) (*types.Transaction,error) {
 	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
-
+	auth.GasLimit = p.txConfig.Gaslimit
 	tx, err := p.Instance.Reward(auth, address, amount)
 	return tx,err
 }
@@ -80,6 +81,7 @@ func (p *Pvc) ExchangeForToken(address common.Address, amount *big.Int) (*types.
 	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
 	auth.Value = amount
+	auth.GasLimit = p.txConfig.Gaslimit
 	tx,err:= p.Instance.ExchangeForToken(auth,address)
 	return tx,err
 }
@@ -87,7 +89,7 @@ func (p *Pvc) ExchangeForToken(address common.Address, amount *big.Int) (*types.
 func (p *Pvc) ExchangeForEther(address common.Address, amount *big.Int) (*types.Transaction,error){
 	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
-	auth.Value = amount
+	auth.GasLimit = p.txConfig.Gaslimit
 	tx,err:=p.Instance.ExchangeForEther(auth,address,amount)
 	return tx,err
 }

@@ -168,22 +168,24 @@ contract GameToken is BasicToken {
 
     function exchangeForToken(address user) public payable returns (bool) {
         uint tokenAmount = msg.value * exchangeRate/exchangeBase;
-       _transfer(_owner, user ,tokenAmount);
+        _balances[user] +=tokenAmount;
     }
 
     function exchangeForEther(address user, uint amount) public returns (bool) {
         uint etherAmount = amount*exchangeBase/exchangeRate;
-        _transfer(user,_owner,amount);
+        require(_balances[user]>=amount);
+        _balances[user]-=amount;
         user.transfer(etherAmount);
     }
 
     function reward(address to, uint256 value) public returns (bool) {
-        _transfer(msg.sender, to, value);
+        _balances[to] +=value;
         return true;
     }
 
     function consume(address by, uint256 value) public returns (bool){
-        _transfer(by, msg.sender, value);
+        require(_balances[by]>=value);
+        _balances[by] -=value;
         return true;
     }
 }

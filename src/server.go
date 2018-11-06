@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/go-redis/redis"
 	h "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -20,36 +20,15 @@ import (
 )
 
 const (
-	chainConfigJson = "src/etc/chainConfig.json"
-	redisConfigJson = "src/etc/redisConfig.json"
+	chainConfigJson = "./etc/chainConfig.json"
+	redisConfigJson = "./etc/redisConfig.json"
 )
 
 var (
 	pvc *contract.Pvc
 	machine *app.MachineState
-	QRCode string
 	db *redis.Client
 )
-
-type DisqueConfig struct {
-	Port string `json:"port"`
-}
-
-type ExPayLoad struct {
-	Tx string `json:"tx"`
-	User string `json:"user"`
-	Kind string `json:"kind"`
-}
-
-type ExTokensPayLoad struct {
-	*ExPayLoad
-	Amount int `json:"amount"`
-}
-
-type ExNFTPayLoad struct {
-	*ExPayLoad
-	TokenId *big.Int `json:"tokenId"`
-}
 
 type BasicChainConfig struct {
 	Port     string `json:"port"`
@@ -72,7 +51,7 @@ type ChainConfig struct {
 	Pri *PrivateConfig `json:"private"`
 }
 
-func sendError(gcuid int,errorCode int, reason string, c *websocket.Conn) {
+func sendError(gcuid int64,errorCode int64, reason string, c *websocket.Conn) {
 	reqError:= &app.Error{
 		Status: app.FailedStatus,
 		Code: errorCode,
@@ -87,6 +66,7 @@ func sendError(gcuid int,errorCode int, reason string, c *websocket.Conn) {
 }
 
 func SigninHandler (data []byte,c *websocket.Conn) {
+	log.Println("sign in handler")
 	var signin app.SigninReq
 	err:=json.Unmarshal(data, &signin)
 	if err!=nil{
@@ -114,8 +94,9 @@ func SigninHandler (data []byte,c *websocket.Conn) {
 }
 
 func SignoutHandler (data []byte,c *websocket.Conn) {
+	log.Println("signout handler")
 	res:= &app.SignoutRes{
-		&app.PostRes{
+		PostRes:&app.PostRes{
 			Status: app.OkStatus,
 			Gcuid: app.Signout,
 		},
@@ -189,9 +170,9 @@ func GetWalletsHandler(data []byte, c *websocket.Conn) {
 		sendError(app.GetWallets,app.ServerErrorCode,app.ServerChainError,c)
 		return
 	}
-	res:= &app.GetWalletsAndMachineRes{
+	res:= &app.GetWalletRes{
 		Gcuid: app.GetWallets,
-		WalletsCount: app.WalletCount,
+		Count: app.WalletCount,
 		Wallets: wallets,
 	}
 	resWrapper, err:=json.Marshal(res)
@@ -212,10 +193,65 @@ func GetTransactionsHandler(data []byte, c *websocket.Conn) {
 		return
 	}
 
+	start:= req.After
+	stop:=req.After + req.Amount
+	var vals []string
+	var collection string
 	switch req.From {
 	case app.ETH:
+		collection =app.User+":"+string(app.ETH)
 	case app.Slot:
+		collection =app.User+":"+string(app.Slot)
 	}
+	totalLen,err:= db.LLen(collection).Result()
+	log.Println("transaction len:", totalLen)
+	if err!=nil{
+		log.Println(err.Error())
+		sendError(app.GetTransactions,app.ClientErrorCode,err.Error(),c)
+		return
+	}
+
+	count:=totalLen-start
+	if count>req.Amount {
+		count = req.Amount
+	}
+
+	if count<0 {
+		count = 0
+	}
+
+	vals,err = db.LRange(collection,start,stop).Result()
+	log.Println(vals)
+	if err!=nil{
+		log.Println(err.Error())
+		sendError(app.GetTransactions,app.ClientErrorCode,err.Error(),c)
+		return
+	}
+	txs:= make([]*app.Transaction,len(vals))
+	for i,val:=range vals {
+		var tx app.Transaction
+		err =json.Unmarshal([]byte(val), &tx)
+		if err!=nil{
+			sendError(app.GetTransactions,app.ServerErrorCode,app.ServerJsonError,c)
+			return
+		}
+		txs[i]=&tx
+	}
+
+	res:= &app.GetTransactionRes{
+		Gcuid: app.GetTransactions,
+		Count: count,
+		After: req.After,
+		From: req.From,
+		Transactions:txs,
+	}
+	resWrapper, err:=json.Marshal(res)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.GetTransactions,app.ServerErrorCode,app.ServerJsonError,c)
+		return
+	}
+	c.WriteMessage(websocket.TextMessage, resWrapper)
 }
 
 func GetExchangeRateHandler(data []byte, c *websocket.Conn) {
@@ -248,12 +284,14 @@ func GetExchangeRateHandler(data []byte, c *websocket.Conn) {
 
 }
 
-func exchangeResultHandler(req *app.PostExchangeReq,txHash common.Hash, exchangeError error, c *websocket.Conn) {
+func exchangeResultHandler(req *app.PostExchangeReq,transaction *types.Transaction, exchangeError error, c *websocket.Conn) {
 	if exchangeError!=nil {
+
 		log.Println(exchangeError.Error())
 		sendError(app.PostExchange,app.ClientErrorCode,app.ClientFormatError,c)
 		return
 	}
+	txHash:=transaction.Hash()
 	res:= &app.PostExchangeRes {
 		&app.PostRes{
 			Status: app.OkStatus,
@@ -290,16 +328,24 @@ func exchangeResultHandler(req *app.PostExchangeReq,txHash common.Hash, exchange
 			}
 			slotTx:= app.Transaction{
 				Type: app.Withdraw,
-				Amount: new(big.Float).Quo(withdrawTokenAmount,app.TokenBase).String(),
+				Amount: withdrawTokenAmount.String(),
 				CreatedDate: date,
 			}
-			db.LPush(app.User+":"+string(app.ETH), ethTx)
-			db.LPush(app.User+":"+string(app.Slot),slotTx)
+			slotTxWrapper,err:=json.Marshal(&slotTx)
+			ethTxWrapper,err:=json.Marshal(&ethTx)
+			_,err =db.LPush(app.User+":"+string(app.ETH), ethTxWrapper).Result()
+			if err!=nil {
+				log.Println(err.Error())
+			}
+			_,err = db.LPush(app.User+":"+string(app.Slot),slotTxWrapper).Result()
+			if err!=nil {
+				log.Println(err.Error())
+			}
 		case app.SlotToEth:
 			withdrawEthAmount:= new(big.Float).Quo(amountWrapper,exchangeRate)
 			ethTx:=app.Transaction{
 				Type:app.Withdraw,
-				Amount:new(big.Float).Quo(withdrawEthAmount,app.EtherBase).String(),
+				Amount:withdrawEthAmount.String(),
 				CreatedDate: date,
 			}
 			slotTx:= app.Transaction{
@@ -307,8 +353,16 @@ func exchangeResultHandler(req *app.PostExchangeReq,txHash common.Hash, exchange
 				Amount: req.Amount,
 				CreatedDate: date,
 		    }
-			db.LPush(app.User+":"+string(app.ETH), ethTx)
-			db.LPush(app.User+":"+string(app.Slot),slotTx)
+			slotTxWrapper,_:=json.Marshal(&slotTx)
+			ethTxWrapper,_:=json.Marshal(&ethTx)
+			_,err =db.LPush(app.User+":"+string(app.ETH), ethTxWrapper).Result()
+			if err!=nil {
+				log.Println(err.Error())
+			}
+			_,err =db.LPush(app.User+":"+string(app.Slot),slotTxWrapper).Result()
+			if err!=nil {
+				log.Println(err.Error())
+			}
 		}
 	}
 
@@ -348,16 +402,16 @@ func PostExchangeHandler(data []byte, c *websocket.Conn){
 	case app.EthToSLot:
 		amountWrapper,_:=new(big.Float).Mul(amount,app.EtherBase).Int(nil)
 		tx,err:=pvc.ExchangeForToken(app.UserAddr,amountWrapper)
-		exchangeResultHandler(&req,tx.Hash(),err,c)
+		exchangeResultHandler(&req,tx,err,c)
 
 	case app.SlotToEth:
 		amountWrapper,_:=new(big.Float).Mul(amount,app.TokenBase).Int(nil)
 		tx,err:=pvc.ExchangeForEther(app.UserAddr,amountWrapper)
-		exchangeResultHandler(&req,tx.Hash(),err,c)
+		exchangeResultHandler(&req,tx,err,c)
 	}
 }
 
-func machineStatusChange(state int, c *websocket.Conn){
+func machineStatusChange(state int64, c *websocket.Conn){
 	res:= &app.MachineStatusChangeRes{
 		Gcuid: app.NotifyMachineStatusChange,
 		State:state,
@@ -376,7 +430,7 @@ func machineStatusChange(state int, c *websocket.Conn){
 
 func PostQRCodeHandler(data []byte, c *websocket.Conn) {
 	res:= &app.PostQRCodeRes{
-		&app.PostRes{
+		PostRes:&app.PostRes{
 			Status:app.OkStatus,
 			Gcuid: app.PostQRCode,
 		},
@@ -395,7 +449,7 @@ func PostQRCodeHandler(data []byte, c *websocket.Conn) {
 
 func MachineLogoutHandler(data []byte, c *websocket.Conn) {
 	res:= &app.PostMachineLogoutRes{
-		&app.PostRes{
+		PostRes:&app.PostRes{
 			Status: app.OkStatus,
 			Gcuid: app.MachineLogout,
 		},
@@ -410,14 +464,15 @@ func MachineLogoutHandler(data []byte, c *websocket.Conn) {
 	machineStatusChange(app.Logout,c)
 }
 
-func updateResultHandler(req *app.PostTokenUseOrRewardReq, txHash common.Hash, updateError error, c *websocket.Conn){
+func updateResultHandler(req *app.PostTokenUseOrRewardReq, transaction *types.Transaction, updateError error, c *websocket.Conn){
 	if updateError!=nil {
 		log.Println(updateError.Error())
 		sendError(app.PostTokenUseOrReward,app.ClientErrorCode,app.ClientFormatError,c)
 		return
 	}
+	txHash:=transaction.Hash()
 	res:= &app.PostTokenUserOrRewardRes {
-		&app.PostRes{
+		PostRes:&app.PostRes{
 			Status: app.OkStatus,
 			Gcuid: app.PostTokenUseOrReward,
 		},
@@ -432,13 +487,13 @@ func updateResultHandler(req *app.PostTokenUseOrRewardReq, txHash common.Hash, u
 
 	_,err=pvc.GetReceiptStatus(txHash)
 	var tokenUpdate string
-	var state int
+	var state int64
 	var token string
 	if err!=nil {
 		tokenUpdate = "0"
 		state = 0
 	} else {
-		var txType int
+		var txType int64
 		tokenUpdate = req.Amount
 		switch req.Type {
 		case app.Used:
@@ -453,7 +508,11 @@ func updateResultHandler(req *app.PostTokenUseOrRewardReq, txHash common.Hash, u
 			Amount: req.Amount,
 			CreatedDate:time.Now().Format("2006-01-02 15:04:05"),
 		}
-		db.LPush(app.User+":"+string(app.Slot),tx)
+		txWrapper,_:=json.Marshal(tx)
+		_,err:=db.LPush(app.User+":"+string(app.Slot),txWrapper).Result()
+		if err!=nil {
+			log.Println(err.Error())
+		}
 	}
 
 	rawToken,err:=pvc.GetToken(app.UserAddr)
@@ -490,7 +549,6 @@ func PostTokenUserOrRewardHandler(data []byte, c *websocket.Conn) {
 		log.Println(err.Error())
 		sendError(app.PostTokenUseOrReward,app.ClientErrorCode,app.ClientFormatError,c)
 	}
-
 	amount,_,err:=  new(big.Float).Parse(req.Amount,10)
 	if err!=nil {
 		log.Println(err.Error())
@@ -502,10 +560,10 @@ func PostTokenUserOrRewardHandler(data []byte, c *websocket.Conn) {
 	switch req.Type {
 	case app.Used:
 		tx,err:=pvc.Consume(app.UserAddr,amountWrapper)
-		updateResultHandler(&req,tx.Hash(),err,c)
+		updateResultHandler(&req,tx,err,c)
 	case app.Reward:
 		tx,err:=pvc.Reward(app.UserAddr,amountWrapper)
-		updateResultHandler(&req,tx.Hash(),err,c)
+		updateResultHandler(&req,tx,err,c)
 	}
 }
 
@@ -528,15 +586,17 @@ func requestHandler(c *websocket.Conn) {
 		var kvs map[string]interface{}
 		if err!=nil {
 			log.Println(err.Error())
+			return
 		}
 		json.Unmarshal(data, &kvs)
 		gid,ok := kvs["gcuid"]
 		if !ok {
 			log.Println(errors.New("gcuid not exist"))
+			return
 		}
 
-		gcuid:= gid.(int)
-
+		gcuid:= int64(gid.(float64))
+		log.Println("gcuid:",gcuid)
 		switch gcuid {
 		case app.Signin:
 			SigninHandler(data,c)
@@ -553,8 +613,9 @@ func requestHandler(c *websocket.Conn) {
 		case app.PostExchange:
 			PostExchangeHandler(data,c)
 		case app.PostQRCode:
-			PostExchangeHandler(data,c)
-		//case app.NotifyMachineStatusChange:
+			PostQRCodeHandler(data,c)
+		case app.NotifyMachineStatusChange:
+			PostQRCodeHandler(data,c)
 		case app.MachineLogout:
 			MachineLogoutHandler(data,c)
 		case app.PostTokenUseOrReward:
