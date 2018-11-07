@@ -612,27 +612,27 @@ func requestHandler(c *websocket.Conn) {
 		log.Println("gcuid:",gcuid)
 		switch gcuid {
 		case app.Signin:
-			SigninHandler(data,c)
+			go SigninHandler(data,c)
 		case app.Signout:
-			SignoutHandler(data,c)
+			go SignoutHandler(data,c)
 		case app.GetWalletsAndMachine:
-			GetWalletsAndMachineHandler(data,c)
+			go GetWalletsAndMachineHandler(data,c)
 		case app.GetWallets:
-			GetWalletsHandler(data,c)
+			go GetWalletsHandler(data,c)
 		case app.GetTransactions:
-			GetTransactionsHandler(data,c)
+			go GetTransactionsHandler(data,c)
 		case app.GetExchangeRate:
-			GetExchangeRateHandler(data,c)
+			go GetExchangeRateHandler(data,c)
 		case app.PostExchange:
-			PostExchangeHandler(data,c)
+			go PostExchangeHandler(data,c)
 		case app.PostQRCode:
-			PostQRCodeHandler(data,c)
+			go PostQRCodeHandler(data,c)
 		case app.NotifyMachineStatusChange:
-			PostQRCodeHandler(data,c)
+			go PostQRCodeHandler(data,c)
 		case app.MachineLogout:
-			MachineLogoutHandler(data,c)
+			go MachineLogoutHandler(data,c)
 		case app.PostTokenUseOrReward:
-			PostTokenUserOrRewardHandler(data,c)
+			go PostTokenUserOrRewardHandler(data,c)
 		}
 	}
 }
