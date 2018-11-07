@@ -538,7 +538,7 @@ func updateResultHandler(req *app.PostTokenUseOrRewardReq, transaction *types.Tr
 	}
 
 	resultRes := & app.TokenCountChangeRes {
-		Gcuid: app.PostTokenUseOrReward,
+		Gcuid: app.NotifyTokenChange,
 		State: state,
 		WalletName: app.TokenWalletName,
 		WalletId: app.User,
