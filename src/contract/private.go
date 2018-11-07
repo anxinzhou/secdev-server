@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"log"
 	"math/big"
 	"strings"
@@ -48,55 +47,39 @@ func (p *Pvc) GetToken(address common.Address) (*big.Int, error) {
 	return token, err
 }
 
-func (p *Pvc) GetExchangeRate() (string, error) {
-	exchangeRate,err:=p.Instance.ExchangeRate(nil)
-	if err!=nil {
-		return "", err
-	}
-	exchangeBase,err:=p.Instance.ExchangeBase(nil)
-	if err!=nil {
-		return "",err
-	}
-	rate:=new(big.Float).Quo(new(big.Float).SetInt(exchangeRate),new(big.Float).SetInt(exchangeBase)).String()
-	return rate,nil
-}
-
-func (p *Pvc) Consume(address common.Address, amount *big.Int) (*types.Transaction,error) {
+func (p *Pvc) Consume(address common.Address, amount *big.Int) (error) {
 	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
 	auth.GasLimit = p.txConfig.Gaslimit
 	tx, err := p.Instance.Consume(auth, address, amount)
-	return tx,err
+	_,err = p.GetReceiptStatus(tx.Hash())
+	return err
 }
 
-func (p *Pvc) Reward(address common.Address, amount *big.Int) (*types.Transaction,error) {
+func (p *Pvc) Reward(address common.Address, amount *big.Int) (error) {
 	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
 	auth.GasLimit = p.txConfig.Gaslimit
 	tx, err := p.Instance.Reward(auth, address, amount)
-	return tx,err
+	_,err = p.GetReceiptStatus(tx.Hash())
+	return err
 }
 
-func (p *Pvc) ExchangeForToken(address common.Address, amount *big.Int) (*types.Transaction,error) {
-	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
-	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
-	auth.Value = amount
-	auth.GasLimit = p.txConfig.Gaslimit
-	tx,err:= p.Instance.ExchangeForToken(auth,address)
-	return tx,err
-}
-
-func (p *Pvc) ExchangeForEther(address common.Address, amount *big.Int) (*types.Transaction,error){
+func (p *Pvc) Mint(address common.Address, amount *big.Int) (error) {
 	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
 	auth.GasLimit = p.txConfig.Gaslimit
-	tx,err:=p.Instance.ExchangeForEther(auth,address,amount)
-	return tx,err
+	tx, err := p.Instance.Mint(auth, address, amount)
+	_,err = p.GetReceiptStatus(tx.Hash())
+	return err
 }
 
-func (p *Pvc) SendTransaction(tx *types.Transaction) error {
-	tx,err:= p.Contract.SendTransaction(tx)
-	_, err = p.GetReceiptStatus(tx.Hash())
+func (p *Pvc) Burn(address common.Address, amount *big.Int) (error) {
+	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
+	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
+	auth.GasLimit = p.txConfig.Gaslimit
+	tx, err := p.Instance.Burn(auth, address, amount)
+	_,err = p.GetReceiptStatus(tx.Hash())
 	return err
 }
 
@@ -118,4 +101,3 @@ func (p *Pvc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
 	}
 	return 0, errors.New("Time out, can not get transaction status")
 }
-

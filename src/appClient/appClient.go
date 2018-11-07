@@ -22,6 +22,7 @@ const (
 	MachineLogout
 	NotifyExchangeResult
 	PostTokenUseOrReward
+	PostGameStartOrEnd
 	Signin = 888
 )
 
@@ -99,6 +100,12 @@ const (
 	Withdraw
 	Gain
 	Spend
+)
+
+// Game procedure
+const (
+	GameStart = iota+1
+	GameEnd
 )
 
 var (
@@ -286,6 +293,17 @@ type PostTokenUserOrRewardRes struct {
 	*PostRes
 }
 
+type PostGameStartOrEndReq struct {
+	Gcuid int64 `json:"gcuid"`
+	Type int64 `json:"type"`
+	Amount string `json:"amount"`
+	Act string `json:"act"`
+}
+
+type PostGameStartOrEndRes struct {
+	*PostRes
+}
+
 type Error struct {
 	Status string `json:"status"`
 	Code int64 `json:"code"`
@@ -298,5 +316,4 @@ type Disconnect struct {
 	Code int64 `json:"code"`
 	Reason string `json:"reason"`
 }
-
 

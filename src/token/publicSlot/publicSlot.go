@@ -28,18 +28,18 @@ var (
 )
 
 // PublicSlotABI is the input ABI used to generate the binding from.
-const PublicSlotABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"user\",\"type\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"exchange\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"spender\",\"type\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"to\",\"type\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"reward\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"by\",\"type\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"consume\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"from\",\"type\":\"address\"},{\"name\":\"to\",\"type\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"machine\",\"type\":\"address\"}],\"name\":\"removeGameMachine\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"ownedAvatars\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"to\",\"type\":\"address\"},{\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"mint\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"upgrade\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"machine\",\"type\":\"address\"}],\"name\":\"addGameMachine\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"tokenId\",\"type\":\"uint256\"},{\"name\":\"user\",\"type\":\"address\"}],\"name\":\"equipArmor\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"avatar\",\"outputs\":[{\"name\":\"gene\",\"type\":\"uint256\"},{\"name\":\"avatarLevel\",\"type\":\"uint256\"},{\"name\":\"weaponed\",\"type\":\"bool\"},{\"name\":\"armored\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"ownerOf\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"tokenID\",\"type\":\"uint256\"},{\"name\":\"avatarOwner\",\"type\":\"address\"},{\"name\":\"gene\",\"type\":\"uint256\"},{\"name\":\"avatarLevel\",\"type\":\"uint256\"},{\"name\":\"weaponed\",\"type\":\"bool\"},{\"name\":\"armored\",\"type\":\"bool\"}],\"name\":\"payNFT\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"newRequiredSignatures\",\"type\":\"uint256\"}],\"name\":\"setRequiredSignatures\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"requiredSignatures\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"_authorizdedMachines\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"vs\",\"type\":\"uint8[]\"},{\"name\":\"rs\",\"type\":\"bytes32[]\"},{\"name\":\"ss\",\"type\":\"bytes32[]\"},{\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"pay\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"to\",\"type\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"tokenId\",\"type\":\"uint256\"},{\"name\":\"user\",\"type\":\"address\"}],\"name\":\"equipWeapon\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"owner\",\"type\":\"address\"},{\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"tokenID\",\"type\":\"uint256\"}],\"name\":\"exchangeNFT\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"payed\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"totalSupply\",\"type\":\"uint256\"},{\"name\":\"tokenName\",\"type\":\"string\"},{\"name\":\"tokenSymbol\",\"type\":\"string\"},{\"name\":\"decimalUnits\",\"type\":\"uint8\"},{\"name\":\"_requiredSignatures\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Exchange\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"transactionHash\",\"type\":\"bytes32\"}],\"name\":\"Pay\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"tokenID\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"gene\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"avatarLevel\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"weaponed\",\"type\":\"bool\"},{\"indexed\":false,\"name\":\"armored\",\"type\":\"bool\"}],\"name\":\"ExchangeNFT\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"machine\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"player\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Reward\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"machine\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"player\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Consume\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"_from\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"_to\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"_owner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"_spender\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"}]"
+const PublicSlotABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"spender\",\"type\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"to\",\"type\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"reward\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"by\",\"type\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"consume\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"from\",\"type\":\"address\"},{\"name\":\"to\",\"type\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"exchangeRate\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"user\",\"type\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"mint\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"user\",\"type\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"exchangeForEther\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"user\",\"type\":\"address\"}],\"name\":\"exchangeForToken\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"exchangeBase\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"user\",\"type\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"burn\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"to\",\"type\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"owner\",\"type\":\"address\"},{\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"totalSupply\",\"type\":\"uint256\"},{\"name\":\"tokenName\",\"type\":\"string\"},{\"name\":\"tokenSymbol\",\"type\":\"string\"}],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Mint\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Burn\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"_from\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"_to\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"_owner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"_spender\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"}]"
 
 // PublicSlotBin is the compiled bytecode used for deploying new contracts.
-const PublicSlotBin = `60806040523480156200001157600080fd5b50604051620023eb380380620023eb833981018060405281019080805190602001909291908051820192919060200180518201929190602001805190602001909291908051906020019092919050505084848484838383838360008190555083600460003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020819055508260019080519060200190620000cc9291906200019d565b5080600260006101000a81548160ff021916908360ff1602179055508160039080519060200190620001009291906200019d565b505050505033600660006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055505050505080600c8190555033600660006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050505050506200024c565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f10620001e057805160ff191683800117855562000211565b8280016001018555821562000211579182015b8281111562000210578251825591602001919060010190620001f3565b5b50905062000220919062000224565b5090565b6200024991905b80821115620002455760008160009055506001016200022b565b5090565b90565b61218f806200025c6000396000f30060806040526004361061016a576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063045d03891461016f57806306fdde03146101bc578063095ea7b31461024c57806318160ddd146102b157806321670f22146102dc578063224b5c721461034157806323b872dd146103a65780633016e1081461042b578063313ce5671461046e578063399bd4f01461049f57806340c10f19146104f657806345977d031461054357806350dc43a114610570578063541486b6146105b35780635e5741f5146106005780636352211e1461065e57806366ff660f146106cb57806370a08231146107445780637d2b9cc01461079b5780638d068043146107c857806390883c08146107f357806395d89b411461084e578063a835ba0b146108de578063a9059cbb14610a10578063bf6feb4014610a75578063dd62ed3e14610ac2578063e9565b8314610b39578063ff88aeb914610b66575b600080fd5b34801561017b57600080fd5b506101ba600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610baf565b005b3480156101c857600080fd5b506101d1610c4b565b6040518080602001828103825283818151815260200191508051906020019080838360005b838110156102115780820151818401526020810190506101f6565b50505050905090810190601f16801561023e5780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b34801561025857600080fd5b50610297600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610ce9565b604051808215151515815260200191505060405180910390f35b3480156102bd57600080fd5b506102c6610e16565b6040518082815260200191505060405180910390f35b3480156102e857600080fd5b50610327600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610e1f565b604051808215151515815260200191505060405180910390f35b34801561034d57600080fd5b5061038c600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610ef3565b604051808215151515815260200191505060405180910390f35b3480156103b257600080fd5b50610411600480360381019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610fc7565b604051808215151515815260200191505060405180910390f35b34801561043757600080fd5b5061046c600480360381019080803573ffffffffffffffffffffffffffffffffffffffff1690602001909291905050506111de565b005b34801561047a57600080fd5b50610483611295565b604051808260ff1660ff16815260200191505060405180910390f35b3480156104ab57600080fd5b506104e0600480360381019080803573ffffffffffffffffffffffffffffffffffffffff1690602001909291905050506112a8565b6040518082815260200191505060405180910390f35b34801561050257600080fd5b50610541600480360381019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803590602001909291905050506112f1565b005b34801561054f57600080fd5b5061056e600480360381019080803590602001909291905050506113ee565b005b34801561057c57600080fd5b506105b1600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919050505061143b565b005b3480156105bf57600080fd5b506105fe60048036038101908080359060200190929190803573ffffffffffffffffffffffffffffffffffffffff1690602001909291905050506114f2565b005b34801561060c57600080fd5b5061062b600480360381019080803590602001909291905050506115c2565b60405180858152602001848152602001831515151581526020018215151515815260200194505050505060405180910390f35b34801561066a57600080fd5b506106896004803603810190808035906020019092919050505061160c565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b3480156106d757600080fd5b5061074260048036038101908080359060200190929190803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803590602001909291908035906020019092919080351515906020019092919080351515906020019092919050505061168a565b005b34801561075057600080fd5b50610785600480360381019080803573ffffffffffffffffffffffffffffffffffffffff1690602001909291905050506117ba565b6040518082815260200191505060405180910390f35b3480156107a757600080fd5b506107c660048036038101908080359060200190929190505050611803565b005b3480156107d457600080fd5b506107dd611869565b6040518082815260200191505060405180910390f35b3480156107ff57600080fd5b50610834600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919050505061186f565b604051808215151515815260200191505060405180910390f35b34801561085a57600080fd5b5061086361188f565b6040518080602001828103825283818151815260200191508051906020019080838360005b838110156108a3578082015181840152602081019050610888565b50505050905090810190601f1680156108d05780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b3480156108ea57600080fd5b50610a0e600480360381019080803590602001908201803590602001908080602002602001604051908101604052809392919081815260200183836020028082843782019150505050505091929192908035906020019082018035906020019080806020026020016040519081016040528093929190818152602001838360200280828437820191505050505050919291929080359060200190820180359060200190808060200260200160405190810160405280939291908181526020018383602002808284378201915050505050509192919290803590602001908201803590602001908080601f016020809104026020016040519081016040528093929190818152602001838380828437820191505050505050919291929050505061192d565b005b348015610a1c57600080fd5b50610a5b600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050611a7d565b604051808215151515815260200191505060405180910390f35b348015610a8157600080fd5b50610ac060048036038101908080359060200190929190803573ffffffffffffffffffffffffffffffffffffffff169060200190929190505050611af9565b005b348015610ace57600080fd5b50610b23600480360381019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803573ffffffffffffffffffffffffffffffffffffffff169060200190929190505050611bc9565b6040518082815260200191505060405180910390f35b348015610b4557600080fd5b50610b6460048036038101908080359060200190929190505050611c50565b005b348015610b7257600080fd5b50610b956004803603810190808035600019169060200190929190505050611f0f565b604051808215151515815260200191505060405180910390f35b610bdc82600660009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1683611f2f565b7f5988e4c12f4844b895de0739f562558435dca9602fd8b970720ee3cf8dff39be8282604051808373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020018281526020019250505060405180910390a15050565b60018054600181600116156101000203166002900480601f016020809104026020016040519081016040528092919081815260200182805460018160011615610100020316600290048015610ce15780601f10610cb657610100808354040283529160200191610ce1565b820191906000526020600020905b815481529060010190602001808311610cc457829003601f168201915b505050505081565b60008073ffffffffffffffffffffffffffffffffffffffff168373ffffffffffffffffffffffffffffffffffffffff1614151515610d2657600080fd5b81600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020819055508273ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff167f8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925846040518082815260200191505060405180910390a36001905092915050565b60008054905090565b6000600760003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060009054906101000a900460ff161515610e7957600080fd5b610e84338484611f2f565b8273ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff167f6b053894d8fdbdcc936dd753e21291f0c48e68ef12306eb39a63a374147ba4bd846040518082815260200191505060405180910390a36001905092915050565b6000600760003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060009054906101000a900460ff161515610f4d57600080fd5b610f58833384611f2f565b8273ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff167f073d7524ea37f2bed5915b0eca0c75d97c80044d12f5d5b2ecc1bc88a685780f846040518082815260200191505060405180910390a36001905092915050565b6000600560008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002054821115151561105457600080fd5b6110e382600560008773ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020546120e890919063ffffffff16565b600560008673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000208190555061116e848484611f2f565b8273ffffffffffffffffffffffffffffffffffffffff168473ffffffffffffffffffffffffffffffffffffffff167fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef846040518082815260200191505060405180910390a3600190509392505050565b600660009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614151561123a57600080fd5b6000600760008373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060006101000a81548160ff02191690831515021790555050565b600260009054906101000a900460ff1681565b6000600a60008373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020549050919050565b600073ffffffffffffffffffffffffffffffffffffffff168273ffffffffffffffffffffffffffffffffffffffff161415151561132d57600080fd5b816008600083815260200190815260200160002060006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555080600a60008473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020819055506002428115156113cf57fe5b0660096000838152602001908152602001600020600001819055505050565b6002600960008381526020019081526020016000206001015410151561141357600080fd5b6001600960008381526020019081526020016000206001016000828254019250508190555050565b600660009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614151561149757600080fd5b6001600760008373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060006101000a81548160ff02191690831515021790555050565b8073ffffffffffffffffffffffffffffffffffffffff166008600084815260200190815260200160002060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1614151561155f57600080fd5b6009600083815260200190815260200160002060020160019054906101000a900460ff1615151561158f57600080fd5b60016009600084815260200190815260200160002060020160016101000a81548160ff0219169083151502179055505050565b60096020528060005260406000206000915090508060000154908060010154908060020160009054906101000a900460ff16908060020160019054906101000a900460ff16905084565b6000806008600084815260200190815260200160002060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff169050600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff161415151561168157600080fd5b80915050919050565b85600a60008773ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002081905550846008600088815260200190815260200160002060006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550836009600088815260200190815260200160002060000181905550826009600088815260200190815260200160002060010181905550816009600088815260200190815260200160002060020160006101000a81548160ff021916908315150217905550806009600088815260200190815260200160002060020160016101000a81548160ff021916908315150217905550505050505050565b6000600460008373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020549050919050565b600660009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614151561185f57600080fd5b80600c8190555050565b600c5481565b60076020528060005260406000206000915054906101000a900460ff1681565b60038054600181600116156101000203166002900480601f0160208091040260200160405190810160405280929190818152602001828054600181600116156101000203166002900480156119255780601f106118fa57610100808354040283529160200191611925565b820191906000526020600020905b81548152906001019060200180831161190857829003601f168201915b505050505081565b60008060006054845114151561194257600080fd5b61194b84612109565b92506119568461211c565b91506119618461212f565b9050600b6000826000191660001916815260200190815260200160002060009054906101000a900460ff1615151561199857600080fd5b6001600b6000836000191660001916815260200190815260200160002060006101000a81548160ff0219169083151502179055506119f9600660009054906101000a900473ffffffffffffffffffffffffffffffffffffffff168484611f2f565b7f1b174056799bea141540e324bb093eb297a02b564c15e75840a30cf0d0f48377838383604051808473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020018381526020018260001916600019168152602001935050505060405180910390a150505050505050565b6000611a8a338484611f2f565b8273ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff167fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef846040518082815260200191505060405180910390a36001905092915050565b8073ffffffffffffffffffffffffffffffffffffffff166008600084815260200190815260200160002060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16141515611b6657600080fd5b6009600083815260200190815260200160002060020160009054906101000a900460ff16151515611b9657600080fd5b60016009600084815260200190815260200160002060020160006101000a81548160ff0219169083151502179055505050565b6000600560008473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060008373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002054905092915050565b60008060008060006008600087815260200190815260200160002060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1694508473ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141515611cc857600080fd5b6000600a60008773ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000208190555060006008600088815260200190815260200160002060006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555060096000878152602001908152602001600020600001549350600960008781526020019081526020016000206001015492506009600087815260200190815260200160002060020160009054906101000a900460ff1691506009600087815260200190815260200160002060020160019054906101000a900460ff169050600060096000888152602001908152602001600020600001819055506000600960008881526020019081526020016000206001018190555060006009600088815260200190815260200160002060020160006101000a81548160ff02191690831515021790555060006009600088815260200190815260200160002060020160016101000a81548160ff0219169083151502179055507f2a797bc85caee23a3e29a6e8fb0614b4ffa925d434e247936693cc55389d7f87868686868686604051808781526020018673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020018581526020018481526020018315151515815260200182151515158152602001965050505050505060405180910390a1505050505050565b600b6020528060005260406000206000915054906101000a900460ff1681565b600460003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020548111151515611f7d57600080fd5b600073ffffffffffffffffffffffffffffffffffffffff168273ffffffffffffffffffffffffffffffffffffffff1614151515611fb957600080fd5b61200b81600460008673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020546120e890919063ffffffff16565b600460008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020819055506120a081600460008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205461214290919063ffffffff16565b600460008473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002081905550505050565b6000808383111515156120fa57600080fd5b82840390508091505092915050565b6000806034830151905080915050919050565b6000806054830151905080915050919050565b6000806020830151905080915050919050565b600080828401905083811015151561215957600080fd5b80915050929150505600a165627a7a7230582020bb9afe3d34c4ed2652da9473d4d2cf2403b0805010f9ed11ef6a2829a427480029`
+const PublicSlotBin = `60806040526101f46007556001600855604051620014b1380380620014b18339810180604052810190808051906020019092919080518201929190602001805182019291905050508282826012600260006101000a81548160ff021916908360ff160217905550600260009054906101000a900460ff1660ff16600a0a8302600081905550600054600460003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020819055508160019080519060200190620000e292919062000149565b508060039080519060200190620000fb92919062000149565b5050505033600660006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550505050620001f8565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f106200018c57805160ff1916838001178555620001bd565b82800160010185558215620001bd579182015b82811115620001bc5782518255916020019190600101906200019f565b5b509050620001cc9190620001d0565b5090565b620001f591905b80821115620001f1576000816000905550600101620001d7565b5090565b90565b6112a980620002086000396000f3006080604052600436106100f1576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806306fdde03146100f6578063095ea7b31461018657806318160ddd146101eb57806321670f2214610216578063224b5c721461027b57806323b872dd146102e0578063313ce567146103655780633ba0b9a91461039657806340c10f19146103c15780635f1e69411461042657806370a082311461048b5780637317d44a146104e25780637e8b3f891461053057806395d89b411461055b5780639dc29fac146105eb578063a9059cbb14610650578063dd62ed3e146106b5575b600080fd5b34801561010257600080fd5b5061010b61072c565b6040518080602001828103825283818151815260200191508051906020019080838360005b8381101561014b578082015181840152602081019050610130565b50505050905090810190601f1680156101785780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b34801561019257600080fd5b506101d1600480360381019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803590602001909291905050506107ca565b604051808215151515815260200191505060405180910390f35b3480156101f757600080fd5b506102006108f7565b6040518082815260200191505060405180910390f35b34801561022257600080fd5b50610261600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610900565b604051808215151515815260200191505060405180910390f35b34801561028757600080fd5b506102c6600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610959565b604051808215151515815260200191505060405180910390f35b3480156102ec57600080fd5b5061034b600480360381019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610a00565b604051808215151515815260200191505060405180910390f35b34801561037157600080fd5b5061037a610c17565b604051808260ff1660ff16815260200191505060405180910390f35b3480156103a257600080fd5b506103ab610c2a565b6040518082815260200191505060405180910390f35b3480156103cd57600080fd5b5061040c600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610c30565b604051808215151515815260200191505060405180910390f35b34801561043257600080fd5b50610471600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610c85565b604051808215151515815260200191505060405180910390f35b34801561049757600080fd5b506104cc600480360381019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190505050610d85565b6040518082815260200191505060405180910390f35b610516600480360381019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190505050610dce565b604051808215151515815260200191505060405180910390f35b34801561053c57600080fd5b50610545610e38565b6040518082815260200191505060405180910390f35b34801561056757600080fd5b50610570610e3e565b6040518080602001828103825283818151815260200191508051906020019080838360005b838110156105b0578082015181840152602081019050610595565b50505050905090810190601f1680156105dd5780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b3480156105f757600080fd5b50610636600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610edc565b604051808215151515815260200191505060405180910390f35b34801561065c57600080fd5b5061069b600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610f7f565b604051808215151515815260200191505060405180910390f35b3480156106c157600080fd5b50610716600480360381019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803573ffffffffffffffffffffffffffffffffffffffff169060200190929190505050610ffb565b6040518082815260200191505060405180910390f35b60018054600181600116156101000203166002900480601f0160208091040260200160405190810160405280929190818152602001828054600181600116156101000203166002900480156107c25780601f10610797576101008083540402835291602001916107c2565b820191906000526020600020905b8154815290600101906020018083116107a557829003601f168201915b505050505081565b60008073ffffffffffffffffffffffffffffffffffffffff168373ffffffffffffffffffffffffffffffffffffffff161415151561080757600080fd5b81600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020819055508273ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff167f8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925846040518082815260200191505060405180910390a36001905092915050565b60008054905090565b600081600460008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020600082825401925050819055506001905092915050565b600081600460008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002054101515156109a957600080fd5b81600460008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020600082825403925050819055506001905092915050565b6000600560008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020548211151515610a8d57600080fd5b610b1c82600560008773ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205461108290919063ffffffff16565b600560008673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002081905550610ba78484846110a3565b8273ffffffffffffffffffffffffffffffffffffffff168473ffffffffffffffffffffffffffffffffffffffff167fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef846040518082815260200191505060405180910390a3600190509392505050565b600260009054906101000a900460ff1681565b60075481565b600081600460008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000206000828254019250508190555092915050565b6000806007546008548402811515610c9957fe5b04905082600460008673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205410151515610cea57600080fd5b82600460008673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020600082825403925050819055508373ffffffffffffffffffffffffffffffffffffffff166108fc829081150290604051600060405180830381858888f19350505050158015610d7d573d6000803e3d6000fd5b505092915050565b6000600460008373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020549050919050565b6000806008546007543402811515610de257fe5b04905080600460008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000206000828254019250508190555050919050565b60085481565b60038054600181600116156101000203166002900480601f016020809104026020016040519081016040528092919081815260200182805460018160011615610100020316600290048015610ed45780601f10610ea957610100808354040283529160200191610ed4565b820191906000526020600020905b815481529060010190602001808311610eb757829003601f168201915b505050505081565b600081600460008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205410151515610f2c57600080fd5b81600460008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000206000828254039250508190555092915050565b6000610f8c3384846110a3565b8273ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff167fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef846040518082815260200191505060405180910390a36001905092915050565b6000600560008473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060008373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002054905092915050565b60008083831115151561109457600080fd5b82840390508091505092915050565b600460008473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205481111515156110f157600080fd5b600073ffffffffffffffffffffffffffffffffffffffff168273ffffffffffffffffffffffffffffffffffffffff161415151561112d57600080fd5b61117f81600460008673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205461108290919063ffffffff16565b600460008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000208190555061121481600460008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205461125c90919063ffffffff16565b600460008473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002081905550505050565b600080828401905083811015151561127357600080fd5b80915050929150505600a165627a7a72305820288ef6835f976f76b37ca302b3ba4eb4b1be317227410ceaaec31e49d84844da0029`
 
 // DeployPublicSlot deploys a new Ethereum contract, binding an instance of PublicSlot to it.
-func DeployPublicSlot(auth *bind.TransactOpts, backend bind.ContractBackend, totalSupply *big.Int, tokenName string, tokenSymbol string, decimalUnits uint8, _requiredSignatures *big.Int) (common.Address, *types.Transaction, *PublicSlot, error) {
+func DeployPublicSlot(auth *bind.TransactOpts, backend bind.ContractBackend, totalSupply *big.Int, tokenName string, tokenSymbol string) (common.Address, *types.Transaction, *PublicSlot, error) {
 	parsed, err := abi.JSON(strings.NewReader(PublicSlotABI))
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(PublicSlotBin), backend, totalSupply, tokenName, tokenSymbol, decimalUnits, _requiredSignatures)
+	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(PublicSlotBin), backend, totalSupply, tokenName, tokenSymbol)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -188,32 +188,6 @@ func (_PublicSlot *PublicSlotTransactorRaw) Transact(opts *bind.TransactOpts, me
 	return _PublicSlot.Contract.contract.Transact(opts, method, params...)
 }
 
-// AuthorizdedMachines is a free data retrieval call binding the contract method 0x90883c08.
-//
-// Solidity: function _authorizdedMachines( address) constant returns(bool)
-func (_PublicSlot *PublicSlotCaller) AuthorizdedMachines(opts *bind.CallOpts, arg0 common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _PublicSlot.contract.Call(opts, out, "_authorizdedMachines", arg0)
-	return *ret0, err
-}
-
-// AuthorizdedMachines is a free data retrieval call binding the contract method 0x90883c08.
-//
-// Solidity: function _authorizdedMachines( address) constant returns(bool)
-func (_PublicSlot *PublicSlotSession) AuthorizdedMachines(arg0 common.Address) (bool, error) {
-	return _PublicSlot.Contract.AuthorizdedMachines(&_PublicSlot.CallOpts, arg0)
-}
-
-// AuthorizdedMachines is a free data retrieval call binding the contract method 0x90883c08.
-//
-// Solidity: function _authorizdedMachines( address) constant returns(bool)
-func (_PublicSlot *PublicSlotCallerSession) AuthorizdedMachines(arg0 common.Address) (bool, error) {
-	return _PublicSlot.Contract.AuthorizdedMachines(&_PublicSlot.CallOpts, arg0)
-}
-
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
 // Solidity: function allowance(owner address, spender address) constant returns(uint256)
@@ -238,50 +212,6 @@ func (_PublicSlot *PublicSlotSession) Allowance(owner common.Address, spender co
 // Solidity: function allowance(owner address, spender address) constant returns(uint256)
 func (_PublicSlot *PublicSlotCallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _PublicSlot.Contract.Allowance(&_PublicSlot.CallOpts, owner, spender)
-}
-
-// Avatar is a free data retrieval call binding the contract method 0x5e5741f5.
-//
-// Solidity: function avatar( uint256) constant returns(gene uint256, avatarLevel uint256, weaponed bool, armored bool)
-func (_PublicSlot *PublicSlotCaller) Avatar(opts *bind.CallOpts, arg0 *big.Int) (struct {
-	Gene        *big.Int
-	AvatarLevel *big.Int
-	Weaponed    bool
-	Armored     bool
-}, error) {
-	ret := new(struct {
-		Gene        *big.Int
-		AvatarLevel *big.Int
-		Weaponed    bool
-		Armored     bool
-	})
-	out := ret
-	err := _PublicSlot.contract.Call(opts, out, "avatar", arg0)
-	return *ret, err
-}
-
-// Avatar is a free data retrieval call binding the contract method 0x5e5741f5.
-//
-// Solidity: function avatar( uint256) constant returns(gene uint256, avatarLevel uint256, weaponed bool, armored bool)
-func (_PublicSlot *PublicSlotSession) Avatar(arg0 *big.Int) (struct {
-	Gene        *big.Int
-	AvatarLevel *big.Int
-	Weaponed    bool
-	Armored     bool
-}, error) {
-	return _PublicSlot.Contract.Avatar(&_PublicSlot.CallOpts, arg0)
-}
-
-// Avatar is a free data retrieval call binding the contract method 0x5e5741f5.
-//
-// Solidity: function avatar( uint256) constant returns(gene uint256, avatarLevel uint256, weaponed bool, armored bool)
-func (_PublicSlot *PublicSlotCallerSession) Avatar(arg0 *big.Int) (struct {
-	Gene        *big.Int
-	AvatarLevel *big.Int
-	Weaponed    bool
-	Armored     bool
-}, error) {
-	return _PublicSlot.Contract.Avatar(&_PublicSlot.CallOpts, arg0)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
@@ -336,6 +266,58 @@ func (_PublicSlot *PublicSlotCallerSession) Decimals() (uint8, error) {
 	return _PublicSlot.Contract.Decimals(&_PublicSlot.CallOpts)
 }
 
+// ExchangeBase is a free data retrieval call binding the contract method 0x7e8b3f89.
+//
+// Solidity: function exchangeBase() constant returns(uint256)
+func (_PublicSlot *PublicSlotCaller) ExchangeBase(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _PublicSlot.contract.Call(opts, out, "exchangeBase")
+	return *ret0, err
+}
+
+// ExchangeBase is a free data retrieval call binding the contract method 0x7e8b3f89.
+//
+// Solidity: function exchangeBase() constant returns(uint256)
+func (_PublicSlot *PublicSlotSession) ExchangeBase() (*big.Int, error) {
+	return _PublicSlot.Contract.ExchangeBase(&_PublicSlot.CallOpts)
+}
+
+// ExchangeBase is a free data retrieval call binding the contract method 0x7e8b3f89.
+//
+// Solidity: function exchangeBase() constant returns(uint256)
+func (_PublicSlot *PublicSlotCallerSession) ExchangeBase() (*big.Int, error) {
+	return _PublicSlot.Contract.ExchangeBase(&_PublicSlot.CallOpts)
+}
+
+// ExchangeRate is a free data retrieval call binding the contract method 0x3ba0b9a9.
+//
+// Solidity: function exchangeRate() constant returns(uint256)
+func (_PublicSlot *PublicSlotCaller) ExchangeRate(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _PublicSlot.contract.Call(opts, out, "exchangeRate")
+	return *ret0, err
+}
+
+// ExchangeRate is a free data retrieval call binding the contract method 0x3ba0b9a9.
+//
+// Solidity: function exchangeRate() constant returns(uint256)
+func (_PublicSlot *PublicSlotSession) ExchangeRate() (*big.Int, error) {
+	return _PublicSlot.Contract.ExchangeRate(&_PublicSlot.CallOpts)
+}
+
+// ExchangeRate is a free data retrieval call binding the contract method 0x3ba0b9a9.
+//
+// Solidity: function exchangeRate() constant returns(uint256)
+func (_PublicSlot *PublicSlotCallerSession) ExchangeRate() (*big.Int, error) {
+	return _PublicSlot.Contract.ExchangeRate(&_PublicSlot.CallOpts)
+}
+
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
 // Solidity: function name() constant returns(string)
@@ -360,110 +342,6 @@ func (_PublicSlot *PublicSlotSession) Name() (string, error) {
 // Solidity: function name() constant returns(string)
 func (_PublicSlot *PublicSlotCallerSession) Name() (string, error) {
 	return _PublicSlot.Contract.Name(&_PublicSlot.CallOpts)
-}
-
-// OwnedAvatars is a free data retrieval call binding the contract method 0x399bd4f0.
-//
-// Solidity: function ownedAvatars(owner address) constant returns(uint256)
-func (_PublicSlot *PublicSlotCaller) OwnedAvatars(opts *bind.CallOpts, owner common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _PublicSlot.contract.Call(opts, out, "ownedAvatars", owner)
-	return *ret0, err
-}
-
-// OwnedAvatars is a free data retrieval call binding the contract method 0x399bd4f0.
-//
-// Solidity: function ownedAvatars(owner address) constant returns(uint256)
-func (_PublicSlot *PublicSlotSession) OwnedAvatars(owner common.Address) (*big.Int, error) {
-	return _PublicSlot.Contract.OwnedAvatars(&_PublicSlot.CallOpts, owner)
-}
-
-// OwnedAvatars is a free data retrieval call binding the contract method 0x399bd4f0.
-//
-// Solidity: function ownedAvatars(owner address) constant returns(uint256)
-func (_PublicSlot *PublicSlotCallerSession) OwnedAvatars(owner common.Address) (*big.Int, error) {
-	return _PublicSlot.Contract.OwnedAvatars(&_PublicSlot.CallOpts, owner)
-}
-
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(tokenId uint256) constant returns(address)
-func (_PublicSlot *PublicSlotCaller) OwnerOf(opts *bind.CallOpts, tokenId *big.Int) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _PublicSlot.contract.Call(opts, out, "ownerOf", tokenId)
-	return *ret0, err
-}
-
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(tokenId uint256) constant returns(address)
-func (_PublicSlot *PublicSlotSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _PublicSlot.Contract.OwnerOf(&_PublicSlot.CallOpts, tokenId)
-}
-
-// OwnerOf is a free data retrieval call binding the contract method 0x6352211e.
-//
-// Solidity: function ownerOf(tokenId uint256) constant returns(address)
-func (_PublicSlot *PublicSlotCallerSession) OwnerOf(tokenId *big.Int) (common.Address, error) {
-	return _PublicSlot.Contract.OwnerOf(&_PublicSlot.CallOpts, tokenId)
-}
-
-// Payed is a free data retrieval call binding the contract method 0xff88aeb9.
-//
-// Solidity: function payed( bytes32) constant returns(bool)
-func (_PublicSlot *PublicSlotCaller) Payed(opts *bind.CallOpts, arg0 [32]byte) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _PublicSlot.contract.Call(opts, out, "payed", arg0)
-	return *ret0, err
-}
-
-// Payed is a free data retrieval call binding the contract method 0xff88aeb9.
-//
-// Solidity: function payed( bytes32) constant returns(bool)
-func (_PublicSlot *PublicSlotSession) Payed(arg0 [32]byte) (bool, error) {
-	return _PublicSlot.Contract.Payed(&_PublicSlot.CallOpts, arg0)
-}
-
-// Payed is a free data retrieval call binding the contract method 0xff88aeb9.
-//
-// Solidity: function payed( bytes32) constant returns(bool)
-func (_PublicSlot *PublicSlotCallerSession) Payed(arg0 [32]byte) (bool, error) {
-	return _PublicSlot.Contract.Payed(&_PublicSlot.CallOpts, arg0)
-}
-
-// RequiredSignatures is a free data retrieval call binding the contract method 0x8d068043.
-//
-// Solidity: function requiredSignatures() constant returns(uint256)
-func (_PublicSlot *PublicSlotCaller) RequiredSignatures(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _PublicSlot.contract.Call(opts, out, "requiredSignatures")
-	return *ret0, err
-}
-
-// RequiredSignatures is a free data retrieval call binding the contract method 0x8d068043.
-//
-// Solidity: function requiredSignatures() constant returns(uint256)
-func (_PublicSlot *PublicSlotSession) RequiredSignatures() (*big.Int, error) {
-	return _PublicSlot.Contract.RequiredSignatures(&_PublicSlot.CallOpts)
-}
-
-// RequiredSignatures is a free data retrieval call binding the contract method 0x8d068043.
-//
-// Solidity: function requiredSignatures() constant returns(uint256)
-func (_PublicSlot *PublicSlotCallerSession) RequiredSignatures() (*big.Int, error) {
-	return _PublicSlot.Contract.RequiredSignatures(&_PublicSlot.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
@@ -518,27 +396,6 @@ func (_PublicSlot *PublicSlotCallerSession) TotalSupply() (*big.Int, error) {
 	return _PublicSlot.Contract.TotalSupply(&_PublicSlot.CallOpts)
 }
 
-// AddGameMachine is a paid mutator transaction binding the contract method 0x50dc43a1.
-//
-// Solidity: function addGameMachine(machine address) returns()
-func (_PublicSlot *PublicSlotTransactor) AddGameMachine(opts *bind.TransactOpts, machine common.Address) (*types.Transaction, error) {
-	return _PublicSlot.contract.Transact(opts, "addGameMachine", machine)
-}
-
-// AddGameMachine is a paid mutator transaction binding the contract method 0x50dc43a1.
-//
-// Solidity: function addGameMachine(machine address) returns()
-func (_PublicSlot *PublicSlotSession) AddGameMachine(machine common.Address) (*types.Transaction, error) {
-	return _PublicSlot.Contract.AddGameMachine(&_PublicSlot.TransactOpts, machine)
-}
-
-// AddGameMachine is a paid mutator transaction binding the contract method 0x50dc43a1.
-//
-// Solidity: function addGameMachine(machine address) returns()
-func (_PublicSlot *PublicSlotTransactorSession) AddGameMachine(machine common.Address) (*types.Transaction, error) {
-	return _PublicSlot.Contract.AddGameMachine(&_PublicSlot.TransactOpts, machine)
-}
-
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(spender address, value uint256) returns(bool)
@@ -558,6 +415,27 @@ func (_PublicSlot *PublicSlotSession) Approve(spender common.Address, value *big
 // Solidity: function approve(spender address, value uint256) returns(bool)
 func (_PublicSlot *PublicSlotTransactorSession) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PublicSlot.Contract.Approve(&_PublicSlot.TransactOpts, spender, value)
+}
+
+// Burn is a paid mutator transaction binding the contract method 0x9dc29fac.
+//
+// Solidity: function burn(user address, amount uint256) returns(bool)
+func (_PublicSlot *PublicSlotTransactor) Burn(opts *bind.TransactOpts, user common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _PublicSlot.contract.Transact(opts, "burn", user, amount)
+}
+
+// Burn is a paid mutator transaction binding the contract method 0x9dc29fac.
+//
+// Solidity: function burn(user address, amount uint256) returns(bool)
+func (_PublicSlot *PublicSlotSession) Burn(user common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _PublicSlot.Contract.Burn(&_PublicSlot.TransactOpts, user, amount)
+}
+
+// Burn is a paid mutator transaction binding the contract method 0x9dc29fac.
+//
+// Solidity: function burn(user address, amount uint256) returns(bool)
+func (_PublicSlot *PublicSlotTransactorSession) Burn(user common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _PublicSlot.Contract.Burn(&_PublicSlot.TransactOpts, user, amount)
 }
 
 // Consume is a paid mutator transaction binding the contract method 0x224b5c72.
@@ -581,172 +459,67 @@ func (_PublicSlot *PublicSlotTransactorSession) Consume(by common.Address, value
 	return _PublicSlot.Contract.Consume(&_PublicSlot.TransactOpts, by, value)
 }
 
-// EquipArmor is a paid mutator transaction binding the contract method 0x541486b6.
+// ExchangeForEther is a paid mutator transaction binding the contract method 0x5f1e6941.
 //
-// Solidity: function equipArmor(tokenId uint256, user address) returns()
-func (_PublicSlot *PublicSlotTransactor) EquipArmor(opts *bind.TransactOpts, tokenId *big.Int, user common.Address) (*types.Transaction, error) {
-	return _PublicSlot.contract.Transact(opts, "equipArmor", tokenId, user)
+// Solidity: function exchangeForEther(user address, amount uint256) returns(bool)
+func (_PublicSlot *PublicSlotTransactor) ExchangeForEther(opts *bind.TransactOpts, user common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _PublicSlot.contract.Transact(opts, "exchangeForEther", user, amount)
 }
 
-// EquipArmor is a paid mutator transaction binding the contract method 0x541486b6.
+// ExchangeForEther is a paid mutator transaction binding the contract method 0x5f1e6941.
 //
-// Solidity: function equipArmor(tokenId uint256, user address) returns()
-func (_PublicSlot *PublicSlotSession) EquipArmor(tokenId *big.Int, user common.Address) (*types.Transaction, error) {
-	return _PublicSlot.Contract.EquipArmor(&_PublicSlot.TransactOpts, tokenId, user)
+// Solidity: function exchangeForEther(user address, amount uint256) returns(bool)
+func (_PublicSlot *PublicSlotSession) ExchangeForEther(user common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _PublicSlot.Contract.ExchangeForEther(&_PublicSlot.TransactOpts, user, amount)
 }
 
-// EquipArmor is a paid mutator transaction binding the contract method 0x541486b6.
+// ExchangeForEther is a paid mutator transaction binding the contract method 0x5f1e6941.
 //
-// Solidity: function equipArmor(tokenId uint256, user address) returns()
-func (_PublicSlot *PublicSlotTransactorSession) EquipArmor(tokenId *big.Int, user common.Address) (*types.Transaction, error) {
-	return _PublicSlot.Contract.EquipArmor(&_PublicSlot.TransactOpts, tokenId, user)
+// Solidity: function exchangeForEther(user address, amount uint256) returns(bool)
+func (_PublicSlot *PublicSlotTransactorSession) ExchangeForEther(user common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _PublicSlot.Contract.ExchangeForEther(&_PublicSlot.TransactOpts, user, amount)
 }
 
-// EquipWeapon is a paid mutator transaction binding the contract method 0xbf6feb40.
+// ExchangeForToken is a paid mutator transaction binding the contract method 0x7317d44a.
 //
-// Solidity: function equipWeapon(tokenId uint256, user address) returns()
-func (_PublicSlot *PublicSlotTransactor) EquipWeapon(opts *bind.TransactOpts, tokenId *big.Int, user common.Address) (*types.Transaction, error) {
-	return _PublicSlot.contract.Transact(opts, "equipWeapon", tokenId, user)
+// Solidity: function exchangeForToken(user address) returns(bool)
+func (_PublicSlot *PublicSlotTransactor) ExchangeForToken(opts *bind.TransactOpts, user common.Address) (*types.Transaction, error) {
+	return _PublicSlot.contract.Transact(opts, "exchangeForToken", user)
 }
 
-// EquipWeapon is a paid mutator transaction binding the contract method 0xbf6feb40.
+// ExchangeForToken is a paid mutator transaction binding the contract method 0x7317d44a.
 //
-// Solidity: function equipWeapon(tokenId uint256, user address) returns()
-func (_PublicSlot *PublicSlotSession) EquipWeapon(tokenId *big.Int, user common.Address) (*types.Transaction, error) {
-	return _PublicSlot.Contract.EquipWeapon(&_PublicSlot.TransactOpts, tokenId, user)
+// Solidity: function exchangeForToken(user address) returns(bool)
+func (_PublicSlot *PublicSlotSession) ExchangeForToken(user common.Address) (*types.Transaction, error) {
+	return _PublicSlot.Contract.ExchangeForToken(&_PublicSlot.TransactOpts, user)
 }
 
-// EquipWeapon is a paid mutator transaction binding the contract method 0xbf6feb40.
+// ExchangeForToken is a paid mutator transaction binding the contract method 0x7317d44a.
 //
-// Solidity: function equipWeapon(tokenId uint256, user address) returns()
-func (_PublicSlot *PublicSlotTransactorSession) EquipWeapon(tokenId *big.Int, user common.Address) (*types.Transaction, error) {
-	return _PublicSlot.Contract.EquipWeapon(&_PublicSlot.TransactOpts, tokenId, user)
-}
-
-// Exchange is a paid mutator transaction binding the contract method 0x045d0389.
-//
-// Solidity: function exchange(user address, amount uint256) returns()
-func (_PublicSlot *PublicSlotTransactor) Exchange(opts *bind.TransactOpts, user common.Address, amount *big.Int) (*types.Transaction, error) {
-	return _PublicSlot.contract.Transact(opts, "exchange", user, amount)
-}
-
-// Exchange is a paid mutator transaction binding the contract method 0x045d0389.
-//
-// Solidity: function exchange(user address, amount uint256) returns()
-func (_PublicSlot *PublicSlotSession) Exchange(user common.Address, amount *big.Int) (*types.Transaction, error) {
-	return _PublicSlot.Contract.Exchange(&_PublicSlot.TransactOpts, user, amount)
-}
-
-// Exchange is a paid mutator transaction binding the contract method 0x045d0389.
-//
-// Solidity: function exchange(user address, amount uint256) returns()
-func (_PublicSlot *PublicSlotTransactorSession) Exchange(user common.Address, amount *big.Int) (*types.Transaction, error) {
-	return _PublicSlot.Contract.Exchange(&_PublicSlot.TransactOpts, user, amount)
-}
-
-// ExchangeNFT is a paid mutator transaction binding the contract method 0xe9565b83.
-//
-// Solidity: function exchangeNFT(tokenID uint256) returns()
-func (_PublicSlot *PublicSlotTransactor) ExchangeNFT(opts *bind.TransactOpts, tokenID *big.Int) (*types.Transaction, error) {
-	return _PublicSlot.contract.Transact(opts, "exchangeNFT", tokenID)
-}
-
-// ExchangeNFT is a paid mutator transaction binding the contract method 0xe9565b83.
-//
-// Solidity: function exchangeNFT(tokenID uint256) returns()
-func (_PublicSlot *PublicSlotSession) ExchangeNFT(tokenID *big.Int) (*types.Transaction, error) {
-	return _PublicSlot.Contract.ExchangeNFT(&_PublicSlot.TransactOpts, tokenID)
-}
-
-// ExchangeNFT is a paid mutator transaction binding the contract method 0xe9565b83.
-//
-// Solidity: function exchangeNFT(tokenID uint256) returns()
-func (_PublicSlot *PublicSlotTransactorSession) ExchangeNFT(tokenID *big.Int) (*types.Transaction, error) {
-	return _PublicSlot.Contract.ExchangeNFT(&_PublicSlot.TransactOpts, tokenID)
+// Solidity: function exchangeForToken(user address) returns(bool)
+func (_PublicSlot *PublicSlotTransactorSession) ExchangeForToken(user common.Address) (*types.Transaction, error) {
+	return _PublicSlot.Contract.ExchangeForToken(&_PublicSlot.TransactOpts, user)
 }
 
 // Mint is a paid mutator transaction binding the contract method 0x40c10f19.
 //
-// Solidity: function mint(to address, tokenId uint256) returns()
-func (_PublicSlot *PublicSlotTransactor) Mint(opts *bind.TransactOpts, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _PublicSlot.contract.Transact(opts, "mint", to, tokenId)
+// Solidity: function mint(user address, amount uint256) returns(bool)
+func (_PublicSlot *PublicSlotTransactor) Mint(opts *bind.TransactOpts, user common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _PublicSlot.contract.Transact(opts, "mint", user, amount)
 }
 
 // Mint is a paid mutator transaction binding the contract method 0x40c10f19.
 //
-// Solidity: function mint(to address, tokenId uint256) returns()
-func (_PublicSlot *PublicSlotSession) Mint(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _PublicSlot.Contract.Mint(&_PublicSlot.TransactOpts, to, tokenId)
+// Solidity: function mint(user address, amount uint256) returns(bool)
+func (_PublicSlot *PublicSlotSession) Mint(user common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _PublicSlot.Contract.Mint(&_PublicSlot.TransactOpts, user, amount)
 }
 
 // Mint is a paid mutator transaction binding the contract method 0x40c10f19.
 //
-// Solidity: function mint(to address, tokenId uint256) returns()
-func (_PublicSlot *PublicSlotTransactorSession) Mint(to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _PublicSlot.Contract.Mint(&_PublicSlot.TransactOpts, to, tokenId)
-}
-
-// Pay is a paid mutator transaction binding the contract method 0xa835ba0b.
-//
-// Solidity: function pay(vs uint8[], rs bytes32[], ss bytes32[], message bytes) returns()
-func (_PublicSlot *PublicSlotTransactor) Pay(opts *bind.TransactOpts, vs []uint8, rs [][32]byte, ss [][32]byte, message []byte) (*types.Transaction, error) {
-	return _PublicSlot.contract.Transact(opts, "pay", vs, rs, ss, message)
-}
-
-// Pay is a paid mutator transaction binding the contract method 0xa835ba0b.
-//
-// Solidity: function pay(vs uint8[], rs bytes32[], ss bytes32[], message bytes) returns()
-func (_PublicSlot *PublicSlotSession) Pay(vs []uint8, rs [][32]byte, ss [][32]byte, message []byte) (*types.Transaction, error) {
-	return _PublicSlot.Contract.Pay(&_PublicSlot.TransactOpts, vs, rs, ss, message)
-}
-
-// Pay is a paid mutator transaction binding the contract method 0xa835ba0b.
-//
-// Solidity: function pay(vs uint8[], rs bytes32[], ss bytes32[], message bytes) returns()
-func (_PublicSlot *PublicSlotTransactorSession) Pay(vs []uint8, rs [][32]byte, ss [][32]byte, message []byte) (*types.Transaction, error) {
-	return _PublicSlot.Contract.Pay(&_PublicSlot.TransactOpts, vs, rs, ss, message)
-}
-
-// PayNFT is a paid mutator transaction binding the contract method 0x66ff660f.
-//
-// Solidity: function payNFT(tokenID uint256, avatarOwner address, gene uint256, avatarLevel uint256, weaponed bool, armored bool) returns()
-func (_PublicSlot *PublicSlotTransactor) PayNFT(opts *bind.TransactOpts, tokenID *big.Int, avatarOwner common.Address, gene *big.Int, avatarLevel *big.Int, weaponed bool, armored bool) (*types.Transaction, error) {
-	return _PublicSlot.contract.Transact(opts, "payNFT", tokenID, avatarOwner, gene, avatarLevel, weaponed, armored)
-}
-
-// PayNFT is a paid mutator transaction binding the contract method 0x66ff660f.
-//
-// Solidity: function payNFT(tokenID uint256, avatarOwner address, gene uint256, avatarLevel uint256, weaponed bool, armored bool) returns()
-func (_PublicSlot *PublicSlotSession) PayNFT(tokenID *big.Int, avatarOwner common.Address, gene *big.Int, avatarLevel *big.Int, weaponed bool, armored bool) (*types.Transaction, error) {
-	return _PublicSlot.Contract.PayNFT(&_PublicSlot.TransactOpts, tokenID, avatarOwner, gene, avatarLevel, weaponed, armored)
-}
-
-// PayNFT is a paid mutator transaction binding the contract method 0x66ff660f.
-//
-// Solidity: function payNFT(tokenID uint256, avatarOwner address, gene uint256, avatarLevel uint256, weaponed bool, armored bool) returns()
-func (_PublicSlot *PublicSlotTransactorSession) PayNFT(tokenID *big.Int, avatarOwner common.Address, gene *big.Int, avatarLevel *big.Int, weaponed bool, armored bool) (*types.Transaction, error) {
-	return _PublicSlot.Contract.PayNFT(&_PublicSlot.TransactOpts, tokenID, avatarOwner, gene, avatarLevel, weaponed, armored)
-}
-
-// RemoveGameMachine is a paid mutator transaction binding the contract method 0x3016e108.
-//
-// Solidity: function removeGameMachine(machine address) returns()
-func (_PublicSlot *PublicSlotTransactor) RemoveGameMachine(opts *bind.TransactOpts, machine common.Address) (*types.Transaction, error) {
-	return _PublicSlot.contract.Transact(opts, "removeGameMachine", machine)
-}
-
-// RemoveGameMachine is a paid mutator transaction binding the contract method 0x3016e108.
-//
-// Solidity: function removeGameMachine(machine address) returns()
-func (_PublicSlot *PublicSlotSession) RemoveGameMachine(machine common.Address) (*types.Transaction, error) {
-	return _PublicSlot.Contract.RemoveGameMachine(&_PublicSlot.TransactOpts, machine)
-}
-
-// RemoveGameMachine is a paid mutator transaction binding the contract method 0x3016e108.
-//
-// Solidity: function removeGameMachine(machine address) returns()
-func (_PublicSlot *PublicSlotTransactorSession) RemoveGameMachine(machine common.Address) (*types.Transaction, error) {
-	return _PublicSlot.Contract.RemoveGameMachine(&_PublicSlot.TransactOpts, machine)
+// Solidity: function mint(user address, amount uint256) returns(bool)
+func (_PublicSlot *PublicSlotTransactorSession) Mint(user common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _PublicSlot.Contract.Mint(&_PublicSlot.TransactOpts, user, amount)
 }
 
 // Reward is a paid mutator transaction binding the contract method 0x21670f22.
@@ -768,27 +541,6 @@ func (_PublicSlot *PublicSlotSession) Reward(to common.Address, value *big.Int) 
 // Solidity: function reward(to address, value uint256) returns(bool)
 func (_PublicSlot *PublicSlotTransactorSession) Reward(to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PublicSlot.Contract.Reward(&_PublicSlot.TransactOpts, to, value)
-}
-
-// SetRequiredSignatures is a paid mutator transaction binding the contract method 0x7d2b9cc0.
-//
-// Solidity: function setRequiredSignatures(newRequiredSignatures uint256) returns()
-func (_PublicSlot *PublicSlotTransactor) SetRequiredSignatures(opts *bind.TransactOpts, newRequiredSignatures *big.Int) (*types.Transaction, error) {
-	return _PublicSlot.contract.Transact(opts, "setRequiredSignatures", newRequiredSignatures)
-}
-
-// SetRequiredSignatures is a paid mutator transaction binding the contract method 0x7d2b9cc0.
-//
-// Solidity: function setRequiredSignatures(newRequiredSignatures uint256) returns()
-func (_PublicSlot *PublicSlotSession) SetRequiredSignatures(newRequiredSignatures *big.Int) (*types.Transaction, error) {
-	return _PublicSlot.Contract.SetRequiredSignatures(&_PublicSlot.TransactOpts, newRequiredSignatures)
-}
-
-// SetRequiredSignatures is a paid mutator transaction binding the contract method 0x7d2b9cc0.
-//
-// Solidity: function setRequiredSignatures(newRequiredSignatures uint256) returns()
-func (_PublicSlot *PublicSlotTransactorSession) SetRequiredSignatures(newRequiredSignatures *big.Int) (*types.Transaction, error) {
-	return _PublicSlot.Contract.SetRequiredSignatures(&_PublicSlot.TransactOpts, newRequiredSignatures)
 }
 
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
@@ -831,27 +583,6 @@ func (_PublicSlot *PublicSlotSession) TransferFrom(from common.Address, to commo
 // Solidity: function transferFrom(from address, to address, value uint256) returns(bool)
 func (_PublicSlot *PublicSlotTransactorSession) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PublicSlot.Contract.TransferFrom(&_PublicSlot.TransactOpts, from, to, value)
-}
-
-// Upgrade is a paid mutator transaction binding the contract method 0x45977d03.
-//
-// Solidity: function upgrade(tokenId uint256) returns()
-func (_PublicSlot *PublicSlotTransactor) Upgrade(opts *bind.TransactOpts, tokenId *big.Int) (*types.Transaction, error) {
-	return _PublicSlot.contract.Transact(opts, "upgrade", tokenId)
-}
-
-// Upgrade is a paid mutator transaction binding the contract method 0x45977d03.
-//
-// Solidity: function upgrade(tokenId uint256) returns()
-func (_PublicSlot *PublicSlotSession) Upgrade(tokenId *big.Int) (*types.Transaction, error) {
-	return _PublicSlot.Contract.Upgrade(&_PublicSlot.TransactOpts, tokenId)
-}
-
-// Upgrade is a paid mutator transaction binding the contract method 0x45977d03.
-//
-// Solidity: function upgrade(tokenId uint256) returns()
-func (_PublicSlot *PublicSlotTransactorSession) Upgrade(tokenId *big.Int) (*types.Transaction, error) {
-	return _PublicSlot.Contract.Upgrade(&_PublicSlot.TransactOpts, tokenId)
 }
 
 // PublicSlotApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the PublicSlot contract.
@@ -996,9 +727,9 @@ func (_PublicSlot *PublicSlotFilterer) WatchApproval(opts *bind.WatchOpts, sink 
 	}), nil
 }
 
-// PublicSlotConsumeIterator is returned from FilterConsume and is used to iterate over the raw logs and unpacked data for Consume events raised by the PublicSlot contract.
-type PublicSlotConsumeIterator struct {
-	Event *PublicSlotConsume // Event containing the contract specifics and raw log
+// PublicSlotBurnIterator is returned from FilterBurn and is used to iterate over the raw logs and unpacked data for Burn events raised by the PublicSlot contract.
+type PublicSlotBurnIterator struct {
+	Event *PublicSlotBurn // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1012,7 +743,7 @@ type PublicSlotConsumeIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *PublicSlotConsumeIterator) Next() bool {
+func (it *PublicSlotBurnIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1021,7 +752,7 @@ func (it *PublicSlotConsumeIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(PublicSlotConsume)
+			it.Event = new(PublicSlotBurn)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1036,7 +767,7 @@ func (it *PublicSlotConsumeIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(PublicSlotConsume)
+		it.Event = new(PublicSlotBurn)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1052,184 +783,42 @@ func (it *PublicSlotConsumeIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *PublicSlotConsumeIterator) Error() error {
+func (it *PublicSlotBurnIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *PublicSlotConsumeIterator) Close() error {
+func (it *PublicSlotBurnIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// PublicSlotConsume represents a Consume event raised by the PublicSlot contract.
-type PublicSlotConsume struct {
-	Machine common.Address
-	Player  common.Address
-	Value   *big.Int
-	Raw     types.Log // Blockchain specific contextual infos
-}
-
-// FilterConsume is a free log retrieval operation binding the contract event 0x073d7524ea37f2bed5915b0eca0c75d97c80044d12f5d5b2ecc1bc88a685780f.
-//
-// Solidity: e Consume(machine indexed address, player indexed address, value uint256)
-func (_PublicSlot *PublicSlotFilterer) FilterConsume(opts *bind.FilterOpts, machine []common.Address, player []common.Address) (*PublicSlotConsumeIterator, error) {
-
-	var machineRule []interface{}
-	for _, machineItem := range machine {
-		machineRule = append(machineRule, machineItem)
-	}
-	var playerRule []interface{}
-	for _, playerItem := range player {
-		playerRule = append(playerRule, playerItem)
-	}
-
-	logs, sub, err := _PublicSlot.contract.FilterLogs(opts, "Consume", machineRule, playerRule)
-	if err != nil {
-		return nil, err
-	}
-	return &PublicSlotConsumeIterator{contract: _PublicSlot.contract, event: "Consume", logs: logs, sub: sub}, nil
-}
-
-// WatchConsume is a free log subscription operation binding the contract event 0x073d7524ea37f2bed5915b0eca0c75d97c80044d12f5d5b2ecc1bc88a685780f.
-//
-// Solidity: e Consume(machine indexed address, player indexed address, value uint256)
-func (_PublicSlot *PublicSlotFilterer) WatchConsume(opts *bind.WatchOpts, sink chan<- *PublicSlotConsume, machine []common.Address, player []common.Address) (event.Subscription, error) {
-
-	var machineRule []interface{}
-	for _, machineItem := range machine {
-		machineRule = append(machineRule, machineItem)
-	}
-	var playerRule []interface{}
-	for _, playerItem := range player {
-		playerRule = append(playerRule, playerItem)
-	}
-
-	logs, sub, err := _PublicSlot.contract.WatchLogs(opts, "Consume", machineRule, playerRule)
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(PublicSlotConsume)
-				if err := _PublicSlot.contract.UnpackLog(event, "Consume", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// PublicSlotExchangeIterator is returned from FilterExchange and is used to iterate over the raw logs and unpacked data for Exchange events raised by the PublicSlot contract.
-type PublicSlotExchangeIterator struct {
-	Event *PublicSlotExchange // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *PublicSlotExchangeIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(PublicSlotExchange)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(PublicSlotExchange)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *PublicSlotExchangeIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *PublicSlotExchangeIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// PublicSlotExchange represents a Exchange event raised by the PublicSlot contract.
-type PublicSlotExchange struct {
+// PublicSlotBurn represents a Burn event raised by the PublicSlot contract.
+type PublicSlotBurn struct {
 	User   common.Address
 	Amount *big.Int
 	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// FilterExchange is a free log retrieval operation binding the contract event 0x5988e4c12f4844b895de0739f562558435dca9602fd8b970720ee3cf8dff39be.
+// FilterBurn is a free log retrieval operation binding the contract event 0xcc16f5dbb4873280815c1ee09dbd06736cffcc184412cf7a71a0fdb75d397ca5.
 //
-// Solidity: e Exchange(user address, amount uint256)
-func (_PublicSlot *PublicSlotFilterer) FilterExchange(opts *bind.FilterOpts) (*PublicSlotExchangeIterator, error) {
+// Solidity: e Burn(user address, amount uint256)
+func (_PublicSlot *PublicSlotFilterer) FilterBurn(opts *bind.FilterOpts) (*PublicSlotBurnIterator, error) {
 
-	logs, sub, err := _PublicSlot.contract.FilterLogs(opts, "Exchange")
+	logs, sub, err := _PublicSlot.contract.FilterLogs(opts, "Burn")
 	if err != nil {
 		return nil, err
 	}
-	return &PublicSlotExchangeIterator{contract: _PublicSlot.contract, event: "Exchange", logs: logs, sub: sub}, nil
+	return &PublicSlotBurnIterator{contract: _PublicSlot.contract, event: "Burn", logs: logs, sub: sub}, nil
 }
 
-// WatchExchange is a free log subscription operation binding the contract event 0x5988e4c12f4844b895de0739f562558435dca9602fd8b970720ee3cf8dff39be.
+// WatchBurn is a free log subscription operation binding the contract event 0xcc16f5dbb4873280815c1ee09dbd06736cffcc184412cf7a71a0fdb75d397ca5.
 //
-// Solidity: e Exchange(user address, amount uint256)
-func (_PublicSlot *PublicSlotFilterer) WatchExchange(opts *bind.WatchOpts, sink chan<- *PublicSlotExchange) (event.Subscription, error) {
+// Solidity: e Burn(user address, amount uint256)
+func (_PublicSlot *PublicSlotFilterer) WatchBurn(opts *bind.WatchOpts, sink chan<- *PublicSlotBurn) (event.Subscription, error) {
 
-	logs, sub, err := _PublicSlot.contract.WatchLogs(opts, "Exchange")
+	logs, sub, err := _PublicSlot.contract.WatchLogs(opts, "Burn")
 	if err != nil {
 		return nil, err
 	}
@@ -1239,8 +828,8 @@ func (_PublicSlot *PublicSlotFilterer) WatchExchange(opts *bind.WatchOpts, sink 
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(PublicSlotExchange)
-				if err := _PublicSlot.contract.UnpackLog(event, "Exchange", log); err != nil {
+				event := new(PublicSlotBurn)
+				if err := _PublicSlot.contract.UnpackLog(event, "Burn", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1261,9 +850,9 @@ func (_PublicSlot *PublicSlotFilterer) WatchExchange(opts *bind.WatchOpts, sink 
 	}), nil
 }
 
-// PublicSlotExchangeNFTIterator is returned from FilterExchangeNFT and is used to iterate over the raw logs and unpacked data for ExchangeNFT events raised by the PublicSlot contract.
-type PublicSlotExchangeNFTIterator struct {
-	Event *PublicSlotExchangeNFT // Event containing the contract specifics and raw log
+// PublicSlotMintIterator is returned from FilterMint and is used to iterate over the raw logs and unpacked data for Mint events raised by the PublicSlot contract.
+type PublicSlotMintIterator struct {
+	Event *PublicSlotMint // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1277,7 +866,7 @@ type PublicSlotExchangeNFTIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *PublicSlotExchangeNFTIterator) Next() bool {
+func (it *PublicSlotMintIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1286,7 +875,7 @@ func (it *PublicSlotExchangeNFTIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(PublicSlotExchangeNFT)
+			it.Event = new(PublicSlotMint)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1301,7 +890,7 @@ func (it *PublicSlotExchangeNFTIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(PublicSlotExchangeNFT)
+		it.Event = new(PublicSlotMint)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1317,46 +906,42 @@ func (it *PublicSlotExchangeNFTIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *PublicSlotExchangeNFTIterator) Error() error {
+func (it *PublicSlotMintIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *PublicSlotExchangeNFTIterator) Close() error {
+func (it *PublicSlotMintIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// PublicSlotExchangeNFT represents a ExchangeNFT event raised by the PublicSlot contract.
-type PublicSlotExchangeNFT struct {
-	TokenID     *big.Int
-	Owner       common.Address
-	Gene        *big.Int
-	AvatarLevel *big.Int
-	Weaponed    bool
-	Armored     bool
-	Raw         types.Log // Blockchain specific contextual infos
+// PublicSlotMint represents a Mint event raised by the PublicSlot contract.
+type PublicSlotMint struct {
+	User   common.Address
+	Amount *big.Int
+	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// FilterExchangeNFT is a free log retrieval operation binding the contract event 0x2a797bc85caee23a3e29a6e8fb0614b4ffa925d434e247936693cc55389d7f87.
+// FilterMint is a free log retrieval operation binding the contract event 0x0f6798a560793a54c3bcfe86a93cde1e73087d944c0ea20544137d4121396885.
 //
-// Solidity: e ExchangeNFT(tokenID uint256, owner address, gene uint256, avatarLevel uint256, weaponed bool, armored bool)
-func (_PublicSlot *PublicSlotFilterer) FilterExchangeNFT(opts *bind.FilterOpts) (*PublicSlotExchangeNFTIterator, error) {
+// Solidity: e Mint(user address, amount uint256)
+func (_PublicSlot *PublicSlotFilterer) FilterMint(opts *bind.FilterOpts) (*PublicSlotMintIterator, error) {
 
-	logs, sub, err := _PublicSlot.contract.FilterLogs(opts, "ExchangeNFT")
+	logs, sub, err := _PublicSlot.contract.FilterLogs(opts, "Mint")
 	if err != nil {
 		return nil, err
 	}
-	return &PublicSlotExchangeNFTIterator{contract: _PublicSlot.contract, event: "ExchangeNFT", logs: logs, sub: sub}, nil
+	return &PublicSlotMintIterator{contract: _PublicSlot.contract, event: "Mint", logs: logs, sub: sub}, nil
 }
 
-// WatchExchangeNFT is a free log subscription operation binding the contract event 0x2a797bc85caee23a3e29a6e8fb0614b4ffa925d434e247936693cc55389d7f87.
+// WatchMint is a free log subscription operation binding the contract event 0x0f6798a560793a54c3bcfe86a93cde1e73087d944c0ea20544137d4121396885.
 //
-// Solidity: e ExchangeNFT(tokenID uint256, owner address, gene uint256, avatarLevel uint256, weaponed bool, armored bool)
-func (_PublicSlot *PublicSlotFilterer) WatchExchangeNFT(opts *bind.WatchOpts, sink chan<- *PublicSlotExchangeNFT) (event.Subscription, error) {
+// Solidity: e Mint(user address, amount uint256)
+func (_PublicSlot *PublicSlotFilterer) WatchMint(opts *bind.WatchOpts, sink chan<- *PublicSlotMint) (event.Subscription, error) {
 
-	logs, sub, err := _PublicSlot.contract.WatchLogs(opts, "ExchangeNFT")
+	logs, sub, err := _PublicSlot.contract.WatchLogs(opts, "Mint")
 	if err != nil {
 		return nil, err
 	}
@@ -1366,274 +951,8 @@ func (_PublicSlot *PublicSlotFilterer) WatchExchangeNFT(opts *bind.WatchOpts, si
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(PublicSlotExchangeNFT)
-				if err := _PublicSlot.contract.UnpackLog(event, "ExchangeNFT", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// PublicSlotPayIterator is returned from FilterPay and is used to iterate over the raw logs and unpacked data for Pay events raised by the PublicSlot contract.
-type PublicSlotPayIterator struct {
-	Event *PublicSlotPay // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *PublicSlotPayIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(PublicSlotPay)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(PublicSlotPay)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *PublicSlotPayIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *PublicSlotPayIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// PublicSlotPay represents a Pay event raised by the PublicSlot contract.
-type PublicSlotPay struct {
-	User            common.Address
-	Amount          *big.Int
-	TransactionHash [32]byte
-	Raw             types.Log // Blockchain specific contextual infos
-}
-
-// FilterPay is a free log retrieval operation binding the contract event 0x1b174056799bea141540e324bb093eb297a02b564c15e75840a30cf0d0f48377.
-//
-// Solidity: e Pay(user address, amount uint256, transactionHash bytes32)
-func (_PublicSlot *PublicSlotFilterer) FilterPay(opts *bind.FilterOpts) (*PublicSlotPayIterator, error) {
-
-	logs, sub, err := _PublicSlot.contract.FilterLogs(opts, "Pay")
-	if err != nil {
-		return nil, err
-	}
-	return &PublicSlotPayIterator{contract: _PublicSlot.contract, event: "Pay", logs: logs, sub: sub}, nil
-}
-
-// WatchPay is a free log subscription operation binding the contract event 0x1b174056799bea141540e324bb093eb297a02b564c15e75840a30cf0d0f48377.
-//
-// Solidity: e Pay(user address, amount uint256, transactionHash bytes32)
-func (_PublicSlot *PublicSlotFilterer) WatchPay(opts *bind.WatchOpts, sink chan<- *PublicSlotPay) (event.Subscription, error) {
-
-	logs, sub, err := _PublicSlot.contract.WatchLogs(opts, "Pay")
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(PublicSlotPay)
-				if err := _PublicSlot.contract.UnpackLog(event, "Pay", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// PublicSlotRewardIterator is returned from FilterReward and is used to iterate over the raw logs and unpacked data for Reward events raised by the PublicSlot contract.
-type PublicSlotRewardIterator struct {
-	Event *PublicSlotReward // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *PublicSlotRewardIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(PublicSlotReward)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(PublicSlotReward)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *PublicSlotRewardIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *PublicSlotRewardIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// PublicSlotReward represents a Reward event raised by the PublicSlot contract.
-type PublicSlotReward struct {
-	Machine common.Address
-	Player  common.Address
-	Value   *big.Int
-	Raw     types.Log // Blockchain specific contextual infos
-}
-
-// FilterReward is a free log retrieval operation binding the contract event 0x6b053894d8fdbdcc936dd753e21291f0c48e68ef12306eb39a63a374147ba4bd.
-//
-// Solidity: e Reward(machine indexed address, player indexed address, value uint256)
-func (_PublicSlot *PublicSlotFilterer) FilterReward(opts *bind.FilterOpts, machine []common.Address, player []common.Address) (*PublicSlotRewardIterator, error) {
-
-	var machineRule []interface{}
-	for _, machineItem := range machine {
-		machineRule = append(machineRule, machineItem)
-	}
-	var playerRule []interface{}
-	for _, playerItem := range player {
-		playerRule = append(playerRule, playerItem)
-	}
-
-	logs, sub, err := _PublicSlot.contract.FilterLogs(opts, "Reward", machineRule, playerRule)
-	if err != nil {
-		return nil, err
-	}
-	return &PublicSlotRewardIterator{contract: _PublicSlot.contract, event: "Reward", logs: logs, sub: sub}, nil
-}
-
-// WatchReward is a free log subscription operation binding the contract event 0x6b053894d8fdbdcc936dd753e21291f0c48e68ef12306eb39a63a374147ba4bd.
-//
-// Solidity: e Reward(machine indexed address, player indexed address, value uint256)
-func (_PublicSlot *PublicSlotFilterer) WatchReward(opts *bind.WatchOpts, sink chan<- *PublicSlotReward, machine []common.Address, player []common.Address) (event.Subscription, error) {
-
-	var machineRule []interface{}
-	for _, machineItem := range machine {
-		machineRule = append(machineRule, machineItem)
-	}
-	var playerRule []interface{}
-	for _, playerItem := range player {
-		playerRule = append(playerRule, playerItem)
-	}
-
-	logs, sub, err := _PublicSlot.contract.WatchLogs(opts, "Reward", machineRule, playerRule)
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(PublicSlotReward)
-				if err := _PublicSlot.contract.UnpackLog(event, "Reward", log); err != nil {
+				event := new(PublicSlotMint)
+				if err := _PublicSlot.contract.UnpackLog(event, "Mint", log); err != nil {
 					return err
 				}
 				event.Raw = log
