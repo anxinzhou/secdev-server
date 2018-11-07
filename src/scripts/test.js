@@ -34,7 +34,7 @@ var walletReq = {
 var ethRecordReq = {
     gcuid: 103,
     amount: 10,
-    after: 5,
+    after: 0,
     act: "get_transactions",
     from: 1
 }
@@ -42,7 +42,7 @@ var ethRecordReq = {
 var tokenRecordReq = {
     gcuid: 103,
     amount: 10,
-    after: 5,
+    after: 0,
     act: "get_transactions",
     from: 2
 }
@@ -111,12 +111,12 @@ ws.on('open', function open() {
     // ws.send(JSON.stringify(logoutReq))
     // ws.send(JSON.stringify(walletAndMachineReq))
     // //ws.send(JSON.stringify(tokenUse))
-    // ws.send(JSON.stringify(tokenReward))
+    ws.send(JSON.stringify(tokenReward))
     ws.send(JSON.stringify(exchangeETSRateReq))
-    ws.send(JSON.stringify(exchangeSTERateReq))
-    ws.send(JSON.stringify(SlotToEthReq))
+    // ws.send(JSON.stringify(exchangeSTERateReq))
+    // ws.send(JSON.stringify(SlotToEthReq))
     //
-    // ws.send(JSON.stringify(ethToSlotReq))
+    ws.send(JSON.stringify(ethToSlotReq))
     ws.send(JSON.stringify(ethRecordReq))
     ws.send(JSON.stringify(tokenRecordReq))
 });

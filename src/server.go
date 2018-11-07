@@ -328,12 +328,12 @@ func exchangeResultHandler(req *app.PostExchangeReq,transaction *types.Transacti
 		case app.EthToSLot:
 			withdrawTokenAmount := new(big.Float).Mul(amountWrapper,exchangeRate)
 			ethTx:= app.Transaction{
-				Type:app.Deposit,
+				Type:app.Withdraw,
 				Amount:req.Amount,
 				CreatedDate: date,
 			}
 			slotTx:= app.Transaction{
-				Type: app.Withdraw,
+				Type: app.Deposit,
 				Amount: withdrawTokenAmount.String(),
 				CreatedDate: date,
 			}
@@ -350,12 +350,12 @@ func exchangeResultHandler(req *app.PostExchangeReq,transaction *types.Transacti
 		case app.SlotToEth:
 			withdrawEthAmount:= new(big.Float).Quo(amountWrapper,exchangeRate)
 			ethTx:=app.Transaction{
-				Type:app.Withdraw,
+				Type:app.Deposit,
 				Amount:withdrawEthAmount.String(),
 				CreatedDate: date,
 			}
 			slotTx:= app.Transaction{
-				Type:app.Deposit,
+				Type:app.Withdraw,
 				Amount: req.Amount,
 				CreatedDate: date,
 		    }

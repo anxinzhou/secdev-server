@@ -2,7 +2,7 @@ package utils
 
 import (
 	"bytes"
-	"strings"
+	"log"
 	"time"
 )
 
@@ -16,9 +16,11 @@ func FillZero(src []byte, length int) []byte{
 }
 
 func GetCurrentTime() string {
+	loc, err:= time.LoadLocation("Asia/Chongqing")
+	if err!=nil {
+		log.Println(err.Error())
+	}
 	// "2006-01-02 15:04:05 is the birth day of golang, fixed format"
-	date:=time.Now().Format("2006-01-02 15:04:05")
-	tmp:=strings.Split(date," ")
-	date = strings.Join(tmp,"T")
+	date:=time.Now().In(loc).Format("2006-01-02T15:04:05")
 	return date
 }
