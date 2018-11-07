@@ -127,11 +127,11 @@ func SignoutHandler (data []byte,c *websocket.Conn) {
 }
 
 func getWallet() ([]*app.Wallet, error) {
-	ether,err:= pvc.GetEther(app.UserAddr)
+	ether,err:= pbc.GetEther(app.UserAddr)
 	if err!=nil {
 		return nil,err
 	}
-	token,err:=pvc.GetToken(app.UserAddr)
+	token,err:=pbc.GetToken(app.UserAddr)
 	if err!=nil {
 		log.Println(err.Error())
 		return nil,err

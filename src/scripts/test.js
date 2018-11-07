@@ -106,19 +106,34 @@ var tokenUse = {
     act: "post_token_exchange"
 }
 
+
+var inGame = {
+    gcuid: 112,
+    type: 1,
+    amount: 100,
+    act: "post_ingame_status"
+}
+
+var outGame = {
+    gcuid: 112,
+    type: 2,
+    amount: 52,
+    act: "post_ingame_status"
+}
+
 ws.on('open', function open() {
     // ws.send(JSON.stringify(qrCodeReq))
     // ws.send(JSON.stringify(logoutReq))
-    // ws.send(JSON.stringify(walletAndMachineReq))
+    ws.send(JSON.stringify(walletAndMachineReq))
     // //ws.send(JSON.stringify(tokenUse))
     ws.send(JSON.stringify(tokenReward))
-    ws.send(JSON.stringify(exchangeETSRateReq))
+    // ws.send(JSON.stringify(exchangeETSRateReq))
     // ws.send(JSON.stringify(exchangeSTERateReq))
     // ws.send(JSON.stringify(SlotToEthReq))
     //
-    ws.send(JSON.stringify(ethToSlotReq))
-    ws.send(JSON.stringify(ethRecordReq))
-    ws.send(JSON.stringify(tokenRecordReq))
+    // ws.send(JSON.stringify(ethToSlotReq))
+    // ws.send(JSON.stringify(ethRecordReq))
+    // ws.send(JSON.stringify(tokenRecordReq))
 });
 
 ws.on('message', function incoming(data) {
