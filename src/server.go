@@ -317,6 +317,7 @@ func exchangeResultHandler(req *app.PostExchangeReq,transaction *types.Transacti
 	if err!=nil {
 		log.Println(err.Error())
 		status = app.FailedStatus
+		return
 	} else {
 		status = app.SuccessStatus
 		amountWrapper,_,_ := new(big.Float).Parse(req.Amount,10)
@@ -342,10 +343,12 @@ func exchangeResultHandler(req *app.PostExchangeReq,transaction *types.Transacti
 			_,err =db.LPush(app.User+":"+string(app.ETH), ethTxWrapper).Result()
 			if err!=nil {
 				log.Println(err.Error())
+				return
 			}
 			_,err = db.LPush(app.User+":"+string(app.Slot),slotTxWrapper).Result()
 			if err!=nil {
 				log.Println(err.Error())
+				return
 			}
 		case app.SlotToEth:
 			withdrawEthAmount:= new(big.Float).Quo(amountWrapper,exchangeRate)
@@ -364,10 +367,12 @@ func exchangeResultHandler(req *app.PostExchangeReq,transaction *types.Transacti
 			_,err =db.LPush(app.User+":"+string(app.ETH), ethTxWrapper).Result()
 			if err!=nil {
 				log.Println(err.Error())
+				return
 			}
 			_,err =db.LPush(app.User+":"+string(app.Slot),slotTxWrapper).Result()
 			if err!=nil {
 				log.Println(err.Error())
+				return
 			}
 		}
 	}
@@ -495,8 +500,10 @@ func updateResultHandler(req *app.PostTokenUseOrRewardReq, transaction *types.Tr
 	var state int64
 	var token string
 	if err!=nil {
+		log.Println(err.Error())
 		tokenUpdate = "0"
 		state = 0
+		return
 	} else {
 		var txType int64
 		tokenUpdate = req.Amount
@@ -517,6 +524,7 @@ func updateResultHandler(req *app.PostTokenUseOrRewardReq, transaction *types.Tr
 		_,err:=db.LPush(app.User+":"+string(app.Slot),txWrapper).Result()
 		if err!=nil {
 			log.Println(err.Error())
+			return
 		}
 	}
 
@@ -524,6 +532,7 @@ func updateResultHandler(req *app.PostTokenUseOrRewardReq, transaction *types.Tr
 	if err!=nil {
 		log.Println(err.Error())
 		token = "0"
+		return
 	} else {
 		token =new(big.Float).Quo(new(big.Float).SetInt(rawToken),app.TokenBase).String()
 	}
