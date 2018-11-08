@@ -23,6 +23,7 @@ const (
 	NotifyExchangeResult
 	PostTokenUseOrReward
 	PostGameStartOrEnd
+	PostTransfer
 	Signin = 888
 	DisConnect = 1000
 )
@@ -101,6 +102,7 @@ const (
 	Withdraw
 	Gain
 	Spend
+	Gas
 )
 
 // Game procedure

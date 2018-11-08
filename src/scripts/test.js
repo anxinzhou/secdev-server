@@ -133,9 +133,9 @@ ws.on('open', function open() {
     // //
     // ws.send(JSON.stringify(ethToSlotReq))
     // ws.send(JSON.stringify(ethRecordReq))
-    ws.send(JSON.stringify(tokenRecordReq))
+    // ws.send(JSON.stringify(tokenRecordReq))
     // ws.send(JSON.stringify(inGame))
-    ws.send(JSON.stringify(outGame))
+    // ws.send(JSON.stringify(outGame))
 });
 
 ws.on('message', function incoming(data) {

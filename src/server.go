@@ -16,7 +16,6 @@ import (
 	"log"
 	"math/big"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -35,7 +34,6 @@ var (
 	machine *app.MachineState
 	db *redis.Client
 
-	InGameSlot float64
 	mutex  *sync.Mutex
 )
 
@@ -475,7 +473,6 @@ func PostGameStartOrEndHandler(data []byte, c *websocket.Conn) {
 	amountWrapper,_:=new(big.Float).Mul(amount,app.TokenBase).Int(nil)
 	switch req.Type {
 	case app.GameStart:
-		InGameSlot,_ = amount.Float64()
 		err =pvc.Mint(app.UserAddr,amountWrapper)
 		if err!=nil{
 			log.Println(err.Error())
@@ -487,43 +484,12 @@ func PostGameStartOrEndHandler(data []byte, c *websocket.Conn) {
 		err:=pbc.Burn(app.UserAddr,amountWrapper)
 		if err!=nil {
 			log.Println(err.Error())
-		}
-	case app.GameEnd:
-
-		err:= pvc.Burn(app.UserAddr,amountWrapper)
-		if err!=nil {
-			log.Println(err.Error())
-			sendError(app.PostGameStartOrEnd, app.ServerErrorCode, err.Error(),c)
-			return
+			pvc.Burn(app.UserAddr,amountWrapper)
 		}
 
-		postRes(app.PostGameStartOrEnd,c)
-
-		err = pbc.Mint(app.UserAddr,amountWrapper)
-		if err!=nil {
-			log.Println(err.Error())
-			return
-		}
-
-		outGameSlot,_:=amount.Float64()
-		var tokenUpdate string
-		var state int64
-		var txType int64
-		var rawTokenUpdate float64
-
-		if InGameSlot > outGameSlot {
-			state = app.Decrease
-			txType = app.Spend
-			rawTokenUpdate = InGameSlot-outGameSlot
-		} else {
-			state = app.Increase
-			txType = app.Reward
-			rawTokenUpdate = outGameSlot - InGameSlot
-		}
-
-		tokenUpdate = strconv.FormatFloat(rawTokenUpdate,'f',-1,64)
+		tokenUpdate := amount.String()
 		tx:=app.Transaction{
-			Type: txType,
+			Type: app.Spend,
 			Amount: tokenUpdate,
 			CreatedDate: utils.GetCurrentTime(),
 		}
@@ -534,29 +500,92 @@ func PostGameStartOrEndHandler(data []byte, c *websocket.Conn) {
 			return
 		}
 
-		rawToken,err:=pbc.GetToken(app.UserAddr)
+		rawTokenTotal,err :=pbc.GetToken(app.UserAddr)
 		if err!=nil {
 			log.Println(err.Error())
 			return
 		}
-		token :=new(big.Float).Quo(new(big.Float).SetInt(rawToken),app.TokenBase).String()
+		tokenTotal :=new(big.Float).Quo(new(big.Float).SetInt(rawTokenTotal),app.TokenBase).String()
 
 
 		resultRes := & app.TokenCountChangeRes {
 			Gcuid: app.NotifyTokenChange,
-			State: state,
+			State: app.Decrease,
 			WalletName: app.TokenWalletName,
 			WalletId: app.User,
 			TokenUpdate: tokenUpdate,
-			TokenTotal: token,
+			TokenTotal: tokenTotal,
 			Act: app.TokenChange,
 			CreatedDate: utils.GetCurrentTime(),
 		}
 
 		wrapperAndSend(app.NotifyTokenChange,resultRes,c)
+	case app.GameEnd:
+
+		postRes(app.PostGameStartOrEnd,c)
 	}
 }
 
+func PostTransferHandler(data []byte, c *websocket.Conn){
+
+	rawToken, err:= pvc.GetToken(app.UserAddr)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.PostTransfer, app.ServerErrorCode, err.Error(),c)
+		return
+	}
+
+	err = pvc.Burn(app.UserAddr,rawToken)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.PostTransfer, app.ServerErrorCode, err.Error(),c)
+		return
+	}
+	postRes(app.PostTransfer,c)
+
+	err = pbc.Mint(app.UserAddr,rawToken)
+	if err!=nil {
+		log.Println(err.Error())
+		pvc.Mint(app.UserAddr,rawToken)
+		return
+	}
+
+	outGameSlot:=new(big.Float).Quo(new(big.Float).SetInt(rawToken),app.TokenBase)
+
+	tokenUpdate := outGameSlot.String()
+	tx:=app.Transaction{
+		Type: app.Gain,
+		Amount: tokenUpdate,
+		CreatedDate: utils.GetCurrentTime(),
+	}
+	txWrapper,_:=json.Marshal(tx)
+	_,err =db.LPush(strings.ToLower(app.User)+":"+string(app.Slot),txWrapper).Result()
+	if err!=nil {
+		log.Println(err.Error())
+		return
+	}
+
+	rawTokenTotal,err :=pbc.GetToken(app.UserAddr)
+	if err!=nil {
+		log.Println(err.Error())
+		return
+	}
+	tokenTotal :=new(big.Float).Quo(new(big.Float).SetInt(rawTokenTotal),app.TokenBase).String()
+
+
+	resultRes := & app.TokenCountChangeRes {
+		Gcuid: app.NotifyTokenChange,
+		State: app.Increase,
+		WalletName: app.TokenWalletName,
+		WalletId: app.User,
+		TokenUpdate: tokenUpdate,
+		TokenTotal: tokenTotal,
+		Act: app.TokenChange,
+		CreatedDate: utils.GetCurrentTime(),
+	}
+
+	wrapperAndSend(app.NotifyTokenChange,resultRes,c)
+}
 
 func disConnect(c *websocket.Conn) {
 	res:=&app.Disconnect{
@@ -610,6 +639,8 @@ func requestHandler(c *websocket.Conn) {
 			go PostTokenUserOrRewardHandler(data,c)
 		case app.PostGameStartOrEnd:
 			go PostGameStartOrEndHandler(data,c)
+		case app.PostTransfer:
+			go PostTransferHandler(data,c)
 		}
 	}
 }
@@ -645,7 +676,6 @@ func init() {
 	log.Println("hello server")
 
 	//inital game machine
-	InGameSlot = 10
 	machine = &app.MachineState{
 		State: app.Logout,
 		MachineId: app.MachineId,
