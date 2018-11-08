@@ -174,7 +174,7 @@ func (p *Pbc) Reward(address common.Address, amount *big.Int) (error) {
 }
 
 func (p *Pbc) EstimateGasPrice(from common.Address,to common.Address,data []byte) (* big.Int,error) {
-	esimatedGas,err:=p.Client.EstimateGas(nil,ethereum.CallMsg{
+	esimatedGas,err:=p.Client.EstimateGas(context.Background(),ethereum.CallMsg{
 		From: from,
 		To: &to,
 		Data:data,
@@ -186,6 +186,6 @@ func (p *Pbc) EstimateGasPrice(from common.Address,to common.Address,data []byte
 	}
 
 	gasPrice,_:=new(big.Float).Quo(targetGasFee, big.NewFloat(float64(esimatedGas))).Int(nil)
-
+	log.Println(gasPrice,esimatedGas)
 	return gasPrice,nil
 }
