@@ -24,6 +24,7 @@ const (
 	PostTokenUseOrReward
 	PostGameStartOrEnd
 	Signin = 888
+	DisConnect = 1000
 )
 
 

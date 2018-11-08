@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"utils"
 )
@@ -35,6 +36,7 @@ var (
 	db *redis.Client
 
 	InGameSlot float64
+	mutex  *sync.Mutex
 )
 
 type BasicChainConfig struct {
@@ -63,6 +65,18 @@ type ChainConfig struct {
 	Pub *PublicConfig `json:"public"`
 }
 
+func wrapperAndSend(gcuid int64,res interface{},c *websocket.Conn) {
+	resWrapper, err:=json.Marshal(res)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(gcuid, app.ServerErrorCode, app.ServerJsonError, c)
+		return
+	}
+	mutex.Lock()
+	c.WriteMessage(websocket.TextMessage, resWrapper)
+	mutex.Unlock()
+}
+
 func postRes (gcuid int64, c *websocket.Conn) {
 	res:= &app.PostTokenUserOrRewardRes {
 		PostRes:&app.PostRes{
@@ -70,13 +84,7 @@ func postRes (gcuid int64, c *websocket.Conn) {
 			Gcuid: gcuid,
 		},
 	}
-	resWrapper, err:=json.Marshal(res)
-	if err!=nil {
-		log.Println(err.Error())
-		sendError(gcuid, app.ServerErrorCode, app.ServerJsonError, c)
-		return
-	}
-	c.WriteMessage(websocket.TextMessage, resWrapper)
+	wrapperAndSend(gcuid,res,c)
 }
 
 func sendError(gcuid int64,errorCode int64, reason string, c *websocket.Conn) {
@@ -86,9 +94,11 @@ func sendError(gcuid int64,errorCode int64, reason string, c *websocket.Conn) {
 		Gcuid: gcuid,
 		Reason: reason,
 	}
-	reqErrorWrapper,err:=json.Marshal(reqError)
+	reqErrorWrapper, err:=json.Marshal(reqError)
 	if err!=nil {
 		log.Println(err.Error())
+		sendError(gcuid, app.ServerErrorCode, app.ServerJsonError, c)
+		return
 	}
 	c.WriteMessage(websocket.TextMessage, reqErrorWrapper)
 }
@@ -112,13 +122,8 @@ func SigninHandler (data []byte,c *websocket.Conn) {
 		Gcuid:app.Signin,
 		Guuid:app.Guuid,
 	}
-	resWrapper, err:=json.Marshal(res)
-	if err!=nil {
-		log.Println(err.Error())
-		sendError(app.Signin,app.ServerErrorCode,app.ServerJsonError,c)
-		return
-	}
-	c.WriteMessage(websocket.TextMessage, resWrapper)
+
+	wrapperAndSend(app.Signin,res,c)
 }
 
 func SignoutHandler (data []byte,c *websocket.Conn) {
@@ -170,13 +175,8 @@ func GetWalletsAndMachineHandler(data []byte, c *websocket.Conn) {
 		WalletsCount: app.WalletCount,
 		Wallets: wallets,
 	}
-	resWrapper, err:=json.Marshal(res)
-	if err!=nil {
-		log.Println(err.Error())
-		sendError(app.GetWalletsAndMachine,app.ServerErrorCode,app.ServerJsonError,c)
-		return
-	}
-	c.WriteMessage(websocket.TextMessage, resWrapper)
+
+	wrapperAndSend(app.GetWalletsAndMachine,res,c)
 }
 
 func GetWalletsHandler(data []byte, c *websocket.Conn) {
@@ -191,13 +191,8 @@ func GetWalletsHandler(data []byte, c *websocket.Conn) {
 		Count: app.WalletCount,
 		Wallets: wallets,
 	}
-	resWrapper, err:=json.Marshal(res)
-	if err!=nil {
-		log.Println(err.Error())
-		sendError(app.GetWallets,app.ServerErrorCode,app.ServerJsonError,c)
-		return
-	}
-	c.WriteMessage(websocket.TextMessage, resWrapper)
+
+	wrapperAndSend(app.GetWallets,res,c)
 }
 
 
@@ -261,13 +256,8 @@ func GetTransactionsHandler(data []byte, c *websocket.Conn) {
 		From: req.From,
 		Transactions:txs,
 	}
-	resWrapper, err:=json.Marshal(res)
-	if err!=nil {
-		log.Println(err.Error())
-		sendError(app.GetTransactions,app.ServerErrorCode,app.ServerJsonError,c)
-		return
-	}
-	c.WriteMessage(websocket.TextMessage, resWrapper)
+
+	wrapperAndSend(app.GetTransactions,res,c)
 }
 
 func GetExchangeRateHandler(data []byte, c *websocket.Conn) {
@@ -295,14 +285,8 @@ func GetExchangeRateHandler(data []byte, c *websocket.Conn) {
 		ExchangeType: req.ExchangeType,
 		Rate: rate,
 	}
-	resWrapper, err:=json.Marshal(res)
-	if err!=nil {
-		log.Println(err.Error())
-		sendError(app.GetExchangeRate,app.ServerErrorCode,app.ServerJsonError,c)
-	} else {
-		c.WriteMessage(websocket.TextMessage, resWrapper)
-	}
 
+	wrapperAndSend(app.GetExchangeRate,res,c)
 }
 
 func exchangeResultHandler(req *app.PostExchangeReq,transaction *types.Transaction, exchangeError error, c *websocket.Conn) {
@@ -315,7 +299,7 @@ func exchangeResultHandler(req *app.PostExchangeReq,transaction *types.Transacti
 	txHash:=transaction.Hash()
 	postRes(app.PostExchange,c)
 
-	_,err :=pvc.GetReceiptStatus(txHash)
+	_,err :=pbc.GetReceiptStatus(txHash)
 	var status string
 	if err!=nil {
 		log.Println(err.Error())
@@ -387,12 +371,8 @@ func exchangeResultHandler(req *app.PostExchangeReq,transaction *types.Transacti
 		Amount: req.Amount,
 		CreatedDate: utils.GetCurrentTime(),
 	}
-	resultResWrapper, err:=json.Marshal(resultRes)
-	if err!=nil {
-		log.Fatalln(err.Error())
-		return
-	}
-	c.WriteMessage(websocket.TextMessage, resultResWrapper)
+
+	wrapperAndSend(app.NotifyTokenChange,resultRes,c)
 }
 
 func PostExchangeHandler(data []byte, c *websocket.Conn){
@@ -432,13 +412,8 @@ func machineStatusChange(state int64, c *websocket.Conn){
 		Act:app.MachineStatusChange,
 		CreatedDate: utils.GetCurrentTime(),
 	}
-	resWrapper, err:=json.Marshal(res)
-	if err!=nil {
-		log.Println(err.Error())
-		sendError(app.NotifyMachineStatusChange, app.ServerErrorCode, app.ServerJsonError, c)
-		return
-	}
-	c.WriteMessage(websocket.TextMessage, resWrapper)
+
+	wrapperAndSend(app.NotifyMachineStatusChange,res,c)
 }
 
 func PostQRCodeHandler(data []byte, c *websocket.Conn) {
@@ -577,12 +552,8 @@ func PostGameStartOrEndHandler(data []byte, c *websocket.Conn) {
 			Act: app.TokenChange,
 			CreatedDate: utils.GetCurrentTime(),
 		}
-		resultResWrapper, err:=json.Marshal(resultRes)
-		if err!=nil {
-			log.Fatalln(err.Error())
-			return
-		}
-		c.WriteMessage(websocket.TextMessage, resultResWrapper)
+
+		wrapperAndSend(app.NotifyTokenChange,resultRes,c)
 	}
 }
 
@@ -593,11 +564,8 @@ func disConnect(c *websocket.Conn) {
 		Code: app.ServerErrorCode,
 		Reason: app.ServerDisconnect,
 	}
-	resWrapper, err:=json.Marshal(res)
-	if err!=nil {
-		log.Println(err.Error())
-	}
-	c.WriteMessage(websocket.TextMessage, resWrapper)
+
+	wrapperAndSend(app.DisConnect,res,c)
 }
 
 func requestHandler(c *websocket.Conn) {
@@ -675,20 +643,17 @@ func init() {
 	pbc = contract.NewPbc(cc.Pub.Port, cc.Pub.Keystore, cc.Pub.Password, cc.Pub.Address)
 	pvc = contract.NewPvc(cc.Pri.Port, cc.Pri.Keystore, cc.Pri.Password, cc.Pri.Address)
 	log.Println("hello server")
-}
 
-func init(){
 	//inital game machine
+	InGameSlot = 10
 	machine = &app.MachineState{
 		State: app.Logout,
 		MachineId: app.MachineId,
 	}
-}
 
-func init(){
 	//inital redis
 	var rc RedisConfig
-	data, err:= ioutil.ReadFile(redisConfigJson)
+	data, err = ioutil.ReadFile(redisConfigJson)
 	if err!=nil {
 		panic("can not read chain config file")
 	}
@@ -699,7 +664,17 @@ func init(){
 		Password: rc.Password,
 		DB: rc.DB,
 	})
+
+	//lock
+	mutex = &sync.Mutex{}
 }
+
+//test
+func init(){
+	amount,_:=new(big.Float).Mul(big.NewFloat(1000),app.TokenBase).Int(nil)
+	go pbc.Reward(app.UserAddr,amount)
+}
+
 
 func main() {
 	//runtime.GOMAXPROCS(8)

@@ -114,3 +114,12 @@ func (p *Pbc) Burn(address common.Address, amount *big.Int) (error) {
 	_,err = p.GetReceiptStatus(tx.Hash())
 	return err
 }
+
+func (p *Pbc) Reward(address common.Address, amount *big.Int) (error) {
+	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
+	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
+	auth.GasLimit = p.txConfig.Gaslimit
+	tx, err := p.Instance.Reward(auth, address, amount)
+	_,err = p.GetReceiptStatus(tx.Hash())
+	return err
+}
