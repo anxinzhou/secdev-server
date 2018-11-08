@@ -129,15 +129,15 @@ func SignoutHandler (data []byte,c *websocket.Conn) {
 	postRes(app.Signout,c)
 }
 
-func getWallet() ([]*app.Wallet, error) {
+func getWallet() ([]*app.Wallet, *app.TransferInfo,error) {
 	ether,err:= pbc.GetEther(app.UserAddr)
 	if err!=nil {
-		return nil,err
+		return nil,nil,err
 	}
 	token,err:=pbc.GetToken(app.UserAddr)
 	if err!=nil {
 		log.Println(err.Error())
-		return nil,err
+		return nil,nil,err
 	}
 
 	tokenWallet :=&app.Wallet{
@@ -153,12 +153,23 @@ func getWallet() ([]*app.Wallet, error) {
 
 	wallets:=make([]*app.Wallet,0,app.WalletCount)
 	wallets = append(wallets, etherWallet, tokenWallet)
-	return wallets,nil
+
+	rawTransferAmount,err :=pvc.GetToken(app.UserAddr)
+	if err!=nil {
+		log.Println(err.Error())
+		return nil,nil,err
+	}
+	transferAmount:=new(big.Float).Quo(new(big.Float).SetInt(rawTransferAmount),app.TokenBase).String()
+	toTransfer:=&app.TransferInfo{
+		Amount:transferAmount,
+		Name:app.TokenWalletName,
+	}
+	return wallets,toTransfer,nil
 }
 
 func GetWalletsAndMachineHandler(data []byte, c *websocket.Conn) {
 
-	wallets,err:=getWallet()
+	wallets,toTransfer,err:=getWallet()
 	if err!=nil {
 		log.Println(err.Error())
 		sendError(app.GetWalletsAndMachine,app.ServerErrorCode,app.ServerChainError,c)
@@ -172,13 +183,15 @@ func GetWalletsAndMachineHandler(data []byte, c *websocket.Conn) {
 		},
 		WalletsCount: app.WalletCount,
 		Wallets: wallets,
+		Transfer: toTransfer,
 	}
+
 
 	wrapperAndSend(app.GetWalletsAndMachine,res,c)
 }
 
 func GetWalletsHandler(data []byte, c *websocket.Conn) {
-	wallets,err:=getWallet()
+	wallets,toTransfer,err:=getWallet()
 	if err!=nil {
 		log.Println(err.Error())
 		sendError(app.GetWallets,app.ServerErrorCode,app.ServerChainError,c)
@@ -188,6 +201,7 @@ func GetWalletsHandler(data []byte, c *websocket.Conn) {
 		Gcuid: app.GetWallets,
 		Count: app.WalletCount,
 		Wallets: wallets,
+		Transfer: toTransfer,
 	}
 
 	wrapperAndSend(app.GetWallets,res,c)

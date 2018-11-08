@@ -131,6 +131,10 @@ func init(){
 }
 
 
+type TransferInfo struct {
+	Name string `json:"name"`
+	Amount string `json:"amount"`
+}
 
 type PostRes struct {
 	Status string `json:"status"`
@@ -186,6 +190,7 @@ type GetWalletsAndMachineRes struct {
 	Machine *MachineState `json:"machine"`
 	WalletsCount int64 `json:"wallets_count"`
 	Wallets []*Wallet `json:"wallets"`
+	Transfer *TransferInfo `json:"transfer"`
 }
 
 type GetWalletReq struct {
@@ -197,6 +202,7 @@ type GetWalletRes struct {
 	Gcuid int64 `json:"gcuid"`
 	Count int64 `json:"count"`
 	Wallets []*Wallet `json:"wallets"`
+	Transfer *TransferInfo `json:"transfer"`
 }
 
 type GetTransactionsReq struct {
