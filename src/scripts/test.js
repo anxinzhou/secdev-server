@@ -48,13 +48,13 @@ var tokenRecordReq = {
 }
 
 //done
-var exchangeSTERateReq = {
+var exchangeETSRateReq = {
     gcuid: 104,
     exchange_type : 1,
     act: "get_exchange_rate"
 }
 
-var exchangeETSRateReq = {
+var exchangeSTERateReq = {
     gcuid: 104,
     exchange_type : 2,
     act: "get_exchange_rate"
@@ -64,7 +64,7 @@ var exchangeETSRateReq = {
 var ethToSlotReq= {
     gcuid: 105,
     exchange_type: 1,
-    amount: "1.21",
+    amount: "0.1",
     act: "post_exchange"
 }
 
@@ -72,7 +72,7 @@ var ethToSlotReq= {
 var SlotToEthReq = {
     gcuid: 105,
     exchange_type: 2,
-    amount: "2.5",
+    amount: "500",
     act: "post_exchange"
 }
 
@@ -110,14 +110,14 @@ var tokenUse = {
 var inGame = {
     gcuid: 112,
     type: 1,
-    amount: 100,
+    amount: "100",
     act: "post_ingame_status"
 }
 
 var outGame = {
     gcuid: 112,
     type: 2,
-    amount: 52,
+    amount: "52",
     act: "post_ingame_status"
 }
 
@@ -125,15 +125,17 @@ ws.on('open', function open() {
     // ws.send(JSON.stringify(qrCodeReq))
     // ws.send(JSON.stringify(logoutReq))
     ws.send(JSON.stringify(walletAndMachineReq))
-    // //ws.send(JSON.stringify(tokenUse))
-    ws.send(JSON.stringify(tokenReward))
+    // // ws.send(JSON.stringify(tokenUse))
+    // ws.send(JSON.stringify(tokenReward))
     // ws.send(JSON.stringify(exchangeETSRateReq))
     // ws.send(JSON.stringify(exchangeSTERateReq))
-    // ws.send(JSON.stringify(SlotToEthReq))
-    //
+    // // ws.send(JSON.stringify(SlotToEthReq))
+    // //
     // ws.send(JSON.stringify(ethToSlotReq))
     // ws.send(JSON.stringify(ethRecordReq))
-    // ws.send(JSON.stringify(tokenRecordReq))
+    ws.send(JSON.stringify(tokenRecordReq))
+    // ws.send(JSON.stringify(inGame))
+    ws.send(JSON.stringify(outGame))
 });
 
 ws.on('message', function incoming(data) {
