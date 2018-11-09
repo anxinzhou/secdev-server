@@ -757,10 +757,10 @@ func init() {
 }
 
 //test
-func init(){
-	amount,_:=new(big.Float).Mul(big.NewFloat(1000),app.TokenBase).Int(nil)
-	go pbc.Reward(app.UserAddr,amount)
-}
+//func init(){
+//	amount,_:=new(big.Float).Mul(big.NewFloat(1000),app.TokenBase).Int(nil)
+//	go pbc.Reward(app.UserAddr,amount)
+//}
 
 
 func main() {

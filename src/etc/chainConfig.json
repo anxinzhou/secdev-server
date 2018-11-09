@@ -9,6 +9,6 @@
         "port": "ws://localhost:8550",
         "keystore": "./etc/keystore/zx",
         "password": "321",
-        "address": "0x48b46e4768cB981ebE9bCaF4992d26CE37CCD9b2"
+        "address": "0xA637EdF3A489ea334Ca20580D02AB59556904E01"
     }
 }
