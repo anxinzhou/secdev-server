@@ -23,9 +23,9 @@ var (
 
 const (
 	privateChainTime    = 1 * time.Second
-	publicChainTime     = 10 * time.Second
+	publicChainTime     = 5 * time.Second
 	privateChainTimeOut = 10 * time.Second
-	publicChainTimeOut  = 60 * time.Second
+	publicChainTimeOut  = 10 * publicChainTime
 	GasLimit            = 3000000
 )
 

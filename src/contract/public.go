@@ -2,7 +2,6 @@ package contract
 
 import (
 	"context"
-	"errors"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -16,7 +15,8 @@ import (
 )
 
 const (
-	TargetGasFee = "5000000000000"
+	TargetGasFee = "50000000000000"
+	TxFee = "0.00005" //ether
 )
 
 type Pbc struct {
@@ -106,22 +106,9 @@ func (p *Pbc) ExchangeForEther(address common.Address, amount *big.Int) (*types.
 }
 
 func (p *Pbc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
-	count := time.Second
-	for {
-		time.Sleep(publicChainTime)
-		receipt, err :=p.Client.TransactionReceipt(context.Background(),txHash)
-		if err==nil {
-			if receipt.Status==0{
-				return receipt.Status, errors.New("transaction revert")
-			}
-			return receipt.Status, nil
-		}
-		count +=time.Second
-		if count == publicChainTimeOut {
-			break
-		}
-	}
-	return 0, errors.New("Time out, can not get transaction status")
+	time.Sleep(publicChainTime)
+	time.Sleep(publicChainTime)
+	return 1,nil
 }
 
 func (p *Pbc) Mint(address common.Address, amount *big.Int) (error) {

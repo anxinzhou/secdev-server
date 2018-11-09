@@ -93,6 +93,8 @@ func (p *Pvc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
 				return receipt.Status, errors.New("transaction revert")
 			}
 			return receipt.Status, nil
+		} else {
+			log.Println(err.Error())
 		}
 		count +=time.Second
 		if count == privateChainTimeOut {

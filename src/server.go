@@ -317,63 +317,76 @@ func exchangeResultHandler(req *app.PostExchangeReq,transaction *types.Transacti
 		log.Println(err.Error())
 		status = app.FailedStatus
 		return
-	} else {
-		status = app.SuccessStatus
-		amountWrapper,_,_ := new(big.Float).Parse(req.Amount,10)
-		rawExchangeRate,_:=pbc.GetExchangeRate()
-		exchangeRate,_,_ := new(big.Float).Parse(rawExchangeRate,10)
-		// "2006-01-02 15:04:05 is the birth day of golang, fixed format"
-	    date:= utils.GetCurrentTime()
-		switch req.ExchangeType {
-		case app.EthToSLot:
-			withdrawTokenAmount := new(big.Float).Mul(amountWrapper,exchangeRate)
-			ethTx:= app.Transaction{
-				Type:app.Withdraw,
-				Amount:req.Amount,
-				CreatedDate: date,
-			}
-			slotTx:= app.Transaction{
-				Type: app.Deposit,
-				Amount: withdrawTokenAmount.String(),
-				CreatedDate: date,
-			}
-			slotTxWrapper,err:=json.Marshal(&slotTx)
-			ethTxWrapper,err:=json.Marshal(&ethTx)
-			_,err =db.LPush(strings.ToLower(app.User)+":"+string(app.ETH), ethTxWrapper).Result()
-			if err!=nil {
-				log.Println(err.Error())
-				return
-			}
-			_,err = db.LPush(strings.ToLower(app.User)+":"+string(app.Slot),slotTxWrapper).Result()
-			if err!=nil {
-				log.Println(err.Error())
-				return
-			}
-		case app.SlotToEth:
-			withdrawEthAmount:= new(big.Float).Quo(amountWrapper,exchangeRate)
-			ethTx:=app.Transaction{
-				Type:app.Deposit,
-				Amount:withdrawEthAmount.String(),
-				CreatedDate: date,
-			}
-			slotTx:= app.Transaction{
-				Type:app.Withdraw,
-				Amount: req.Amount,
-				CreatedDate: date,
-		    }
-			slotTxWrapper,_:=json.Marshal(&slotTx)
-			ethTxWrapper,_:=json.Marshal(&ethTx)
-			_,err =db.LPush(strings.ToLower(app.User)+":"+string(app.ETH), ethTxWrapper).Result()
-			if err!=nil {
-				log.Println(err.Error())
-				return
-			}
-			_,err =db.LPush(strings.ToLower(app.User)+":"+string(app.Slot),slotTxWrapper).Result()
-			if err!=nil {
-				log.Println(err.Error())
-				return
-			}
+	}
+
+	status = app.SuccessStatus
+	amountWrapper,_,_ := new(big.Float).Parse(req.Amount,10)
+	rawExchangeRate,_:=pbc.GetExchangeRate()
+	exchangeRate,_,_ := new(big.Float).Parse(rawExchangeRate,10)
+	// "2006-01-02 15:04:05 is the birth day of golang, fixed format"
+	date:= utils.GetCurrentTime()
+	switch req.ExchangeType {
+	case app.EthToSLot:
+		withdrawTokenAmount := new(big.Float).Mul(amountWrapper,exchangeRate)
+		ethTx:= app.Transaction{
+			Type:app.Withdraw,
+			Amount:req.Amount,
+			CreatedDate: date,
 		}
+		slotTx:= app.Transaction{
+			Type: app.Deposit,
+			Amount: withdrawTokenAmount.String(),
+			CreatedDate: date,
+		}
+		slotTxWrapper,err:=json.Marshal(&slotTx)
+		ethTxWrapper,err:=json.Marshal(&ethTx)
+		_,err =db.LPush(strings.ToLower(app.User)+":"+string(app.ETH), ethTxWrapper).Result()
+		if err!=nil {
+			log.Println(err.Error())
+			return
+		}
+		_,err = db.LPush(strings.ToLower(app.User)+":"+string(app.Slot),slotTxWrapper).Result()
+		if err!=nil {
+			log.Println(err.Error())
+			return
+		}
+	case app.SlotToEth:
+		withdrawEthAmount:= new(big.Float).Quo(amountWrapper,exchangeRate)
+		ethTx:=app.Transaction{
+			Type:app.Deposit,
+			Amount:withdrawEthAmount.String(),
+			CreatedDate: date,
+		}
+		slotTx:= app.Transaction{
+			Type:app.Withdraw,
+			Amount: req.Amount,
+			CreatedDate: date,
+		}
+		slotTxWrapper,_:=json.Marshal(&slotTx)
+		ethTxWrapper,_:=json.Marshal(&ethTx)
+		_,err =db.LPush(strings.ToLower(app.User)+":"+string(app.ETH), ethTxWrapper).Result()
+		if err!=nil {
+			log.Println(err.Error())
+			return
+		}
+		_,err =db.LPush(strings.ToLower(app.User)+":"+string(app.Slot),slotTxWrapper).Result()
+		if err!=nil {
+			log.Println(err.Error())
+			return
+		}
+	}
+
+	feeTx:=app.Transaction {
+		Type: app.Gas,
+		Amount: contract.TxFee,
+		CreatedDate:date,
+	}
+
+	feeTxWrapper,_:=json.Marshal(&feeTx)
+	_,err =db.LPush(strings.ToLower(app.User)+":"+string(app.ETH), feeTxWrapper).Result()
+	if err!=nil {
+		log.Println(err.Error())
+		return
 	}
 
 	resultRes := & app.ExchangeResultRes {
@@ -501,11 +514,26 @@ func PostGameStartOrEndHandler(data []byte, c *websocket.Conn) {
 			pvc.Burn(app.UserAddr,amountWrapper)
 		}
 
+		date:= utils.GetCurrentTime()
+
+		feeTx:=app.Transaction {
+			Type: app.Gas,
+			Amount: contract.TxFee,
+			CreatedDate: date,
+		}
+
+		feeTxWrapper,_:=json.Marshal(&feeTx)
+		_,err =db.LPush(strings.ToLower(app.User)+":"+string(app.ETH), feeTxWrapper).Result()
+		if err!=nil {
+			log.Println(err.Error())
+			return
+		}
+
 		tokenUpdate := amount.String()
 		tx:=app.Transaction{
 			Type: app.Spend,
 			Amount: tokenUpdate,
-			CreatedDate: utils.GetCurrentTime(),
+			CreatedDate: date,
 		}
 		txWrapper,_:=json.Marshal(tx)
 		_,err =db.LPush(strings.ToLower(app.User)+":"+string(app.Slot),txWrapper).Result()
@@ -530,7 +558,7 @@ func PostGameStartOrEndHandler(data []byte, c *websocket.Conn) {
 			TokenUpdate: tokenUpdate,
 			TokenTotal: tokenTotal,
 			Act: app.TokenChange,
-			CreatedDate: utils.GetCurrentTime(),
+			CreatedDate: date,
 		}
 
 		wrapperAndSend(app.NotifyTokenChange,resultRes,c)
@@ -564,13 +592,28 @@ func PostTransferHandler(data []byte, c *websocket.Conn){
 		return
 	}
 
+	date:= utils.GetCurrentTime()
+
+	feeTx:=app.Transaction {
+		Type: app.Gas,
+		Amount: contract.TxFee,
+		CreatedDate: date,
+	}
+
+	feeTxWrapper,_:=json.Marshal(&feeTx)
+	_,err =db.LPush(strings.ToLower(app.User)+":"+string(app.ETH), feeTxWrapper).Result()
+	if err!=nil {
+		log.Println(err.Error())
+		return
+	}
+
 	outGameSlot:=new(big.Float).Quo(new(big.Float).SetInt(rawToken),app.TokenBase)
 
 	tokenUpdate := outGameSlot.String()
 	tx:=app.Transaction{
 		Type: app.Gain,
 		Amount: tokenUpdate,
-		CreatedDate: utils.GetCurrentTime(),
+		CreatedDate: date,
 	}
 	txWrapper,_:=json.Marshal(tx)
 	_,err =db.LPush(strings.ToLower(app.User)+":"+string(app.Slot),txWrapper).Result()
@@ -595,7 +638,7 @@ func PostTransferHandler(data []byte, c *websocket.Conn){
 		TokenUpdate: tokenUpdate,
 		TokenTotal: tokenTotal,
 		Act: app.TokenChange,
-		CreatedDate: utils.GetCurrentTime(),
+		CreatedDate: date,
 	}
 
 	wrapperAndSend(app.NotifyTokenChange,resultRes,c)
