@@ -121,6 +121,13 @@ var outGame = {
     act: "post_ingame_status"
 }
 
+var PostEosTokenUpdate = {
+    gcuid: 114,
+    type: 2,
+    account: "bob",
+    amount: "110"
+}
+
 ws.on('open', function open() {
     // ws.send(JSON.stringify(qrCodeReq))
     // ws.send(JSON.stringify(logoutReq))
@@ -129,13 +136,14 @@ ws.on('open', function open() {
     // ws.send(JSON.stringify(tokenReward))
     // ws.send(JSON.stringify(exchangeETSRateReq))
     // ws.send(JSON.stringify(exchangeSTERateReq))
-    ws.send(JSON.stringify(SlotToEthReq))
+    //ws.send(JSON.stringify(SlotToEthReq))
     // //
     // ws.send(JSON.stringify(ethToSlotReq))
     // ws.send(JSON.stringify(ethRecordReq))
     // ws.send(JSON.stringify(tokenRecordReq))
     // ws.send(JSON.stringify(inGame))
     // ws.send(JSON.stringify(outGame))
+    ws.send(JSON.stringify(PostEosTokenUpdate))
 });
 
 ws.on('message', function incoming(data) {

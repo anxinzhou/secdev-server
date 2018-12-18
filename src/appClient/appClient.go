@@ -24,6 +24,7 @@ const (
 	PostTokenUseOrReward
 	PostGameStartOrEnd
 	PostTransfer
+	PostEosTokenUpdate
 	Signin = 888
 	DisConnect = 1000
 )
@@ -326,3 +327,9 @@ type Disconnect struct {
 	Reason string `json:"reason"`
 }
 
+type PostEosTokenUpdateReq struct {
+	Gcuid int64 `json:"gcuid"`
+	Type int64 `json:"type"`
+	Amount string `json:"amount"`
+	Account string `json:"account"`
+}

@@ -5,6 +5,7 @@ import (
 	app "appClient"
 	"contract"
 	"encoding/json"
+	"eos"
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -12,7 +13,6 @@ import (
 	h "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"io/ioutil"
 	"log"
 	"math/big"
 	"net/http"
@@ -568,6 +568,38 @@ func PostGameStartOrEndHandler(data []byte, c *websocket.Conn) {
 	}
 }
 
+func PostEosTokenUpdateHandler(data []byte, c *websocket.Conn) {
+	var req app.PostEosTokenUpdateReq
+
+	err:= json.Unmarshal(data,&req)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.PostEosTokenUpdate,app.ClientErrorCode,app.ClientFormatError,c)
+	}
+	amount,_,err:=  new(big.Float).Parse(req.Amount,10)
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.PostEosTokenUpdate,app.ClientErrorCode,app.ClientFormatError,c)
+		return
+	}
+
+	account:= req.Account
+	switch req.Type {
+	case app.Reward:
+		err=eos.Reward(account,amount)
+	case app.Used:
+		err=eos.Consume(account,amount)
+	}
+
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.PostEosTokenUpdate, app.ServerErrorCode, err.Error(),c)
+		return
+	}
+
+	postRes(app.PostEosTokenUpdate,c)
+}
+
 func PostTransferHandler(data []byte, c *websocket.Conn){
 
 	rawToken, err:= pvc.GetToken(app.UserAddr)
@@ -698,7 +730,10 @@ func requestHandler(c *websocket.Conn) {
 			go PostGameStartOrEndHandler(data,c)
 		case app.PostTransfer:
 			go PostTransferHandler(data,c)
+		case app.PostEosTokenUpdate:
+			go PostEosTokenUpdateHandler(data,c)
 		}
+
 	}
 }
 
@@ -718,43 +753,43 @@ func requestParser(w http.ResponseWriter, r *http.Request) {
 	}()
 }
 
-func init() {
-	// initial contract
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
-	var cc ChainConfig
-	data, err := ioutil.ReadFile(chainConfigJson)
-	if err != nil {
-		panic("can not read chain config file")
-	}
-	json.Unmarshal(data, &cc)
-	pbc = contract.NewPbc(cc.Pub.Port, cc.Pub.Keystore, cc.Pub.Password, cc.Pub.Address)
-	pvc = contract.NewPvc(cc.Pri.Port, cc.Pri.Keystore, cc.Pri.Password, cc.Pri.Address)
-	log.Println("hello server")
-
-	//inital game machine
-	machine = &app.MachineState{
-		State: app.Logout,
-		MachineId: app.MachineId,
-	}
-
-	//inital redis
-	var rc RedisConfig
-	data, err = ioutil.ReadFile(redisConfigJson)
-	if err!=nil {
-		panic("can not read chain config file")
-	}
-	json.Unmarshal(data,&rc)
-
-	db = redis.NewClient(&redis.Options{
-		Addr: rc.Port,
-		Password: rc.Password,
-		DB: rc.DB,
-	})
-
-	//lock
-	mutex = &sync.Mutex{}
-}
+//func init() {
+//	// initial contract
+//
+//
+//	var cc ChainConfig
+//	data, err := ioutil.ReadFile(chainConfigJson)
+//	if err != nil {
+//		panic("can not read chain config file")
+//	}
+//	json.Unmarshal(data, &cc)
+//	pbc = contract.NewPbc(cc.Pub.Port, cc.Pub.Keystore, cc.Pub.Password, cc.Pub.Address)
+//	pvc = contract.NewPvc(cc.Pri.Port, cc.Pri.Keystore, cc.Pri.Password, cc.Pri.Address)
+//	log.Println("hello server")
+//
+//	//inital game machine
+//	machine = &app.MachineState{
+//		State: app.Logout,
+//		MachineId: app.MachineId,
+//	}
+//
+//	//inital redis
+//	var rc RedisConfig
+//	data, err = ioutil.ReadFile(redisConfigJson)
+//	if err!=nil {
+//		panic("can not read chain config file")
+//	}
+//	json.Unmarshal(data,&rc)
+//
+//	db = redis.NewClient(&redis.Options{
+//		Addr: rc.Port,
+//		Password: rc.Password,
+//		DB: rc.DB,
+//	})
+//
+//
+//
+//}
 
 //test
 //func init(){
@@ -762,9 +797,30 @@ func init() {
 //	go pbc.Reward(app.UserAddr,amount)
 //}
 
+func init() {
+	// lock
+	mutex = &sync.Mutex{}
+	// log
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	//inital redis
+	//var rc RedisConfig
+	//data, err := ioutil.ReadFile(redisConfigJson)
+	//if err!=nil {
+	//	panic("can not read chain config file")
+	//}
+	//json.Unmarshal(data,&rc)
+	//
+	//db = redis.NewClient(&redis.Options{
+	//	Addr: rc.Port,
+	//	Password: rc.Password,
+	//	DB: rc.DB,
+	//})
+
+}
+
 
 func main() {
-	//runtime.GOMAXPROCS(8)
+
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", requestParser).Methods("GET")
