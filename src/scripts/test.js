@@ -1,9 +1,9 @@
 const WebSocket = require('ws');
 
-const ws = new WebSocket('ws://localhost:4000');
+// const ws = new WebSocket('ws://localhost:4000');
+const ws = new WebSocket("ws://18.136.134.84:4000");
 const now = require('performance-now');
-var Web3 = require('web3');
-web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8540"));
+
 
 
 //done
