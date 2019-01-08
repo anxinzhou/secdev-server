@@ -1,8 +1,9 @@
 const WebSocket = require('ws');
 
 const ws = new WebSocket('ws://localhost:4000');
+const now = require('performance-now');
 var Web3 = require('web3');
-web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8540"))
+web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8540"));
 
 
 //done
@@ -64,7 +65,7 @@ var exchangeSTERateReq = {
 var ethToSlotReq= {
     gcuid: 105,
     exchange_type: 1,
-    amount: "0.1",
+    amount: "0.0001",
     act: "post_exchange"
 }
 
@@ -72,7 +73,7 @@ var ethToSlotReq= {
 var SlotToEthReq = {
     gcuid: 105,
     exchange_type: 2,
-    amount: "500",
+    amount: "1",
     act: "post_exchange"
 }
 
@@ -128,7 +129,14 @@ var PostEosTokenUpdate = {
     amount: "110"
 }
 
-ws.on('open', function open() {
+var TestForNFTCreate = {
+    gcuid: 1111
+}
+
+var start
+var end
+
+ws.on('open', async function open() {
     // ws.send(JSON.stringify(qrCodeReq))
     // ws.send(JSON.stringify(logoutReq))
     // ws.send(JSON.stringify(walletAndMachineReq))
@@ -136,17 +144,21 @@ ws.on('open', function open() {
     // ws.send(JSON.stringify(tokenReward))
     // ws.send(JSON.stringify(exchangeETSRateReq))
     // ws.send(JSON.stringify(exchangeSTERateReq))
-    //ws.send(JSON.stringify(SlotToEthReq))
+    // ws.send(JSON.stringify(SlotToEthReq))
     // //
     // ws.send(JSON.stringify(ethToSlotReq))
     // ws.send(JSON.stringify(ethRecordReq))
     // ws.send(JSON.stringify(tokenRecordReq))
     // ws.send(JSON.stringify(inGame))
     // ws.send(JSON.stringify(outGame))
-    ws.send(JSON.stringify(PostEosTokenUpdate))
+    // ws.send(JSON.stringify(PostEosTokenUpdate))
+    start = now();
+    ws.send(JSON.stringify(TestForNFTCreate))
 });
 
 ws.on('message', function incoming(data) {
     console.log("")
     console.log(data)
+    end = now()
+    console.log("consuming time: "+ parseFloat((end-start).toFixed(4))/1000 + "s");
 });
