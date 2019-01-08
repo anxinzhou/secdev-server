@@ -190,7 +190,7 @@ func (_PrivateSlot *PrivateSlotTransactorRaw) Transact(opts *bind.TransactOpts, 
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(owner address, spender address) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) constant returns(uint256)
 func (_PrivateSlot *PrivateSlotCaller) Allowance(opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -202,21 +202,21 @@ func (_PrivateSlot *PrivateSlotCaller) Allowance(opts *bind.CallOpts, owner comm
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(owner address, spender address) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) constant returns(uint256)
 func (_PrivateSlot *PrivateSlotSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _PrivateSlot.Contract.Allowance(&_PrivateSlot.CallOpts, owner, spender)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(owner address, spender address) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) constant returns(uint256)
 func (_PrivateSlot *PrivateSlotCallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _PrivateSlot.Contract.Allowance(&_PrivateSlot.CallOpts, owner, spender)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(owner address) constant returns(uint256)
+// Solidity: function balanceOf(address owner) constant returns(uint256)
 func (_PrivateSlot *PrivateSlotCaller) BalanceOf(opts *bind.CallOpts, owner common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -228,14 +228,14 @@ func (_PrivateSlot *PrivateSlotCaller) BalanceOf(opts *bind.CallOpts, owner comm
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(owner address) constant returns(uint256)
+// Solidity: function balanceOf(address owner) constant returns(uint256)
 func (_PrivateSlot *PrivateSlotSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _PrivateSlot.Contract.BalanceOf(&_PrivateSlot.CallOpts, owner)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(owner address) constant returns(uint256)
+// Solidity: function balanceOf(address owner) constant returns(uint256)
 func (_PrivateSlot *PrivateSlotCallerSession) BalanceOf(owner common.Address) (*big.Int, error) {
 	return _PrivateSlot.Contract.BalanceOf(&_PrivateSlot.CallOpts, owner)
 }
@@ -398,189 +398,189 @@ func (_PrivateSlot *PrivateSlotCallerSession) TotalSupply() (*big.Int, error) {
 
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
-// Solidity: function approve(spender address, value uint256) returns(bool)
+// Solidity: function approve(address spender, uint256 value) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactor) Approve(opts *bind.TransactOpts, spender common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.contract.Transact(opts, "approve", spender, value)
 }
 
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
-// Solidity: function approve(spender address, value uint256) returns(bool)
+// Solidity: function approve(address spender, uint256 value) returns(bool)
 func (_PrivateSlot *PrivateSlotSession) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.Approve(&_PrivateSlot.TransactOpts, spender, value)
 }
 
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
-// Solidity: function approve(spender address, value uint256) returns(bool)
+// Solidity: function approve(address spender, uint256 value) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactorSession) Approve(spender common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.Approve(&_PrivateSlot.TransactOpts, spender, value)
 }
 
 // Burn is a paid mutator transaction binding the contract method 0x9dc29fac.
 //
-// Solidity: function burn(user address, amount uint256) returns(bool)
+// Solidity: function burn(address user, uint256 amount) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactor) Burn(opts *bind.TransactOpts, user common.Address, amount *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.contract.Transact(opts, "burn", user, amount)
 }
 
 // Burn is a paid mutator transaction binding the contract method 0x9dc29fac.
 //
-// Solidity: function burn(user address, amount uint256) returns(bool)
+// Solidity: function burn(address user, uint256 amount) returns(bool)
 func (_PrivateSlot *PrivateSlotSession) Burn(user common.Address, amount *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.Burn(&_PrivateSlot.TransactOpts, user, amount)
 }
 
 // Burn is a paid mutator transaction binding the contract method 0x9dc29fac.
 //
-// Solidity: function burn(user address, amount uint256) returns(bool)
+// Solidity: function burn(address user, uint256 amount) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactorSession) Burn(user common.Address, amount *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.Burn(&_PrivateSlot.TransactOpts, user, amount)
 }
 
 // Consume is a paid mutator transaction binding the contract method 0x224b5c72.
 //
-// Solidity: function consume(by address, value uint256) returns(bool)
+// Solidity: function consume(address by, uint256 value) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactor) Consume(opts *bind.TransactOpts, by common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.contract.Transact(opts, "consume", by, value)
 }
 
 // Consume is a paid mutator transaction binding the contract method 0x224b5c72.
 //
-// Solidity: function consume(by address, value uint256) returns(bool)
+// Solidity: function consume(address by, uint256 value) returns(bool)
 func (_PrivateSlot *PrivateSlotSession) Consume(by common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.Consume(&_PrivateSlot.TransactOpts, by, value)
 }
 
 // Consume is a paid mutator transaction binding the contract method 0x224b5c72.
 //
-// Solidity: function consume(by address, value uint256) returns(bool)
+// Solidity: function consume(address by, uint256 value) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactorSession) Consume(by common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.Consume(&_PrivateSlot.TransactOpts, by, value)
 }
 
 // ExchangeForEther is a paid mutator transaction binding the contract method 0x5f1e6941.
 //
-// Solidity: function exchangeForEther(user address, amount uint256) returns(bool)
+// Solidity: function exchangeForEther(address user, uint256 amount) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactor) ExchangeForEther(opts *bind.TransactOpts, user common.Address, amount *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.contract.Transact(opts, "exchangeForEther", user, amount)
 }
 
 // ExchangeForEther is a paid mutator transaction binding the contract method 0x5f1e6941.
 //
-// Solidity: function exchangeForEther(user address, amount uint256) returns(bool)
+// Solidity: function exchangeForEther(address user, uint256 amount) returns(bool)
 func (_PrivateSlot *PrivateSlotSession) ExchangeForEther(user common.Address, amount *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.ExchangeForEther(&_PrivateSlot.TransactOpts, user, amount)
 }
 
 // ExchangeForEther is a paid mutator transaction binding the contract method 0x5f1e6941.
 //
-// Solidity: function exchangeForEther(user address, amount uint256) returns(bool)
+// Solidity: function exchangeForEther(address user, uint256 amount) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactorSession) ExchangeForEther(user common.Address, amount *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.ExchangeForEther(&_PrivateSlot.TransactOpts, user, amount)
 }
 
 // ExchangeForToken is a paid mutator transaction binding the contract method 0x7317d44a.
 //
-// Solidity: function exchangeForToken(user address) returns(bool)
+// Solidity: function exchangeForToken(address user) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactor) ExchangeForToken(opts *bind.TransactOpts, user common.Address) (*types.Transaction, error) {
 	return _PrivateSlot.contract.Transact(opts, "exchangeForToken", user)
 }
 
 // ExchangeForToken is a paid mutator transaction binding the contract method 0x7317d44a.
 //
-// Solidity: function exchangeForToken(user address) returns(bool)
+// Solidity: function exchangeForToken(address user) returns(bool)
 func (_PrivateSlot *PrivateSlotSession) ExchangeForToken(user common.Address) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.ExchangeForToken(&_PrivateSlot.TransactOpts, user)
 }
 
 // ExchangeForToken is a paid mutator transaction binding the contract method 0x7317d44a.
 //
-// Solidity: function exchangeForToken(user address) returns(bool)
+// Solidity: function exchangeForToken(address user) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactorSession) ExchangeForToken(user common.Address) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.ExchangeForToken(&_PrivateSlot.TransactOpts, user)
 }
 
 // Mint is a paid mutator transaction binding the contract method 0x40c10f19.
 //
-// Solidity: function mint(user address, amount uint256) returns(bool)
+// Solidity: function mint(address user, uint256 amount) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactor) Mint(opts *bind.TransactOpts, user common.Address, amount *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.contract.Transact(opts, "mint", user, amount)
 }
 
 // Mint is a paid mutator transaction binding the contract method 0x40c10f19.
 //
-// Solidity: function mint(user address, amount uint256) returns(bool)
+// Solidity: function mint(address user, uint256 amount) returns(bool)
 func (_PrivateSlot *PrivateSlotSession) Mint(user common.Address, amount *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.Mint(&_PrivateSlot.TransactOpts, user, amount)
 }
 
 // Mint is a paid mutator transaction binding the contract method 0x40c10f19.
 //
-// Solidity: function mint(user address, amount uint256) returns(bool)
+// Solidity: function mint(address user, uint256 amount) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactorSession) Mint(user common.Address, amount *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.Mint(&_PrivateSlot.TransactOpts, user, amount)
 }
 
 // Reward is a paid mutator transaction binding the contract method 0x21670f22.
 //
-// Solidity: function reward(to address, value uint256) returns(bool)
+// Solidity: function reward(address to, uint256 value) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactor) Reward(opts *bind.TransactOpts, to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.contract.Transact(opts, "reward", to, value)
 }
 
 // Reward is a paid mutator transaction binding the contract method 0x21670f22.
 //
-// Solidity: function reward(to address, value uint256) returns(bool)
+// Solidity: function reward(address to, uint256 value) returns(bool)
 func (_PrivateSlot *PrivateSlotSession) Reward(to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.Reward(&_PrivateSlot.TransactOpts, to, value)
 }
 
 // Reward is a paid mutator transaction binding the contract method 0x21670f22.
 //
-// Solidity: function reward(to address, value uint256) returns(bool)
+// Solidity: function reward(address to, uint256 value) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactorSession) Reward(to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.Reward(&_PrivateSlot.TransactOpts, to, value)
 }
 
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
 //
-// Solidity: function transfer(to address, value uint256) returns(bool)
+// Solidity: function transfer(address to, uint256 value) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactor) Transfer(opts *bind.TransactOpts, to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.contract.Transact(opts, "transfer", to, value)
 }
 
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
 //
-// Solidity: function transfer(to address, value uint256) returns(bool)
+// Solidity: function transfer(address to, uint256 value) returns(bool)
 func (_PrivateSlot *PrivateSlotSession) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.Transfer(&_PrivateSlot.TransactOpts, to, value)
 }
 
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
 //
-// Solidity: function transfer(to address, value uint256) returns(bool)
+// Solidity: function transfer(address to, uint256 value) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactorSession) Transfer(to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.Transfer(&_PrivateSlot.TransactOpts, to, value)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(from address, to address, value uint256) returns(bool)
+// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactor) TransferFrom(opts *bind.TransactOpts, from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.contract.Transact(opts, "transferFrom", from, to, value)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(from address, to address, value uint256) returns(bool)
+// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
 func (_PrivateSlot *PrivateSlotSession) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.TransferFrom(&_PrivateSlot.TransactOpts, from, to, value)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
-// Solidity: function transferFrom(from address, to address, value uint256) returns(bool)
+// Solidity: function transferFrom(address from, address to, uint256 value) returns(bool)
 func (_PrivateSlot *PrivateSlotTransactorSession) TransferFrom(from common.Address, to common.Address, value *big.Int) (*types.Transaction, error) {
 	return _PrivateSlot.Contract.TransferFrom(&_PrivateSlot.TransactOpts, from, to, value)
 }
@@ -662,7 +662,7 @@ type PrivateSlotApproval struct {
 
 // FilterApproval is a free log retrieval operation binding the contract event 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925.
 //
-// Solidity: e Approval(_owner indexed address, _spender indexed address, _value uint256)
+// Solidity: event Approval(address indexed _owner, address indexed _spender, uint256 _value)
 func (_PrivateSlot *PrivateSlotFilterer) FilterApproval(opts *bind.FilterOpts, _owner []common.Address, _spender []common.Address) (*PrivateSlotApprovalIterator, error) {
 
 	var _ownerRule []interface{}
@@ -683,7 +683,7 @@ func (_PrivateSlot *PrivateSlotFilterer) FilterApproval(opts *bind.FilterOpts, _
 
 // WatchApproval is a free log subscription operation binding the contract event 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925.
 //
-// Solidity: e Approval(_owner indexed address, _spender indexed address, _value uint256)
+// Solidity: event Approval(address indexed _owner, address indexed _spender, uint256 _value)
 func (_PrivateSlot *PrivateSlotFilterer) WatchApproval(opts *bind.WatchOpts, sink chan<- *PrivateSlotApproval, _owner []common.Address, _spender []common.Address) (event.Subscription, error) {
 
 	var _ownerRule []interface{}
@@ -803,7 +803,7 @@ type PrivateSlotBurn struct {
 
 // FilterBurn is a free log retrieval operation binding the contract event 0xcc16f5dbb4873280815c1ee09dbd06736cffcc184412cf7a71a0fdb75d397ca5.
 //
-// Solidity: e Burn(user address, amount uint256)
+// Solidity: event Burn(address user, uint256 amount)
 func (_PrivateSlot *PrivateSlotFilterer) FilterBurn(opts *bind.FilterOpts) (*PrivateSlotBurnIterator, error) {
 
 	logs, sub, err := _PrivateSlot.contract.FilterLogs(opts, "Burn")
@@ -815,7 +815,7 @@ func (_PrivateSlot *PrivateSlotFilterer) FilterBurn(opts *bind.FilterOpts) (*Pri
 
 // WatchBurn is a free log subscription operation binding the contract event 0xcc16f5dbb4873280815c1ee09dbd06736cffcc184412cf7a71a0fdb75d397ca5.
 //
-// Solidity: e Burn(user address, amount uint256)
+// Solidity: event Burn(address user, uint256 amount)
 func (_PrivateSlot *PrivateSlotFilterer) WatchBurn(opts *bind.WatchOpts, sink chan<- *PrivateSlotBurn) (event.Subscription, error) {
 
 	logs, sub, err := _PrivateSlot.contract.WatchLogs(opts, "Burn")
@@ -926,7 +926,7 @@ type PrivateSlotMint struct {
 
 // FilterMint is a free log retrieval operation binding the contract event 0x0f6798a560793a54c3bcfe86a93cde1e73087d944c0ea20544137d4121396885.
 //
-// Solidity: e Mint(user address, amount uint256)
+// Solidity: event Mint(address user, uint256 amount)
 func (_PrivateSlot *PrivateSlotFilterer) FilterMint(opts *bind.FilterOpts) (*PrivateSlotMintIterator, error) {
 
 	logs, sub, err := _PrivateSlot.contract.FilterLogs(opts, "Mint")
@@ -938,7 +938,7 @@ func (_PrivateSlot *PrivateSlotFilterer) FilterMint(opts *bind.FilterOpts) (*Pri
 
 // WatchMint is a free log subscription operation binding the contract event 0x0f6798a560793a54c3bcfe86a93cde1e73087d944c0ea20544137d4121396885.
 //
-// Solidity: e Mint(user address, amount uint256)
+// Solidity: event Mint(address user, uint256 amount)
 func (_PrivateSlot *PrivateSlotFilterer) WatchMint(opts *bind.WatchOpts, sink chan<- *PrivateSlotMint) (event.Subscription, error) {
 
 	logs, sub, err := _PrivateSlot.contract.WatchLogs(opts, "Mint")
@@ -1050,7 +1050,7 @@ type PrivateSlotTransfer struct {
 
 // FilterTransfer is a free log retrieval operation binding the contract event 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef.
 //
-// Solidity: e Transfer(_from indexed address, _to indexed address, _value uint256)
+// Solidity: event Transfer(address indexed _from, address indexed _to, uint256 _value)
 func (_PrivateSlot *PrivateSlotFilterer) FilterTransfer(opts *bind.FilterOpts, _from []common.Address, _to []common.Address) (*PrivateSlotTransferIterator, error) {
 
 	var _fromRule []interface{}
@@ -1071,7 +1071,7 @@ func (_PrivateSlot *PrivateSlotFilterer) FilterTransfer(opts *bind.FilterOpts, _
 
 // WatchTransfer is a free log subscription operation binding the contract event 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef.
 //
-// Solidity: e Transfer(_from indexed address, _to indexed address, _value uint256)
+// Solidity: event Transfer(address indexed _from, address indexed _to, uint256 _value)
 func (_PrivateSlot *PrivateSlotFilterer) WatchTransfer(opts *bind.WatchOpts, sink chan<- *PrivateSlotTransfer, _from []common.Address, _to []common.Address) (event.Subscription, error) {
 
 	var _fromRule []interface{}

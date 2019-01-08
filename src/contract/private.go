@@ -5,11 +5,11 @@ import (
 	"errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"log"
 	"math/big"
 	"strings"
 	"sync/atomic"
-	"time"
 	"token/privateSlot"
 )
 
@@ -84,22 +84,34 @@ func (p *Pvc) Burn(address common.Address, amount *big.Int) (error) {
 }
 
 func (p *Pvc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
-	count := time.Second
+	count:= 0
+	ch:= make(chan *types.Header)
+	sub,err:= p.Client.SubscribeNewHead(context.Background(),ch)
+	if err!=nil {
+		log.Println(err.Error())
+		return 0,err
+	}
+
 	for {
-		time.Sleep(privateChainTime)
-		receipt, err :=p.Client.TransactionReceipt(context.Background(),txHash)
-		if err==nil {
-			if receipt.Status==0{
-				return receipt.Status, errors.New("transaction revert")
-			}
-			return receipt.Status, nil
-		} else {
+		select {
+		case err:= <- sub.Err():
 			log.Println(err.Error())
-		}
-		count +=time.Second
-		if count == privateChainTimeOut {
-			break
+			return 0,err
+		case <- ch:
+			count+=1
+			if count>=maxWaitingBlock {
+				return 0, errors.New("transaction time out")
+			} else {
+				receipt, err:= p.Client.TransactionReceipt(context.Background(),txHash)
+				if err == nil {
+					if receipt.Status ==0 {
+						return receipt.Status, errors.New("transaction revert")
+					}
+					return receipt.Status, nil
+				} else {
+					log.Println(err.Error())
+				}
+			}
 		}
 	}
-	return 0, errors.New("Time out, can not get transaction status")
 }

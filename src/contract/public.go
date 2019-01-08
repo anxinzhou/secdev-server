@@ -2,6 +2,7 @@ package contract
 
 import (
 	"context"
+	"errors"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -10,7 +11,6 @@ import (
 	"math/big"
 	"strings"
 	"sync/atomic"
-	"time"
 	"token/publicSlot"
 )
 
@@ -86,6 +86,27 @@ func (p *Pbc) ExchangeForToken(address common.Address, amount *big.Int) (*types.
 	return tx,err
 }
 
+func (p* Pbc) Create(address common.Address, tokenID *big.Int) (error) {
+	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
+	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
+	auth.GasLimit = p.txConfig.Gaslimit
+
+	data,err:= p.ABI.Pack("create",address,tokenID)
+	if err!=nil {
+		return err
+	}
+
+	gasPrice, err:= p.EstimateGasPrice(address,p.Contract.Address,data)
+	if err!=nil {
+		return err
+	}
+	auth.GasPrice = gasPrice
+
+	tx,err:= p.Instance.Create(auth,address,tokenID)
+	_,err = p.GetReceiptStatus(tx.Hash())
+	return err
+}
+
 func (p *Pbc) ExchangeForEther(address common.Address, amount *big.Int) (*types.Transaction,error){
 	nonce:= atomic.AddUint64(&p.txConfig.nonce, 1)
 	auth:= NewAuth(p.txConfig.key.PrivateKey, nonce-1, big.NewInt(0))
@@ -105,10 +126,44 @@ func (p *Pbc) ExchangeForEther(address common.Address, amount *big.Int) (*types.
 	return tx,err
 }
 
+//func (p *Pbc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
+//	time.Sleep(publicChainTime)
+//	time.Sleep(publicChainTime)
+//	return 1,nil
+//}
+
 func (p *Pbc) GetReceiptStatus (txHash common.Hash) (uint64,error) {
-	time.Sleep(publicChainTime)
-	time.Sleep(publicChainTime)
-	return 1,nil
+	log.Println("geting transaction receipt for "+txHash.String())
+	count:= 0
+	ch:= make(chan *types.Header)
+	sub,err:= p.Client.SubscribeNewHead(context.Background(),ch)
+	if err!=nil {
+		log.Println(err.Error())
+		return 0,err
+	}
+
+	for {
+		select {
+			case err:= <- sub.Err():
+				log.Println(err.Error())
+				return 0,err
+			case <- ch:
+				count+=1
+				if count>=maxWaitingBlock {
+					return 0, errors.New("transaction time out")
+				} else {
+					receipt, err:= p.Client.TransactionReceipt(context.Background(),txHash)
+					if err == nil {
+						if receipt.Status ==0 {
+							return receipt.Status, errors.New("transaction revert")
+						}
+						return receipt.Status, nil
+					} else {
+						log.Println(err.Error())
+					}
+				}
+		}
+	}
 }
 
 func (p *Pbc) Mint(address common.Address, amount *big.Int) (error) {

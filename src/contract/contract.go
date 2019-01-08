@@ -13,7 +13,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"io/ioutil"
 	"math/big"
-	"time"
 )
 
 var (
@@ -22,10 +21,7 @@ var (
 )
 
 const (
-	privateChainTime    = 1 * time.Second
-	publicChainTime     = 5 * time.Second
-	privateChainTimeOut = 10 * time.Second
-	publicChainTimeOut  = 10 * publicChainTime
+	maxWaitingBlock = 50  // come from web3js, if wait more than 50 blocks, transaction time out
 	GasLimit            = 3000000
 )
 

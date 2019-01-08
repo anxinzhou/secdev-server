@@ -27,6 +27,7 @@ const (
 	PostEosTokenUpdate
 	Signin = 888
 	DisConnect = 1000
+	TestCreateNFT = 1111
 )
 
 

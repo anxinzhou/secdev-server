@@ -6,9 +6,9 @@
         "address": "0x5b49DFC13a6DaFd31af00228A86d924dB6c3C491"
     },
     "public": {
-        "port": "ws://localhost:8550",
+        "port": "wss://kovan.infura.io/ws",
         "keystore": "./etc/keystore/zx",
         "password": "321",
-        "address": "0xA637EdF3A489ea334Ca20580D02AB59556904E01"
+        "address": "0x779ba910850cdd7df4ff52db368b406460c91b6a"
     }
 }

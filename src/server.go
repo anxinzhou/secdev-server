@@ -13,6 +13,7 @@ import (
 	h "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"io/ioutil"
 	"log"
 	"math/big"
 	"net/http"
@@ -483,6 +484,16 @@ func PostTokenUserOrRewardHandler(data []byte, c *websocket.Conn) {
 	postRes(app.PostTokenUseOrReward,c)
 }
 
+func TestCreateNFTHandler(data []byte, c *websocket.Conn) {
+	err:=pbc.Create(app.UserAddr,big.NewInt(1121221))
+	if err!=nil {
+		log.Println(err.Error())
+		sendError(app.TestCreateNFT,app.ServerErrorCode,err.Error(),c)
+		return
+	}
+	postRes(app.TestCreateNFT,c)
+}
+
 func PostGameStartOrEndHandler(data []byte, c *websocket.Conn) {
 	var req app.PostGameStartOrEndReq
 	err:= json.Unmarshal(data,&req)
@@ -732,8 +743,9 @@ func requestHandler(c *websocket.Conn) {
 			go PostTransferHandler(data,c)
 		case app.PostEosTokenUpdate:
 			go PostEosTokenUpdateHandler(data,c)
+		case app.TestCreateNFT:
+			go TestCreateNFTHandler(data,c)
 		}
-
 	}
 }
 
@@ -753,43 +765,44 @@ func requestParser(w http.ResponseWriter, r *http.Request) {
 	}()
 }
 
-//func init() {
-//	// initial contract
-//
-//
-//	var cc ChainConfig
-//	data, err := ioutil.ReadFile(chainConfigJson)
-//	if err != nil {
-//		panic("can not read chain config file")
-//	}
-//	json.Unmarshal(data, &cc)
-//	pbc = contract.NewPbc(cc.Pub.Port, cc.Pub.Keystore, cc.Pub.Password, cc.Pub.Address)
-//	pvc = contract.NewPvc(cc.Pri.Port, cc.Pri.Keystore, cc.Pri.Password, cc.Pri.Address)
-//	log.Println("hello server")
-//
-//	//inital game machine
-//	machine = &app.MachineState{
-//		State: app.Logout,
-//		MachineId: app.MachineId,
-//	}
-//
-//	//inital redis
-//	var rc RedisConfig
-//	data, err = ioutil.ReadFile(redisConfigJson)
-//	if err!=nil {
-//		panic("can not read chain config file")
-//	}
-//	json.Unmarshal(data,&rc)
-//
-//	db = redis.NewClient(&redis.Options{
-//		Addr: rc.Port,
-//		Password: rc.Password,
-//		DB: rc.DB,
-//	})
-//
-//
-//
-//}
+func init() {
+	// initial contract
+
+
+	var cc ChainConfig
+	data, err := ioutil.ReadFile(chainConfigJson)
+	if err != nil {
+		log.Println(err.Error())
+		panic("can not read chain config file")
+	}
+	json.Unmarshal(data, &cc)
+	pbc = contract.NewPbc(cc.Pub.Port, cc.Pub.Keystore, cc.Pub.Password, cc.Pub.Address)
+	//pvc = contract.NewPvc(cc.Pri.Port, cc.Pri.Keystore, cc.Pri.Password, cc.Pri.Address)
+	//log.Println("hello server")
+
+	//inital game machine
+	machine = &app.MachineState{
+		State: app.Logout,
+		MachineId: app.MachineId,
+	}
+
+	//inital redis
+	//var rc RedisConfig
+	//data, err = ioutil.ReadFile(redisConfigJson)
+	//if err!=nil {
+	//	panic("can not read chain config file")
+	//}
+	//json.Unmarshal(data,&rc)
+	//
+	//db = redis.NewClient(&redis.Options{
+	//	Addr: rc.Port,
+	//	Password: rc.Password,
+	//	DB: rc.DB,
+	//})
+
+
+
+}
 
 //test
 //func init(){
