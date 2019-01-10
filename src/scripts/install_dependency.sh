@@ -113,12 +113,17 @@ installJsdependency(){
   npm i
 }
 
+installParity(){
+	sudo snap install parity
+}
+
 installGeth 
 installGO
 installRedis
 installNodeJS
 installGoPackage
 installJsdependency
+installParity
 
 
 
