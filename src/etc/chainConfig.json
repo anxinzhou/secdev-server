@@ -3,7 +3,7 @@
         "port": "ws://localhost:8650",
         "keystore": "./etc/keystore/zx",
         "password": "321",
-        "address": "0x5b49DFC13a6DaFd31af00228A86d924dB6c3C491"
+        "address": "0x48b46e4768cB981ebE9bCaF4992d26CE37CCD9b2"
     },
     "public": {
         "port": "wss://kovan.infura.io/ws",

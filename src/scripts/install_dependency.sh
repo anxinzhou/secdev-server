@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 installGoPackage() {
+	sudo apt install -y gcc
 	echo "installing go package"
 	export GOPATH=$(dirname $(dirname "$PWD"))
 	go get -u github.com/ethereum/go-ethereum
@@ -15,15 +16,16 @@ installGoPackage() {
 installGO() {
 	echo "installing go"
 	if [ -x "$(command -v go)" ];
+	then
 		echo "have installed go"
 		return
 	fi 
 
-	if ["$(uname)"=="Darwin"];
+	if [ "$(uname)" = "Darwin" ];
 	then
 		brew update
 		brew install golang
-	elif ["$(expr substr $(uname -s) 1 5)"=="Linux"];
+	elif [ "$(expr substr $(uname -s) 1 5)" = "Linux" ];
 	then
 		sudo snap install go --classic
 	else
@@ -37,15 +39,16 @@ installGO() {
 installGeth() {
 	echo "installing geth"
 	if [ -x "$(command -v geth)" ];
+	then
 		echo "have installed geth,skip"
 		return
 	fi 
 
-	if ["$(uname)"=="Darwin"];
+	if [ "$(uname)" = "Darwin" ];
 	then
 		brew tap ethereum/ethereum
 		brew install ethereum
-	elif ["$(expr substr $(uname -s) 1 5)"=="Linux"];
+	elif [ "$(expr substr $(uname -s) 1 5)" = "Linux" ];
 	then
 		sudo add-apt-repository -y ppa:ethereum/ethereum
 		sudo apt-get update
@@ -67,13 +70,18 @@ installRedis() {
 		return
 	fi
 
+	target="redis-5.0.3.tar.gz"
+	dst="redis-5.0.3"
+
 	(	
 		cd $HOME
 		curl -O http://download.redis.io/releases/${target}
 		tar -xzvf ${target}
 		cd $dst
+		sudo apt install -y  make
+		sudo apt install -y  make-guile
 		make
-		ln -s $(pwd)/src/redis-server /usr/local/bin/redis-server
+		sudo ln -s $(pwd)/src/redis-server /usr/local/bin/redis-server
 	)
 
 	echo "finish installing redis"
@@ -82,15 +90,16 @@ installRedis() {
 installNodeJS() {
 	echo "installing node js"
 	if [ -x "$(command -v node)" ];
+	then
 		echo "have installed geth,skip"
 		return
 	fi
 
-	if ["$(uname)"=="Darwin"];
+	if [ "$(uname)" = "Darwin" ];
 	then
 		brew update
 		brew install node
-	elif ["$(expr substr $(uname -s) 1 5)"=="Linux"];
+	elif [ "$(expr substr $(uname -s) 1 5)" = "Linux" ];
 	then
 		curl -sL https://deb.nodesource.com/setup_10.x | sudo bash -
 		sudo apt install -y nodejs
@@ -99,12 +108,17 @@ installNodeJS() {
 		exit 1
 	fi
 }
+installJsdependency(){
+  sudo apt install -y g++
+  npm i
+}
 
 installGeth 
 installGO
-installGoPackage
 installRedis
 installNodeJS
+installGoPackage
+installJsdependency
 
 
 
