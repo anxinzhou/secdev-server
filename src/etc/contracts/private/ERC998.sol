@@ -1,19 +1,26 @@
 pragma solidity ^0.5.2;
 
-import './IERC721.sol';
-import './IERC20.sol';
+import "../IERC721.sol";
+import "../IERC20.sol";
+import "../Address.sol";
+import "../SafeMath.sol";
 
 contract ComposableTopDown  {
     using SafeMath for uint256;
     using Address for address;
 
+    /**
+    * For bridge development
+    * Mapping tokenId from lock state
+    */
+    mapping(uint256 => bool) private _locked;
+
     // return this.rootOwnerOf.selector ^ this.rootOwnerOfChild.selector ^
     //   this.tokenOwnerOf.selector ^ this.ownerOfChild.selector;
-    bytes32 constant ERC998_MAGIC_VALUE = 0xcd740db5;
+    bytes4 constant ERC998_MAGIC_VALUE = 0xcd740db5;
 
     uint256 tokenCount = 0;
-
-    // Mapping from token ID to owner
+    // mapping from token ID to owner
     mapping(uint256 => address) private _tokenOwner;
 
     // Mapping from root token owner to tokenId to approved address
@@ -35,7 +42,7 @@ contract ComposableTopDown  {
     // Optional mapping for token URIs
     mapping(uint256 => string) private _tokenURIs;
 
-    // Event list
+    // ERC998 Event
     event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
     event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
@@ -43,12 +50,128 @@ contract ComposableTopDown  {
     event TransferERC20(uint256 indexed _tokenId, address indexed _to, address indexed _erc20Contract, uint256 _value);
     event ReceivedChild(address indexed _from, uint256 indexed _tokenId, address indexed _childContract, uint256 _childTokenId);
     event TransferChild(uint256 indexed tokenId, address indexed _to, address indexed _childContract, uint256 _childTokenId);
+
+    // Bridge Event
+    event Lock(address operator ,address owner, uint256 tokenId);
+    event Unlock(address operator, address owner, uint256 tokenId);
+
     /**
      * @dev Constructor function
      */
     constructor (string memory name, string memory symbol) public {
         _name = name;
         _symbol = symbol;
+    }
+
+    /**
+     * for bridge developemnt
+     *  query token lock state
+     * if locked, not allowed to transfer or burn
+    */
+    function isLocked(uint256 tokenId) external view returns (bool) {
+        return _locked[tokenId];
+    }
+
+    /**
+    * for bridge developemnt
+    *  lock
+    * called by user
+   */
+    function lock(uint256 tokenId) external {
+        address operator = msg.sender;
+        address tokenOwner = _tokenOwner[tokenId];
+        require(tokenOwner !=address(0), "token not exist");
+        require(!_locked[tokenId], "token already locked");
+        _locked[tokenId] = true;
+        emit Lock(operator , tokenOwner , tokenId);
+    }
+
+    /**
+     * for bridge developemnt
+     * unlock Token
+     */
+    function unlock(uint256 tokenId) external {
+        address operator = msg.sender;
+        address tokenOwner = _tokenOwner[tokenId];
+        require(tokenOwner !=address(0), "token not exist");
+        require(_locked[tokenId], "token already unlocked");
+        _locked[tokenId] = false;
+        emit Unlock(operator, tokenOwner, tokenId);
+    }
+
+    /**
+     * for bridge development
+     * The token mint in public chain is locked initially
+     * The token mint in private chain is unlocked initially
+    */
+    function mint(address to, uint256 tokenId, string memory uri) public {
+        _mint(to, tokenId);
+        _setTokenURI(tokenId,uri);
+        _locked[tokenId] = false;
+    }
+
+    /**
+     * for bridge developemnt
+     *  query token lock state
+     * Require multisig
+    */
+    function changeOwner(address owner, uint256 tokenId) external {
+        _tokenOwner[tokenId] = owner;
+    }
+
+    // for ERC721 child bridge transfer
+
+    /**
+     * for bridge developemnt
+     *  mint child Token
+     * Require Multisig
+    */
+
+    function mintERC721Child(uint256 parentTokenId, address childContract ,uint256 childTokenId, string memory uri) public {
+        IERC721(childContract).mint(address(this), childTokenId, uri);
+        address operator = msg.sender;
+        receiveChild(operator, parentTokenId, childContract, childTokenId);
+    }
+
+    /**
+     * for bridge developemnt
+     *  burn child Token
+     * Require Multisig
+    */
+
+    function burnERC721Child(uint256 parentTokenId ,address childContract, uint256 childTokenId) external {
+        IERC721(childContract).burn(childTokenId);
+        removeChild(parentTokenId, childContract, childTokenId);
+    }
+
+    /**
+     * for bridge developemnt
+     *  mint child Token
+     * Require Multisig
+    */
+
+    function mintERC20Child(uint256 parentTokenId, address childContract ,uint256 value) public {
+        IERC20(childContract).mint(address(this), value);
+        address operator = msg.sender;
+        erc20Received(operator, parentTokenId, childContract, value);
+    }
+
+    /**
+     * for bridge developemnt
+     *  burn child Token
+     * Require Multisig
+    */
+
+    function burnERC20Child(uint256 parentTokenId ,address childContract, uint256 value) external {
+        IERC20(childContract).burn(address(this),value);
+        removeERC20(parentTokenId, childContract, value);
+    }
+
+    //Test if token exist
+
+    function _exists(uint256 tokenId) internal view returns (bool) {
+        address owner = _tokenOwner[tokenId];
+        return owner != address(0);
     }
 
     /**
@@ -97,14 +220,6 @@ contract ComposableTopDown  {
     /**
      * for template develop use
     */
-    function mint(address to, uint256 tokenId, string memory uri) public {
-        _mint(to, tokenId);
-        _setTokenURI(tokenId,uri);
-    }
-
-    /**
-     * for template develop use
-    */
     function burn(uint256 tokenId) external {
         _burn(tokenId);
     }
@@ -123,6 +238,11 @@ contract ComposableTopDown  {
         _ownedTokensCount[to] = _ownedTokensCount[to].add(1);
 
         emit Transfer(address(0), to, tokenId);
+    }
+
+    function _clearApproval(uint256 tokenId) internal {
+        address owner = ownerOf(tokenId);
+        _tokenApprovals[owner][tokenId]=address(0);
     }
 
     /**
@@ -188,13 +308,13 @@ contract ComposableTopDown  {
         }
 
         bool callSuccess;
-        bytes memory calldata;
+        bytes memory _calldata;
         // 0xed81cdda == rootOwnerOfChild(address,uint256)
-        calldata = abi.encodeWithSelector(0xed81cdda, address(this), _childTokenId);
+        _calldata = abi.encodeWithSelector(0xed81cdda, address(this), _childTokenId);
         assembly {
-            callSuccess := staticcall(gas, rootOwnerAddress, add(calldata, 0x20), mload(calldata), calldata, 0x20)
+            callSuccess := staticcall(gas, rootOwnerAddress, add(_calldata, 0x20), mload(_calldata), _calldata, 0x20)
             if callSuccess {
-                rootOwner := mload(calldata)
+                rootOwner := mload(_calldata)
             }
         }
         if(callSuccess == true && rootOwner >> 224 == ERC998_MAGIC_VALUE) {
@@ -205,7 +325,7 @@ contract ComposableTopDown  {
             // Case 3: Token owner is other contract
             // Or
             // Case 4: Token owner is user
-            return ERC998_MAGIC_VALUE << 224 | bytes32(rootOwnerAddress);
+            return bytes32(ERC998_MAGIC_VALUE) << 224 | bytes32(bytes20(rootOwnerAddress));
         }
     }
 
@@ -218,22 +338,22 @@ contract ComposableTopDown  {
         return tokenOwner;
     }
 
-    function balanceOf(address _tokenOwner) external view returns (uint256) {
-        require(_tokenOwner != address(0));
-        return _ownedTokensCount[_tokenOwner];
+    function balanceOf(address owner) external view returns (uint256) {
+        require(owner != address(0));
+        return _ownedTokensCount[owner];
     }
 
 
     function approve(address _approved, uint256 _tokenId) external {
-        address rootOwner = address(rootOwnerOf(_tokenId));
+        address rootOwner = address(bytes20(rootOwnerOf(_tokenId)));
         require(rootOwner == msg.sender || _operatorApprovals[rootOwner][msg.sender]);
         _tokenApprovals[rootOwner][_tokenId] = _approved;
         emit Approval(rootOwner, _approved, _tokenId);
     }
 
     function getApproved(uint256 _tokenId) public view returns (address)  {
-        address rootOwner = address(rootOwnerOf(_tokenId));
-        return _operatorApprovals[rootOwner][_tokenId];
+        address rootOwner = address(bytes20(rootOwnerOf(_tokenId)));
+        return _tokenApprovals[rootOwner][_tokenId];
     }
 
     function setApprovalForAll(address _operator, bool _approved) external {
@@ -258,11 +378,11 @@ contract ComposableTopDown  {
             bytes32 rootOwner;
             bool callSuccess;
             // 0xed81cdda == rootOwnerOfChild(address,uint256)
-            bytes memory calldata = abi.encodeWithSelector(0xed81cdda, address(this), _tokenId);
+            bytes memory _calldata = abi.encodeWithSelector(0xed81cdda, address(this), _tokenId);
             assembly {
-                callSuccess := staticcall(gas, _from, add(calldata, 0x20), mload(calldata), calldata, 0x20)
+                callSuccess := staticcall(gas, _from, add(_calldata, 0x20), mload(_calldata), _calldata, 0x20)
                 if callSuccess {
-                    rootOwner := mload(calldata)
+                    rootOwner := mload(_calldata)
                 }
             }
             if(callSuccess == true) {
@@ -295,7 +415,7 @@ contract ComposableTopDown  {
 
     function safeTransferFrom(address _from, address _to, uint256 _tokenId) public {
         _transferFrom(_from, _to, _tokenId);
-        if (isContract(_to)) {
+        if (_to.isContract()) {
             bytes4 retval = IERC721(_to).onERC721Received(msg.sender, _from, _tokenId, "");
             require(retval == ERC721_RECEIVED);
         }
@@ -303,7 +423,7 @@ contract ComposableTopDown  {
 
     function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes memory _data) public {
         _transferFrom(_from, _to, _tokenId);
-        if (isContract(_to)) {
+        if (_to.isContract()) {
             bytes4 retval = IERC721(_to).onERC721Received(msg.sender, _from, _tokenId, _data);
             require(retval == ERC721_RECEIVED);
         }
@@ -363,11 +483,11 @@ contract ComposableTopDown  {
         require(tokenId > 0 || childTokenIndex[tokenId][_childContract][_childTokenId] > 0);
         require(tokenId == _fromTokenId);
         require(_to != address(0));
-        address rootOwner = address(rootOwnerOf(tokenId));
+        address rootOwner = address(bytes20(rootOwnerOf(tokenId)));
         require(rootOwner == msg.sender || _operatorApprovals[rootOwner][msg.sender] ||
         _tokenApprovals[rootOwner][tokenId] == msg.sender);
         removeChild(tokenId, _childContract, _childTokenId);
-        IERC721(_childContract).safeTransferFrom(this, _to, _childTokenId);
+        IERC721(_childContract).safeTransferFrom(address(this), _to, _childTokenId);
         emit TransferChild(tokenId, _to, _childContract, _childTokenId);
     }
 
@@ -376,11 +496,11 @@ contract ComposableTopDown  {
         require(tokenId > 0 || childTokenIndex[tokenId][_childContract][_childTokenId] > 0);
         require(tokenId == _fromTokenId);
         require(_to != address(0));
-        address rootOwner = address(rootOwnerOf(tokenId));
+        address rootOwner = address(bytes20(rootOwnerOf(tokenId)));
         require(rootOwner == msg.sender || _operatorApprovals[rootOwner][msg.sender] ||
         _tokenApprovals[rootOwner][tokenId] == msg.sender);
         removeChild(tokenId, _childContract, _childTokenId);
-        IERC721(_childContract).safeTransferFrom(this, _to, _childTokenId, _data);
+        IERC721(_childContract).safeTransferFrom(address(this), _to, _childTokenId, _data);
         emit TransferChild(tokenId, _to, _childContract, _childTokenId);
     }
 
@@ -389,7 +509,7 @@ contract ComposableTopDown  {
         require(tokenId > 0 || childTokenIndex[tokenId][_childContract][_childTokenId] > 0);
         require(tokenId == _fromTokenId);
         require(_to != address(0));
-        address rootOwner = address(rootOwnerOf(tokenId));
+        address rootOwner = address(bytes20(rootOwnerOf(tokenId)));
         require(rootOwner == msg.sender || _operatorApprovals[rootOwner][msg.sender] ||
         _tokenApprovals[rootOwner][tokenId] == msg.sender);
         removeChild(tokenId, _childContract, _childTokenId);
@@ -397,11 +517,11 @@ contract ComposableTopDown  {
         // before transferring.
         //does not work with current standard which does not allow approving self, so we must let it fail in that case.
         //0x095ea7b3 == "approve(address,uint256)"
-        bytes memory calldata = abi.encodeWithSelector(0x095ea7b3, this, _childTokenId);
+        bytes memory _calldata = abi.encodeWithSelector(0x095ea7b3, this, _childTokenId);
         assembly {
-            let success := call(gas, _childContract, 0, add(calldata, 0x20), mload(calldata), calldata, 0)
+            let success := call(gas, _childContract, 0, add(_calldata, 0x20), mload(_calldata), _calldata, 0)
         }
-        IERC721(_childContract).transferFrom(this, _to, _childTokenId);
+        IERC721(_childContract).transferFrom(address(this), _to, _childTokenId);
         emit TransferChild(tokenId, _to, _childContract, _childTokenId);
     }
 
@@ -411,7 +531,7 @@ contract ComposableTopDown  {
         require(_from == msg.sender ||
         IERC721(_childContract).isApprovedForAll(_from, msg.sender) ||
         IERC721(_childContract).getApproved(_childTokenId) == msg.sender);
-        IERC721(_childContract).transferFrom(_from, this, _childTokenId);
+        IERC721(_childContract).transferFrom(_from, address(this), _childTokenId);
     }
 
     function onERC721Received(address _from, uint256 _childTokenId, bytes memory _data) public returns (bytes4) {
@@ -465,7 +585,7 @@ contract ComposableTopDown  {
     function ownerOfChild(address _childContract, uint256 _childTokenId) external view returns (bytes32 parentTokenOwner, uint256 parentTokenId) {
         parentTokenId = childTokenOwner[_childContract][_childTokenId];
         require(parentTokenId > 0 || childTokenIndex[parentTokenId][_childContract][_childTokenId] > 0);
-        return (ERC998_MAGIC_VALUE << 224 | bytes32(_tokenOwner[parentTokenId]), parentTokenId);
+        return (bytes32(ERC998_MAGIC_VALUE) << 224 | bytes32(bytes20(_tokenOwner[parentTokenId])), parentTokenId);
     }
 
     function childExists(address _childContract, uint256 _childTokenId) external view returns (bool) {
@@ -492,7 +612,7 @@ contract ComposableTopDown  {
     }
 
     ////////////////////////////////////////////////////////
-    // ERC998ERC223 and ERC998ERC223Enumerable implementation
+    // ERC998ERC20 implementation
     ////////////////////////////////////////////////////////
 
     // tokenId => token contract
@@ -532,7 +652,7 @@ contract ComposableTopDown  {
 
     function transferERC20(uint256 _tokenId, address _to, address _erc20Contract, uint256 _value) external {
         require(_to != address(0));
-        address rootOwner = address(rootOwnerOf(_tokenId));
+        address rootOwner = address(bytes20(rootOwnerOf(_tokenId)));
         require(rootOwner == msg.sender || _operatorApprovals[rootOwner][msg.sender] ||
         _tokenApprovals[rootOwner][_tokenId] == msg.sender);
         removeERC20(_tokenId, _erc20Contract, _value);
@@ -546,12 +666,12 @@ contract ComposableTopDown  {
         if (!allowed) {
             uint256 remaining;
             // 0xdd62ed3e == allowance(address,address)
-            bytes memory calldata = abi.encodeWithSelector(0xdd62ed3e, _from, msg.sender);
+            bytes memory _calldata = abi.encodeWithSelector(0xdd62ed3e, _from, msg.sender);
             bool callSuccess;
             assembly {
-                callSuccess := staticcall(gas, _erc20Contract, add(calldata, 0x20), mload(calldata), calldata, 0x20)
+                callSuccess := staticcall(gas, _erc20Contract, add(_calldata, 0x20), mload(_calldata), _calldata, 0x20)
                 if callSuccess {
-                    remaining := mload(calldata)
+                    remaining := mload(_calldata)
                 }
             }
             require(callSuccess, "call to allowance failed");
@@ -560,7 +680,7 @@ contract ComposableTopDown  {
         }
         require(allowed, "not allowed to getERC20");
         erc20Received(_from, _tokenId, _erc20Contract, _value);
-        require(IERC20(_erc20Contract).transferFrom(_from, this, _value), "ERC20 transfer failed.");
+        require(IERC20(_erc20Contract).transferFrom(_from, address(this), _value), "ERC20 transfer failed.");
     }
 
     function erc20Received(address _from, uint256 _tokenId, address _erc20Contract, uint256 _value) private {

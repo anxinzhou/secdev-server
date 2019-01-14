@@ -1,6 +1,8 @@
 pragma solidity ^0.5.2;
 
-import './IERC721.sol';
+import "./IERC721.sol";
+import "./Address.sol";
+import "./SafeMath.sol";
 
 contract ERC721 is IERC721 {
     using SafeMath for uint256;
