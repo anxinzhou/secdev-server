@@ -1,14 +1,1 @@
-{
-    "private": {
-        "port": "ws://localhost:8650",
-        "keystore": "./etc/keystore/zx",
-        "password": "321",
-        "address": "0x48b46e4768cB981ebE9bCaF4992d26CE37CCD9b2"
-    },
-    "public": {
-        "port": "wss://kovan.infura.io/ws",
-        "keystore": "./etc/keystore/zx",
-        "password": "321",
-        "address": "0x779ba910850cdd7df4ff52db368b406460c91b6a"
-    }
-}
+{"private":{"port":"ws://localhost:8650","keystore":"./etc/keystore/zx","password":"321","address":"0xe6606632C77911EB84bA8C0FcEF992e139bB776b"},"public":{"port":"wss://kovan.infura.io/ws","keystore":"./etc/keystore/zx","password":"321","address":"0x779ba910850cdd7df4ff52db368b406460c91b6a"}}

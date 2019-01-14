@@ -1,5 +1,7 @@
 const solc = require('solc')
 const fs = require('fs-extra')
+const fsSync = require('fs')
+const path = require('path')
 var program = require('commander')
 var Web3 = require('web3');
 const {
@@ -7,61 +9,76 @@ const {
 } = require('util')
 const readFile = promisify(fs.readFile)
 const readJson = promisify(fs.readJson)
+const writeJson = promisify(fs.writeJson)
 
 program
     .version('1.0.0')
-
+// Related file should be in same directory
 program
     .command('deploy <file> <contract>')
     .description('deploy contract in  file')
-    .option('-r, --rpcport <port>', 'rpc path (default:8545)')
+    .option('-r, --rpcport <port>', 'rpc path ')
     .option('-a, --arguments <arguments>', 'contract constructor arguments')
     .option('-k, --keystore <path>', 'keystore file to deploy contract')
     .option('-p, --password <password>', 'password to decrpt keystore')
-    .action(function(file, contract, options) {
+    .option('-s, --save <saveKind>', 'kind to save contract Address 0 for public, else for private')    // only used for demo project
+    .action(async function(file, contractName, options) {
+
+        // Exam parameter
         if (!options.keystore) {
             throw new Error('no keystore file specified')
         }
-
         if (!options.password) {
             throw new Error('no password specified')
         }
 
-        web3 = new Web3(new Web3.providers.HttpProvider(options.rpcport))
-        readFile(file).then((input) => {
-            output = solc.compile(input.toString(), 1)
-            contractName = ':' + contract
-            if (!output.contracts.hasOwnProperty(contractName)) {
-                throw new Error('no such contract ' + contractName)
+        if (!options.rpcport) {
+            throw new Error("specify rpcport ")
+        }
+        // connect to api provider
+        let web3 = new Web3(new Web3.providers.HttpProvider(options.rpcport))
+
+        try {
+            let ks = await readJson(options.keystore)
+            let account = web3.eth.accounts.decrypt(ks, options.password)
+
+            // compile contract
+            let [bytecode,abi] = await compileContract(file,contractName)
+
+            // pack transaction to deploy contract
+            let contract = new web3.eth.Contract(abi)
+            let dp = contract.deploy({
+                data: '0x' + bytecode,
+                arguments: JSON.parse(options.arguments)
+            })
+            let tx = {
+                data: dp.encodeABI(),
+                from: account.address,
+                gas: "5000000",
+                gasPrice: '0',
+                value: "0", // 1000 ether
             }
-            bytecode = output.contracts[contractName].bytecode
-            abi = JSON.parse(output.contracts[contractName].interface)
-            contract = new web3.eth.Contract(abi)
-            args = JSON.parse(options.arguments)
-            readJson(options.keystore).then(ks => {
-                account = web3.eth.accounts.decrypt(ks, options.password)
-                dp = contract.deploy({
-                    data: '0x' + bytecode,
-                    arguments: args
-                })
-                var tx = {
-                    data: dp.encodeABI(),
-                    from: account.address,
-                    gas: "3000000",
-                    gasPrice: '0',
-                    value: "10000000000000000000000", // 1000 ether
-                }
-                return account.signTransaction(tx)
-            }).then(signedTx => {
-                console.log(110)
-                return web3.eth.sendSignedTransaction(signedTx.rawTransaction)
-            }).then(receipt => {
-                if (receipt.status == '0x0') {
-                    throw new Error("contract deploy revert")
-                }
-                console.log(receipt.contractAddress)
-            }).catch(console.log)
-        })
+
+            // sign and send transaction
+            let signedTx = await account.signTransaction(tx)
+            let receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction)
+            if (receipt.status === '0x0') {
+                throw new Error("contract deploy revert")
+            }
+
+            console.log("deploy contract at: "+ receipt.contractAddress)
+
+            // if save Save to specified location
+            if(options.save!=undefined) {
+                let dst = '../etc/chainConfig.json'
+                let chainKind = options.save==0? 'public':'private'
+                config = await readJson(dst)
+                config[chainKind].address = receipt.contractAddress
+                await writeJson(dst,config)
+            }
+        } catch (err) {
+            console.log(err)
+        }
     })
 
 program
@@ -79,3 +96,56 @@ program
     })
 
 program.parse(process.argv)
+
+async function compileContract(file,contractName) {
+    try {
+        let code = await readFile(file)
+        code = code.toString()
+        let input = {
+            language:'Solidity',
+            sources: {
+            },
+            settings:{
+                optimizer: {
+                    enabled:true
+                },
+                outputSelection: {
+                    '*':{
+                        '*':['*']
+                    }
+                }
+            }
+        }
+
+        let fileName = path.basename(file)
+        input.sources[fileName] = {
+            content: code
+        }
+
+        let findImports = package => {
+            try {
+               let  baseName = path.dirname(file);
+                package = path.join(baseName, package)
+                let content = fsSync.readFileSync(package)
+                return {
+                    contents: content.toString()
+                }
+            } catch (err) {
+                throw err
+            }
+        }
+
+
+        let output = JSON.parse(solc.compile(JSON.stringify(input), findImports))
+        if (output.errors) {
+            throw output.errors
+        }
+        let compiledObject = output.contracts[fileName][contractName]
+        let  bytecode = compiledObject.evm.bytecode.object
+        let abi = output.contracts[fileName][contractName].abi
+        return [bytecode,abi]
+    } catch (err) {
+        throw err
+    }
+}
+
