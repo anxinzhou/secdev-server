@@ -1,16 +1,41 @@
-(
-cd ../etc/contracts 
+#!/usr/bin/env bash
+pvc="PvcERC998"
+pbc="PbcERC998"
+contractName="ComposableTopDown"
 
-solc --abi privateBridgeToken.sol -o ./privateAbi --overwrite
-solc --bin privateBridgeToken.sol -o ./privateBin --overwrite
+baseContractPath="../etc/contracts/"
+targetAPIPath="../token/"
 
-solc --abi publicBridgeToken.sol -o ./publicAbi --overwrite
-solc --bin publicBridgeToken.sol -o ./publicBin --overwrite
+generateGoAPI(){
+     #install abigen
+    (
+       cd ${GOPATH}/src/github.com/ethereum/go-ethereum
+       go install ./cmd/abigen
+    )
+    fileName=$1
+    contractName=$2
+    basePath=$3
+    targetDir=$4${fileName}"/"
+    contractPathPrefix=${basePath}${fileName}
 
-) 
-export GOPATH=$(dirname $(dirname "$PWD"))
+    (
+        cd ${basePath}
+        solc --abi --bin ${fileName}".sol" -o ${fileName} --overwrite
+    )
 
-(cd $GOPATH/src/github.com/ethereum/go-ethereum
-go install ./cmd/abigen)
-abigen --abi=../etc/contracts/privateAbi/GameToken.abi --bin=../etc/contracts/privateBin/GameToken.bin --pkg=privateSlot -out ../token/privateSlot/privateSlot.go &&
-abigen --abi=../etc/contracts/publicAbi/GameToken.abi --bin=../etc/contracts/publicBin/GameToken.bin --pkg=publicSlot -out ../token/publicSlot/publicSlot.go
+    if [[ ! -d "$targetDir" ]]
+    then
+         mkdir $targetDir
+    fi
+    abigen --abi=${contractPathPrefix}"/"${contractName}".abi" --bin=${contractPathPrefix}"/"${contractName}".bin" --pkg=${fileName} -out ${targetDir}${fileName}".go"
+
+   #clear abi and bin file
+   for file in `ls $contractPathPrefix`
+   do
+        rm ${contractPathPrefix}"/"${file}
+   done
+   rmdir ${contractPathPrefix}
+}
+
+generateGoAPI $pvc $contractName $baseContractPath $targetAPIPath
+generateGoAPI $pbc $contractName $baseContractPath $targetAPIPath

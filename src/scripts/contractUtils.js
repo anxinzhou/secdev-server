@@ -10,7 +10,6 @@ const {
 const readFile = promisify(fs.readFile)
 const readJson = promisify(fs.readJson)
 const writeJson = promisify(fs.writeJson)
-
 program
     .version('1.0.0')
 // Related file should be in same directory
@@ -37,7 +36,6 @@ program
         }
         // connect to api provider
         let web3 = new Web3(new Web3.providers.HttpProvider(options.rpcport))
-
         try {
             let ks = await readJson(options.keystore)
             let account = web3.eth.accounts.decrypt(ks, options.password)
