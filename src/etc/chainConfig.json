@@ -1,1 +1,0 @@
-{"private":{"port":"ws://localhost:8650","keystore":"./etc/keystore/zx","password":"321","address":"0x1Ee1d5178c8cc69796293976df78b36789F12F75"},"public":{"port":"wss://kovan.infura.io/ws","keystore":"./etc/keystore/zx","password":"321","address":"0xa36574819eFB84767505Cd80bf5AF23cE507136b"}}

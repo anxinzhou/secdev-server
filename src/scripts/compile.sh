@@ -7,6 +7,12 @@ baseContractPath="../etc/contracts/"
 targetAPIPath="../token/"
 
 generateGoAPI(){
+     #set gopath
+     (
+      cd ../../
+      export GOPATH=$(pwd)
+     )
+
      #install abigen
     (
        cd ${GOPATH}/src/github.com/ethereum/go-ethereum
@@ -35,6 +41,13 @@ generateGoAPI(){
         rm ${contractPathPrefix}"/"${file}
    done
    rmdir ${contractPathPrefix}
+
+   #install pkg
+   (
+    cd ${targetAPIPath}
+    echo $(pwd)
+    go install ${fileName}
+   )
 }
 
 generateGoAPI $pvc $contractName $baseContractPath $targetAPIPath

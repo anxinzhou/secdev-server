@@ -20,7 +20,7 @@ program
     .option('-a, --arguments <arguments>', 'contract constructor arguments')
     .option('-k, --keystore <path>', 'keystore file to deploy contract')
     .option('-p, --password <password>', 'password to decrpt keystore')
-    .option('-s, --save <saveKind>', 'kind to save contract Address 0 for public, else for private')    // only used for demo project
+    .option('-s, --save', 'kind to save contract Address 0 for public, else for private')    // only used for demo project
     .action(async function(file, contractName, options) {
 
         // Exam parameter
@@ -68,10 +68,14 @@ program
 
             // if save Save to specified location
             if(options.save!=undefined) {
-                let dst = '../etc/chainConfig.json'
-                let chainKind = options.save==0? 'public':'private'
-                config = await readJson(dst)
-                config[chainKind].address = receipt.contractAddress
+                let dst = '../etc/'+path.basename(file).split('.')[0]+'.json'
+                let config
+                if(fsSync.existsSync(dst)) {
+                    config = await readJson(dst)
+                } else {
+                    config = {}
+                }
+                config.address = receipt.contractAddress
                 await writeJson(dst,config)
             }
         } catch (err) {
