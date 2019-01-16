@@ -4,6 +4,7 @@ package main
 import (
 	app "appClient"
 	"contract"
+	"db"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,7 +15,8 @@ import (
 	"net/http"
 )
 
-func requestHandler( h *app.Handler) {
+func appRequestHandler( h *app.Handler) {
+
 	for {
 		_, data, err := h.W.ReadMessage()
 		var kvs map[string]interface{}
@@ -62,22 +64,35 @@ func requestHandler( h *app.Handler) {
 	}
 }
 
-func requestParser(w http.ResponseWriter, r *http.Request) {
-	log.Println("receive a reqeust")
-	var upgrader = websocket.Upgrader{}
-	upgrader.CheckOrigin = func(rq *http.Request) bool { return true }
-	c, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Print("upgrade:", err)
-		return
-	}
+func requestParserWrapper(clientKind string) (func (http.ResponseWriter, *http.Request)) {
+	return func(w http.ResponseWriter, r *http.Request){
+		log.Println("receive a reqeust")
+		var upgrader = websocket.Upgrader{}
+		upgrader.CheckOrigin = func(rq *http.Request) bool { return true }
+		c, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			log.Print("upgrade:", err)
+			return
+		}
 
+		defer c.Close()
+		switch clientKind {
+		case "app":
+			h := appHandler(c)
+			appRequestHandler(h)
+			defer h.DisConnect()
+		case "web":
+		}
+	}
+}
+
+func appHandler(c *websocket.Conn) *app.Handler{
 	const (
 		Pbc998ConfigJson  = "./etc/PbcERC998.json"
 		Pvc998ConfigJson = "./etc/PvcERC998.json"
 		redisConfigJson  = "./etc/redisConfig.json"
 	)
-	//dbClient:= db.NewDBFromJSON(redisConfigJson)
+	dbClient:= db.NewDBFromJSON(redisConfigJson)
 	machine := &app.MachineState{
 		State:     app.Logout,
 		MachineId: app.MachineId,
@@ -85,13 +100,7 @@ func requestParser(w http.ResponseWriter, r *http.Request) {
 	pbcERC998:= contract.NewPbcERC998FromJSON(Pbc998ConfigJson)
 	pvcERC998:= contract.NewPvcERC998FromJSON(Pvc998ConfigJson)
 	assembledContract := contract.NewAssembleContract(pbcERC998,nil,pvcERC998,nil)
-	handler:= app.NewHandler(c, nil, machine , assembledContract)
-
-	requestHandler(handler)
-	defer func() {
-		handler.DisConnect()
-		c.Close()
-	}()
+	return app.NewHandler(c, dbClient, machine , assembledContract)
 }
 
 
@@ -100,10 +109,10 @@ func main() {
 	// log
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", requestParser).Methods("GET")
+	const applicationKind = "app"     // app or web
+	r.HandleFunc("/", requestParserWrapper(applicationKind)).Methods("GET")
 
 	fmt.Println("Running http server")
 	http.ListenAndServe(
