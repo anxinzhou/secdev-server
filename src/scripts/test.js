@@ -103,7 +103,7 @@ var tokenReward = {
 var tokenUse = {
     gcuid: 111,
     type: 1,
-    amount: "1.9",
+    amount: "100",
     act: "post_token_exchange"
 }
 
@@ -141,10 +141,10 @@ ws.on('open', async function open() {
     // ws.send(JSON.stringify(qrCodeReq))
     // ws.send(JSON.stringify(logoutReq))
     // ws.send(JSON.stringify(walletAndMachineReq))
-    // // ws.send(JSON.stringify(tokenUse))
      ws.send(JSON.stringify(tokenReward))
-    // ws.send(JSON.stringify(exchangeETSRateReq))
-     //ws.send(JSON.stringify(exchangeSTERateReq))
+     ws.send(JSON.stringify(tokenUse))
+     ws.send(JSON.stringify(exchangeETSRateReq))
+    /ws.send(JSON.stringify(exchangeSTERateReq))
     // ws.send(JSON.stringify(SlotToEthReq))
     // //
     // ws.send(JSON.stringify(ethToSlotReq))

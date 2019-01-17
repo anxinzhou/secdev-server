@@ -75,8 +75,8 @@ installRedis() {
 
 	(	
 		cd $HOME
-		curl -O http://download.redis.io/releases/${target}
-		tar -xzvf ${target}
+		wget http://download.redis.io/releases/${target}
+		tar xzf ${target}
 		cd $dst
 		sudo apt install -y  make
 		sudo apt install -y  make-guile
