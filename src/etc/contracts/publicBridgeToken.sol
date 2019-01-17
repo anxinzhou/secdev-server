@@ -1,4 +1,4 @@
-pragma solidity ^0.4.25;
+pragma solidity ^0.5.2;
 
 interface ERC721Metadata /* is ERC721 */ {
     /// @notice A descriptive name for a collection of NFTs in this contract
