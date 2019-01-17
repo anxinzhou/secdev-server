@@ -43,40 +43,6 @@ library SafeMath {
   }
 }
 
-library Helpers {
-    // returns whether `array` contains `value`.
-    function addressArrayContains(address[] array, address value) internal pure returns (bool) {
-        for (uint256 i = 0; i < array.length; i++) {
-            if (array[i] == value) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // returns the digits of `inputValue` as a string.
-    // example: `uintToString(12345678)` returns `"12345678"`
-    function uintToString(uint256 inputValue) internal pure returns (string) {
-        // figure out the length of the resulting string
-        uint256 length = 0;
-        uint256 currentValue = inputValue;
-        do {
-            length++;
-            currentValue /= 10;
-        } while (currentValue != 0);
-        // allocate enough memory
-        bytes memory result = new bytes(length);
-        // construct the string backwards
-        uint256 i = length - 1;
-        currentValue = inputValue;
-        do {
-            result[i--] = byte(48 + currentValue % 10);
-            currentValue /= 10;
-        } while (currentValue != 0);
-        return string(result);
-    }
-}
-
 contract BasicToken {
     using SafeMath for uint256;
 
@@ -98,8 +64,8 @@ contract BasicToken {
 
     constructor (
         uint256 totalSupply,
-        string tokenName,
-        string tokenSymbol
+        string memory tokenName,
+        string memory tokenSymbol
     ) public {
         decimals = 18;
         _totalSupply = totalSupply* 10**uint(decimals);
@@ -163,8 +129,8 @@ contract GameToken is BasicToken {
 
     constructor (
         uint256 totalSupply,
-        string tokenName,
-        string tokenSymbol
+        string memory tokenName,
+        string memory tokenSymbol
     ) BasicToken(totalSupply,tokenName,tokenSymbol) payable public {
         _owner = msg.sender;
     }
@@ -183,7 +149,7 @@ contract GameToken is BasicToken {
         _balances[user] +=tokenAmount;
     }
 
-    function exchangeForEther(address user, uint amount) public returns (bool) {
+    function exchangeForEther(address payable user, uint amount) public returns (bool) {
         uint etherAmount = amount*exchangeBase/exchangeRate;
         require(_balances[user]>=amount);
         _balances[user]-=amount;

@@ -1,19 +1,5 @@
 pragma solidity ^0.5.2;
 
-interface ERC721Metadata /* is ERC721 */ {
-    /// @notice A descriptive name for a collection of NFTs in this contract
-    function name() external view returns (string _name);
-
-    /// @notice An abbreviated name for NFTs in this contract
-    function symbol() external view returns (string _symbol);
-
-    /// @notice A distinct Uniform Resource Identifier (URI) for a given asset.
-    /// @dev Throws if `_tokenId` is not a valid NFT. URIs are defined in RFC
-    ///  3986. The URI may point to a JSON file that conforms to the "ERC721
-    ///  Metadata JSON Schema".
-    function tokenURI(uint256 _tokenId) external view returns (string);
-}
-
 library SafeMath {
   function mul(uint256 a, uint256 b) internal pure returns (uint256) {
     // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
@@ -57,62 +43,6 @@ library SafeMath {
   }
 }
 
-library Helpers {
-    function append(string a, string b) internal pure returns (string) {
-        return string(abi.encodePacked(a, b));
-    }
-
-    function uint2str(uint i) internal pure returns (string){
-        if (i == 0) return "0";
-        uint j = i;
-        uint length;
-        while (j != 0){
-            length++;
-            j /= 10;
-        }
-        bytes memory bstr = new bytes(length);
-        uint k = length - 1;
-        while (i != 0){
-            bstr[k--] = byte(48 + i % 10);
-            i /= 10;
-        }
-        return string(bstr);
-    }
-
-
-    // returns whether `array` contains `value`.
-    function addressArrayContains(address[] array, address value) internal pure returns (bool) {
-        for (uint256 i = 0; i < array.length; i++) {
-            if (array[i] == value) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // returns the digits of `inputValue` as a string.
-    // example: `uintToString(12345678)` returns `"12345678"`
-    function uintToString(uint256 inputValue) internal pure returns (string) {
-        // figure out the length of the resulting string
-        uint256 length = 0;
-        uint256 currentValue = inputValue;
-        do {
-            length++;
-            currentValue /= 10;
-        } while (currentValue != 0);
-        // allocate enough memory
-        bytes memory result = new bytes(length);
-        // construct the string backwards
-        uint256 i = length - 1;
-        currentValue = inputValue;
-        do {
-            result[i--] = byte(48 + currentValue % 10);
-            currentValue /= 10;
-        } while (currentValue != 0);
-        return string(result);
-    }
-}
-
 contract BasicToken {
     using SafeMath for uint256;
 
@@ -134,8 +64,8 @@ contract BasicToken {
 
     constructor (
         uint256 totalSupply,
-        string tokenName,
-        string tokenSymbol
+        string memory tokenName,
+        string memory tokenSymbol
     ) public {
         decimals = 18;
         _totalSupply = totalSupply* 10**uint(decimals);
@@ -189,7 +119,6 @@ contract BasicToken {
 }
 
 contract GameToken is BasicToken {
-
     // creator of this contract
     address internal _owner;
     uint public exchangeRate = 500;
@@ -200,8 +129,8 @@ contract GameToken is BasicToken {
 
     constructor (
         uint256 totalSupply,
-        string tokenName,
-        string tokenSymbol
+        string memory tokenName,
+        string memory tokenSymbol
     ) BasicToken(totalSupply,tokenName,tokenSymbol) payable public {
         _owner = msg.sender;
     }
@@ -220,7 +149,7 @@ contract GameToken is BasicToken {
         _balances[user] +=tokenAmount;
     }
 
-    function exchangeForEther(address user, uint amount) public returns (bool) {
+    function exchangeForEther(address payable user, uint amount) public returns (bool) {
         uint etherAmount = amount*exchangeBase/exchangeRate;
         require(_balances[user]>=amount);
         _balances[user]-=amount;
@@ -236,36 +165,5 @@ contract GameToken is BasicToken {
         require(_balances[by]>=value);
         _balances[by] -=value;
         return true;
-    }
-
-    mapping(uint256=>string) _tokenURI;
-    mapping(address=>uint256) ownedToken;
-    mapping(uint256=>address) ownerOfToken;
-
-    string private _name = "avatar";
-    string private _symbol = "AVT";
-    string private _baseURI = "https://secdev.site/";
-
-    function NFTName() external view returns (string) {
-        return _name;
-    }
-
-    /// @notice An abbreviated name for NFTs in this contract
-    function NFTSymbol() external view returns (string) {
-        return _symbol;
-    }
-
-    /// @notice A distinct Uniform Resource Identifier (URI) for a given asset.
-    /// @dev Throws if `_tokenId` is not a valid NFT. URIs are defined in RFC
-    ///  3986. The URI may point to a JSON file that conforms to the "ERC721
-    ///  Metadata JSON Schema".
-    function tokenURI(uint256 _tokenId) external view returns (string) {
-        return _tokenURI[_tokenId];
-    }
-
-    function create(address _user, uint256 _tokenID) external returns (bool) {
-        ownerOfToken[_tokenID] = _user;
-        ownedToken[_owner] = _tokenID;
-        _tokenURI[_tokenID] = Helpers.append(_baseURI,Helpers.uint2str(_tokenID));
     }
 }
