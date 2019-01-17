@@ -2,5 +2,5 @@
   "port": "wss://kovan.infura.io/ws",
   "keystore": "./etc/keystore/zx",
   "password": "321",
-  "address": "0xa36574819eFB84767505Cd80bf5AF23cE507136b"
+  "address": "0xda825E0ba17bdcc9D2D5F712b1Ad99281441b16b"
 }

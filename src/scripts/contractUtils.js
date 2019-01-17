@@ -52,7 +52,7 @@ program
             let tx = {
                 data: dp.encodeABI(),
                 from: account.address,
-                gas: "5000000",
+                gas: "4500000",
                 gasPrice: '0',
                 value: "0", // 1000 ether
             }

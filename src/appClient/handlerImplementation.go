@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/big"
 	"strings"
+	"time"
 	"utils"
 )
 
@@ -567,4 +568,15 @@ func (h *Handler) postTransferHandler(data []byte) {
 	}
 
 	h.wrapperAndSend(NotifyTokenChange, resultRes)
+}
+
+func (h *Handler) postQRCodeHandler(data []byte) {
+	h.postRes(PostQRCode)
+	time.Sleep(SleepTime)
+	h.machineStatusChange(Login)
+}
+
+func (h *Handler) machineLogoutHandler(data []byte) {
+	h.postRes(MachineLogout)
+	h.machineStatusChange(Logout)
 }

@@ -153,17 +153,18 @@ func (c *Contract) GetReceiptStatus (txHash common.Hash) (uint64,error) {
 			return 0,err
 		case <- ch:
 			count+=1
+			log.Println("getting receipt")
 			if count>=maxWaitingBlock {
 				return 0, errors.New("transaction time out")
 			} else {
 				receipt, err:= c.Client.TransactionReceipt(context.Background(),txHash)
 				if err == nil {
+					log.Println("receipt found")
 					if receipt.Status ==0 {
 						return receipt.Status, errors.New("transaction revert")
 					}
 					return receipt.Status, nil
 				} else {
-					log.Println(err.Error())
 				}
 			}
 		}
@@ -178,13 +179,12 @@ func (c *Contract) sendWithOpts(funcName string, sendOpts *SendOpts,args ...inte
 	}
 
 	nonce:= atomic.AddUint64(&c.txConfig.nonce, 1)
-	tx:= types.NewTransaction(nonce,sendOpts.To,sendOpts.Value,sendOpts.GasLimit,sendOpts.GasPrice,input)
-	chainID, err := c.Client.NetworkID(context.Background())
+	tx:= types.NewTransaction(nonce-1,sendOpts.To,sendOpts.Value,sendOpts.GasLimit,sendOpts.GasPrice,input)
+	signedTx, err:= types.SignTx(tx,types.HomesteadSigner{},c.txConfig.key.PrivateKey)
 	if err!=nil {
 		return err
 	}
-	signedTx, err:= types.SignTx(tx,types.NewEIP155Signer(chainID),c.txConfig.key.PrivateKey)
-	err = c.Client.SendTransaction(context.Background(), signedTx)
+	err = c.Client.SendTransaction(context.TODO(), signedTx)
 	if err!=nil {
 		return err
 	}

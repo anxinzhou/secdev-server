@@ -21,6 +21,10 @@ func (c *ERC998) Mint(to common.Address, tokenId *big.Int, uri string) error {
 	return c.send("mint", to, tokenId, uri)
 }
 
+func (c *ERC998) Burn(tokenId *big.Int) error {
+	return c.send("burn",tokenId)
+}
+
 func (c *ERC998) MintERC721Child(parentTokenId *big.Int, childContract common.Address, childTokenId *big.Int, uri string) error {
 	return c.send("mintERC721Child", parentTokenId, childContract, childTokenId, uri)
 }
@@ -40,7 +44,7 @@ func (c *ERC998) BurnERC20Child(parentTokenId *big.Int,childContract common.Addr
 func (c *ERC998) TokenURI(tokenId *big.Int) (string,error) {
 	data,err:= c.call("tokenURI",tokenId)
 	if err!=nil {
-		return "",nil
+		return "",err
 	}
 	return string(data),nil
 }
@@ -48,3 +52,12 @@ func (c *ERC998) TokenURI(tokenId *big.Int) (string,error) {
 func (c *ERC998) SetTokenURI(tokenId *big.Int,uri string) error {
 	return c.send("setTokenURI", tokenId, uri)
 }
+
+func (c* ERC998) OwnerOf(tokenId *big.Int) (common.Address,error) {
+	data,err:= c.call("ownerOf", tokenId)
+	if err!=nil {
+		return common.Address{},err
+	}
+	return common.BytesToAddress(data),nil
+}
+

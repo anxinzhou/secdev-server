@@ -17,11 +17,13 @@ type IERC721 interface {
 	Lock(* big.Int) error
 	Unlock(*big.Int) error
 	Mint(common.Address, *big.Int, string) error
+	Burn(*big.Int) error
 	MintERC721Child(*big.Int, common.Address, *big.Int, string) error
 	BurnERC721Child(*big.Int, common.Address, *big.Int) error
 	MintERC20Child(*big.Int, common.Address, *big.Int) error
 	BurnERC20Child(*big.Int, common.Address, *big.Int) error
 	TokenURI(*big.Int) (string,error)
 	SetTokenURI(*big.Int, string) error
+	OwnerOf(*big.Int) (common.Address, error)
 }
 

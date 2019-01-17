@@ -5,6 +5,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"io/ioutil"
 	"log"
+	"math/big"
 	publicERC998 "token/PbcERC998"
 )
 
@@ -41,3 +42,6 @@ func NewPbcERC998FromJSON(configFile string) *PbcERC998 {
 	return NewPbcERC998(c.Port, c.Keystore, c.Password, common.HexToAddress(c.Address))
 }
 
+func (p *PbcERC998) Exists(tokenId *big.Int) (bool,error) {
+	return p.Instance.Exists(nil,tokenId)
+}

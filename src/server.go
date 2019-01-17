@@ -2,11 +2,13 @@
 package main
 
 import (
-	app "appClient"
+	"appClient"
+	"encoding/json"
+	"github.com/ethereum/go-ethereum/common"
+	"io/ioutil"
+	"webClient"
 	"contract"
 	"db"
-	"encoding/json"
-	"errors"
 	"fmt"
 	h "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -14,55 +16,6 @@ import (
 	"log"
 	"net/http"
 )
-
-func appRequestHandler( h *app.Handler) {
-
-	for {
-		_, data, err := h.W.ReadMessage()
-		var kvs map[string]interface{}
-		if err != nil {
-			log.Println(err.Error())
-			return
-		}
-		json.Unmarshal(data, &kvs)
-		gid, ok := kvs["gcuid"]
-		if !ok {
-			log.Println(errors.New("gcuid not exist"))
-			return
-		}
-
-		gcuid := int64(gid.(float64))
-		log.Println("gcuid:", gcuid)
-		switch gcuid {
-		case app.Signin:
-			go h.SigninHandler(data)
-		case app.Signout:
-			go h.SignoutHandler(data)
-		case app.GetWalletsAndMachine:
-			go h.GetWalletsAndMachineHandler(data)
-		case app.GetWallets:
-			go h.GetWalletsHandler(data)
-		case app.GetTransactions:
-			go h.GetTransactionsHandler(data)
-		case app.GetExchangeRate:
-			go h.GetExchangeRateHandler(data)
-		case app.PostExchange:
-			go h.PostExchangeHandler(data)
-		case app.PostQRCode:
-			go h.PostQRCodeHandler(data)
-		case app.NotifyMachineStatusChange:
-			go h.PostQRCodeHandler(data)
-		case app.MachineLogout:
-			go h.MachineLogoutHandler(data)
-		case app.PostTokenUseOrReward:
-			go h.PostTokenUserOrRewardHandler(data)
-		case app.PostGameStartOrEnd:
-			go h.PostGameStartOrEndHandler(data)
-		case app.PostTransfer:
-			go h.PostTransferHandler(data)
-		}
-	}
-}
 
 func requestParserWrapper(clientKind string) (func (http.ResponseWriter, *http.Request)) {
 	return func(w http.ResponseWriter, r *http.Request){
@@ -79,31 +32,66 @@ func requestParserWrapper(clientKind string) (func (http.ResponseWriter, *http.R
 		switch clientKind {
 		case "app":
 			h := appHandler(c)
-			appRequestHandler(h)
+			h.HandlerRequest()
 			defer h.DisConnect()
 		case "web":
+			h:= webHandler(c)
+			h.HandlerRequest()
+		default:
+			log.Fatalln("wrong client kind")
 		}
 	}
 }
 
-func appHandler(c *websocket.Conn) *app.Handler{
+func appHandler(c *websocket.Conn) *appClient.Handler{
 	const (
 		Pbc998ConfigJson  = "./etc/PbcERC998.json"
 		Pvc998ConfigJson = "./etc/PvcERC998.json"
 		redisConfigJson  = "./etc/redisConfig.json"
 	)
 	dbClient:= db.NewDBFromJSON(redisConfigJson)
-	machine := &app.MachineState{
-		State:     app.Logout,
-		MachineId: app.MachineId,
+	machine := &appClient.MachineState{
+		State:     appClient.Logout,
+		MachineId: appClient.MachineId,
 	}
 	pbcERC998:= contract.NewPbcERC998FromJSON(Pbc998ConfigJson)
 	pvcERC998:= contract.NewPvcERC998FromJSON(Pvc998ConfigJson)
 	assembledContract := contract.NewAssembleContract(pbcERC998,nil,pvcERC998,nil)
-	return app.NewHandler(c, dbClient, machine , assembledContract)
+	return appClient.NewHandler(c, dbClient, machine , assembledContract)
 }
 
+// only for test child contract
+func loadChildAddress(configFile string) common.Address {
+	// read child contract Address, only for test
+	type basicChainConfig struct {
+		Address  string `json:"address"`
+	}
+	// initial contract
+	var c basicChainConfig
+	data, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		log.Println(err.Error())
+		panic("can not read chain config file")
+	}
+	json.Unmarshal(data, &c)
+	return common.HexToAddress(c.Address)
+}
 
+func webHandler(c *websocket.Conn) *webClient.Handler {
+	const (
+		Pbc998ConfigJson  = "./etc/PbcERC998.json"
+		Pbc721ConfigJson = "./etc/PbcERC721.json"
+		Pvc998ConfigJson = "./etc/PvcERC998.json"
+		Pvc721ConfigJson = "./etc/PvcERC721.json"
+	)
+
+	webClient.PvcERC721 = loadChildAddress(Pvc721ConfigJson)
+	webClient.PbcERC721 = loadChildAddress(Pbc721ConfigJson)
+	pbcERC998:= contract.NewPbcERC998FromJSON(Pbc998ConfigJson)
+	pvcERC998:= contract.NewPvcERC998FromJSON(Pvc998ConfigJson)
+	assembledContract := contract.NewAssembleContract(pbcERC998,nil,pvcERC998,nil)
+	return webClient.NewHandler(c, assembledContract)
+}
 
 func main() {
 	// log
@@ -111,7 +99,7 @@ func main() {
 
 	r := mux.NewRouter()
 
-	const applicationKind = "app"     // app or web
+	const applicationKind = "web"     // app or web
 	r.HandleFunc("/", requestParserWrapper(applicationKind)).Methods("GET")
 
 	fmt.Println("Running http server")

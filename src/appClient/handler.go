@@ -2,10 +2,12 @@ package appClient
 
 import (
 	"contract"
+	"encoding/json"
+	"errors"
 	"github.com/go-redis/redis"
 	"github.com/gorilla/websocket"
+	"log"
 	"sync"
-	"time"
 )
 
 type Handler struct {
@@ -26,57 +28,6 @@ func NewHandler(w *websocket.Conn, db *redis.Client, machine *MachineState, c* c
 	}
 }
 
-func (h *Handler) SigninHandler(data []byte) {
-	h.signinHandler(data)
-}
-
-func (h *Handler) SignoutHandler(data []byte) {
-	h.signoutHandler(data)
-}
-
-func (h *Handler) GetWalletsAndMachineHandler(data []byte) {
-	h.getWalletsAndMachineHandler(data)
-}
-
-func (h *Handler) GetWalletsHandler(data []byte) {
-	h.getWalletsHandler(data)
-}
-
-func (h *Handler) GetTransactionsHandler(data []byte) {
-	h.getTransactionsHandler(data)
-}
-
-func (h *Handler) GetExchangeRateHandler(data []byte) {
-	h.getExchangeRateHandler(data)
-}
-
-func (h *Handler) PostExchangeHandler(data []byte) {
-	h.postExchangeHandler(data)
-}
-
-func (h *Handler) PostQRCodeHandler(data []byte) {
-	h.postRes(PostQRCode)
-	time.Sleep(SleepTime)
-	h.machineStatusChange(Login)
-}
-
-func (h *Handler) MachineLogoutHandler(data []byte) {
-	h.postRes(MachineLogout)
-	h.machineStatusChange(Logout)
-}
-
-func (h *Handler) PostTokenUserOrRewardHandler(data []byte) {
-	h.postTokenUserOrRewardHandler(data)
-}
-
-func (h *Handler) PostGameStartOrEndHandler(data []byte) {
-	h.postGameStartOrEndHandler(data)
-}
-
-func (h *Handler) PostTransferHandler(data []byte) {
-	h.postTransferHandler(data)
-}
-
 func (h *Handler) DisConnect() {
 	res := &Disconnect{
 		Status: FailedStatus,
@@ -85,4 +36,50 @@ func (h *Handler) DisConnect() {
 	}
 
 	h.wrapperAndSend(DisConnect, res)
+}
+
+func (h *Handler) HandlerRequest() {
+	for {
+		_, data, err := h.W.ReadMessage()
+		var kvs map[string]interface{}
+		if err != nil {
+			log.Println(err.Error())
+			continue
+		}
+		json.Unmarshal(data, &kvs)
+		gid, ok := kvs["gcuid"]
+		if !ok {
+			log.Println(errors.New("gcuid not exist"))
+			continue
+		}
+
+		gcuid := int64(gid.(float64))
+		log.Println("gcuid:", gcuid)
+		switch gcuid {
+		case Signin:
+			go h.signinHandler(data)
+		case Signout:
+			go h.signoutHandler(data)
+		case GetWalletsAndMachine:
+			go h.getWalletsAndMachineHandler(data)
+		case GetWallets:
+			go h.getWalletsHandler(data)
+		case GetTransactions:
+			go h.getTransactionsHandler(data)
+		case GetExchangeRate:
+			go h.getExchangeRateHandler(data)
+		case PostExchange:
+			go h.postExchangeHandler(data)
+		case PostQRCode:
+			go h.postQRCodeHandler(data)
+		case MachineLogout:
+			go h.machineLogoutHandler(data)
+		case PostTokenUseOrReward:
+			go h.postTokenUserOrRewardHandler(data)
+		case PostGameStartOrEnd:
+			go h.postGameStartOrEndHandler(data)
+		case PostTransfer:
+			go h.postTransferHandler(data)
+		}
+	}
 }

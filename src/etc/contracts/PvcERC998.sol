@@ -174,6 +174,10 @@ contract ComposableTopDown  {
         return owner != address(0);
     }
 
+    function exists(uint256 tokenId) public view returns (bool) {
+        return _exists(tokenId);
+    }
+
     /**
      * @dev Gets the token name
      * @return string representing the token name

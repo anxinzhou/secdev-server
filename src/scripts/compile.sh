@@ -8,10 +8,7 @@ targetAPIPath="../token/"
 
 generateGoAPI(){
      #set gopath
-     (
-      cd ../../
-      export GOPATH=$(pwd)
-     )
+     export GOPATH=$(dirname $(dirname $(pwd)))
 
      #install abigen
     (
@@ -42,12 +39,6 @@ generateGoAPI(){
    done
    rmdir ${contractPathPrefix}
 
-   #install pkg
-   (
-    cd ${targetAPIPath}
-    echo $(pwd)
-    go install ${fileName}
-   )
 }
 
 generateGoAPI $pvc $contractName $baseContractPath $targetAPIPath
