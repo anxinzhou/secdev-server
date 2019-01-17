@@ -18,12 +18,12 @@ sudo sh install_deps.sh
 ./deployPrivateContract.sh
 ```
 
-#Run redis
+# Run redis
 ```bash
 ./redisRun.sh
 ```
 
-#Run server
+# Run server
 ```bash
 ./serverRun.sh
 ```
