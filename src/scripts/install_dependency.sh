@@ -110,7 +110,7 @@ installNodeJS() {
 }
 installJsdependency(){
   sudo apt install -y g++
-  npm i
+  sudo npm i
 }
 
 installParity(){
