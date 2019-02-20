@@ -104,7 +104,7 @@ func main() {
 
 	fmt.Println("Running http server")
 	http.ListenAndServe(
-		":4000",
+		"0.0.0.0:4000",
 		h.CORS(
 			h.AllowedMethods([]string{"get", "options", "post", "put", "head"}),
 			h.AllowedOrigins([]string{"*"}),

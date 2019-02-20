@@ -1,0 +1,3 @@
+etc/chain/*/*/*/geth
+scripts/node_modules
+./*/geth

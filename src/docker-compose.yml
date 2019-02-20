@@ -1,0 +1,32 @@
+version: '3.2'
+services:
+  geth:
+    network_mode: "bridge"
+    container_name: private
+    build:
+      context: etc/chain/private/testnet
+    image: xarcher/private-chain:lastest
+    ports:
+    - "8540:8540"
+    - "8650:8650"
+    - "30311:30311"
+    command: sh start.sh
+    logging:
+      driver: "none"
+    volumes:
+    - type: bind
+      source: ./etc/chain/private/testnet/node
+      target: /privateChain/node
+  deployer:
+    network_mode: "bridge"
+    container_name: deployer
+    working_dir: /deployer/scripts
+    build:
+      context: ./
+      dockerfile: scripts/Dockerfile
+    image: xarcher/deployer:latest
+    depends_on:
+    - geth
+    links:
+      - geth
+    command:  ./998Deploy.sh private http://geth:8540
