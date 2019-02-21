@@ -1,0 +1,54 @@
+version: '3.2'
+services:
+  frontend:
+    image: xarcher/front-end:lastest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+    environment:
+      - SERVER_PATH="ws://127.0.0.1:4000"
+    command: http-server dist
+    networks:
+      chain:
+  backend:
+    image: xarcher/back-end:lastest
+    working_dir: /app/src
+    ports:
+      - "4000:4000"
+    networks:
+      - chain
+    depends_on:
+      - deployer
+    environment:
+      - GOPATH=/app
+    command: go run server.go
+  geth:
+    container_name: private
+    image: xarcher/private-chain:lastest
+    expose:
+      - 8540
+      - 8650
+      - 30311
+    command: sh start.sh
+    logging:
+      driver: "none"
+    volumes:
+      - type: volume
+        source: chain_data
+        target: /privateChain/node/geth
+    networks:
+      chain:
+  deployer:
+    container_name: deployer
+    working_dir: /deployer/scripts
+    image: xarcher/deployer:latest
+    depends_on:
+      - geth
+    command:  ./998Deploy.sh private http://geth:8540
+    networks:
+      chain:
+networks:
+  chain:
+volumes:
+  chain_data:

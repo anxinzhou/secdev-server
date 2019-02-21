@@ -1,1 +1,1 @@
-{"port":"ws://localhost:8650","keystore":"./etc/keystore/zx","password":"321","address":"0xf17F6c1451449d35Aa8f33244e6822D981cc255a"}
+{"port":"ws://geth:8650","keystore":"./etc/keystore/zx","password":"321","address":"0xf17F6c1451449d35Aa8f33244e6822D981cc255a"}
